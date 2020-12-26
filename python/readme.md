@@ -1,3 +1,9 @@
+# James' code from ECE 457A
+
+As of 2020-12-26, this directory is still being ported
+
+---
+
 Tested with Python 3.7
 
 Python libraries
