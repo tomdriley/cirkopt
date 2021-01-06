@@ -1,0 +1,2 @@
+#!/bin/tcsh -f
+/bin/tcsh -f -c  "cd /home/ece498/run_char;setenv ALTOSHOME /CMC/tools/cadence/LIBERATE18.10.293_lnx86;/CMC/tools/cadence/LIBERATE18.10.293_lnx86/bin/liberate  -a T20201229125137119780S0015585 -t 6380183 -b . -m 1 /home/ece498/run_char/altos.iccad1.uwaterloo.ca.T20201229125137119780S0015585.ldb.gz/.liberate_slave_0  >& /home/ece498/run_char/altos.iccad1.uwaterloo.ca.T20201229125137119780S0015585.ldb.gz/client_0.log; ; sleep 0" 

@@ -1,0 +1,13 @@
+# Comment
+set cells {
+  AND2X1
+  DFFQX1
+  DFFSRHQX1
+  INVX1
+  SDFFQX1
+  SDFFSRHQX1
+  TLATQX1
+  TLATSRX1
+  XOR2X1
+}
+set cells { AND2X1 DFFQX1 INVX1 }

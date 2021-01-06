@@ -1,0 +1,2 @@
+number:slaveId,date:TimeStamps,string:taskString
+0,Dec 29 12:57:51 2020,libraCmd_runSlave libraCmd_computeArcs INVX1 /home/ece498/run_char/tcl/char.tcl {nil} {nil}
