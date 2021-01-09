@@ -1,11 +1,15 @@
 
-##  Summary
-----------------------------------------
+# Liberate Library Characterization
+
+## Summary
+
+Liberate takes in tcl scripts and netlist files and generates ldb libraries containing the performance of the netlists
+
+##  How to Use
 1. Run Characterization and generate Liberty files
 2. Review output files
 
 ##  Steps
-----------------------------------------
 1. Run Characterization
      1. Run characterization using Liberate.  cmd:
          liberate tcl/char.tcl |& tee char.log
@@ -21,7 +25,6 @@
 
 
 ##  Notes
-----------------------------------------
 1. RAK is setup to allow user to run 9 cells (all different cell types).
    In the interest of fast turn around time, only AND2X1 and INVX1 is setup to be characterize initially.
    User can update setup to run all the cells by modifying file cells.tcl:
