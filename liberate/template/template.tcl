@@ -27,14 +27,7 @@ set_var min_output_cap 2.52711e-16
 
 set cells { 
     AND2X1 
-    DFFQX1 
-    DFFSRHQX1 
     INVX1 
-    SDFFQX1 
-    SDFFSRHQX1 
-    TLATQX1 
-    TLATX1 
-    TLATSRX1 
     XOR2X1 
 }
 
@@ -73,33 +66,6 @@ define_cell \
        BUFX8_drv
 }
 
-set cell DFFQX1
-if {[ALAPI_active_cell $cell]} {
-    define_cell \
-       -clock { CK } \
-       -input { D } \
-       -output { Q } \
-       -pinlist { CK D Q } \
-       -delay delay_template \
-       -power power_template \
-       -constraint const_template \
-       $cell
-}
-
-set cell DFFSRHQX1
-if {[ALAPI_active_cell $cell]} {
-    define_cell \
-       -clock { CK } \
-       -async { RN SN } \
-       -input { D } \
-       -output { Q } \
-       -pinlist { CK D RN SN Q } \
-       -delay delay_template \
-       -power power_template \
-       -constraint const_template \
-       $cell
-}
-
 set cell INVX1
 if {[ALAPI_active_cell $cell]} {
     define_cell \
@@ -108,73 +74,6 @@ if {[ALAPI_active_cell $cell]} {
        -pinlist { A Y } \
        -delay delay_template \
        -power power_template \
-       $cell
-}
-
-set cell SDFFQX1
-if {[ALAPI_active_cell $cell]} {
-    define_cell \
-       -clock { CK } \
-       -input { D SE SI } \
-       -output { Q } \
-       -pinlist { CK D SE SI Q } \
-       -delay delay_template \
-       -power power_template \
-       -constraint const_template \
-       $cell
-}
-
-set cell SDFFSRHQX1
-if {[ALAPI_active_cell $cell]} {
-define_cell \
-       -clock { CK } \
-       -async { RN SN } \
-       -input { D SE SI } \
-       -output { Q } \
-       -pinlist { CK D RN SE SI SN Q } \
-       -delay delay_template \
-       -power power_template \
-       -constraint const_template \
-       $cell
-}
-
-set cell TLATQX1
-if {[ALAPI_active_cell $cell]} {
-    define_cell \
-       -clock { G } \
-       -input { D } \
-       -output { Q } \
-       -pinlist { D G Q } \
-       -delay delay_template \
-       -power power_template \
-       -constraint const_template \
-       $cell
-}
-
-set cell TLATX1
-if {[ALAPI_active_cell $cell]} {
-    define_cell \
-       -clock { G } \
-       -input { D } \
-       -output { Q QN } \
-       -pinlist { D G Q QN } \
-       -delay delay_template \
-       -power power_template \
-       -constraint const_template \
-       $cell
-}
-
-set cell TLATSRX1
-if {[ALAPI_active_cell $cell]} {
-    define_cell \
-       -clock { G } \
-       -async { RN SN } \
-       -input { D } \
-       -output { Q QN } \
-       -pinlist { D G RN SN Q QN } \
-       -delay delay_template \
-       -power power_template \
-       -constraint const_template \
        $cell
 }
 
