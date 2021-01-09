@@ -1,2 +1,0 @@
-string:Cells Status,string:CPUs available/requested,string:Current Speed,string:Estimated ETA,number:is_multiPvt,number:totalClients
-3/3,1/1,123.0 seconds/cell,Tue Dec 29 12:58:23 2020,0,1
