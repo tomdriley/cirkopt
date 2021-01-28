@@ -5,7 +5,7 @@ import numpy as np
 from control.matlab import feedback, series, stepinfo, step, tf
 
 
-def Q2_perfFCN(Kp, Ti, Td, show_plot=False):
+def perffcn(Kp, Ti, Td, show_plot=False):
     G = Kp * tf([Ti * Td, Ti, 1], [Ti, 0])
     F = tf(1, [1, 6, 11, 6, 0])
 
