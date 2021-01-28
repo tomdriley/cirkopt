@@ -1,6 +1,4 @@
-# James' code from ECE 457A
-
-As of 2020-12-26, this directory is still being ported
+# James' code from class work, to be used as a reference
 
 ---
 
