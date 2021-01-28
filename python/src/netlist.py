@@ -31,7 +31,7 @@ class Netlist:
     device_lengths: Tuple[int]
 
     """Stores the device m values in order of device appearance in base_netlist_file"""
-    device_m_values: Tuple[int] #hello
+    device_m_values: Tuple[int]
 
     def persist(self, file: File) -> None:
         """Writes netlist to new file located via path string."""
