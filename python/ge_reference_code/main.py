@@ -2,8 +2,8 @@ import argparse
 
 import matplotlib.pyplot as plt
 import numpy as np
-from a3_q1_ga import optimize, chromosome_to_floats
-from perffcn_a3 import Q2_perfFCN as perffcn
+from ge import optimize, chromosome_to_floats
+from perffcn import perffcn
 
 
 def main(simulations):
@@ -49,7 +49,6 @@ def main(simulations):
 
 
 if __name__ == '__main__':
-    # Gives good results: --nants 15 20 --qpersistence 0.50 0.60 --p0 0.30 0.35 --online true true
     parser = argparse.ArgumentParser(description='Run Genetic Algorithm and plot Fitness vs Iteration.')
     parser.add_argument('--pop_size', type=int, nargs='+', help='Population sizes for each simulation')
     parser.add_argument('--ngenerations', type=int, nargs='+', help='Number of generations for each simulation')
