@@ -84,6 +84,17 @@ if {[ALAPI_active_cell $cell]} {
        $cell
 }
 
+set cell INVX1_2
+if {[ALAPI_active_cell $cell]} {
+    define_cell \
+       -input { A } \
+       -output { Y } \
+       -pinlist { A Y } \
+       -delay delay_template \
+       -power power_template \
+       $cell
+}
+
 set cell XOR2X1
 if {[ALAPI_active_cell $cell]} {
     define_cell \

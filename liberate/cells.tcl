@@ -7,4 +7,4 @@ set cells {
   XOR2X1
 }
 # Overrides
-set cells { INVX1 }
+set cells { INVX1 INVX1_2 }
