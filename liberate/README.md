@@ -22,7 +22,13 @@ Liberate takes in tcl scripts and netlist files and generates ldb libraries cont
         In the ldb/ directory, individual cell ldb files are present. Also, there will be client_<#>.log files.
         Check each log file for "ERROR" messages.
      4. Check liberty file lib/example_nldm.lib
-
+2. Note that tcl/char.tcl has been setup to enable command line input.  User can use the command line input feature to set PVT.
+     1. Run characterization for PVT PROCESS=ff VDD=1.1 TEMP=0  cmd:
+          liberate tcl/char.tcl PROCESS=ff VDD=1.1 TEMP=0 |& tee char.log
+        The following ldb and lib files were created:
+          ldb/tst_ff_1.1_0.ldb.gz, lib/tst_ff_1.1_0_nldm.lib
+        User can use this command line input feature to enable programability to the run script.
+     2. See Makefile for example of commands for the rest of the PVT corners.
 
 ##  Notes
 1. RAK is setup to allow user to run 9 cells (all different cell types).
