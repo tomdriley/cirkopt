@@ -2,7 +2,7 @@ import multiprocessing as mp
 import time
 
 import numpy as np
-from perffcn_a3 import Q2_perfFCN as perffcn
+from perffcn import perffcn
 
 KP_FP_MIN = 200
 KP_FP_MAX = 1800

@@ -1,4 +1,4 @@
-from a3_q1_ga import chromosome_to_floats, floats_to_chromosome
+from ge import chromosome_to_floats, floats_to_chromosome
 
 
 def test_chromosome_encoding():
