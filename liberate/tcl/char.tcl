@@ -10,7 +10,6 @@ set VDD                  1.0
 set TEMP                 70
 set SETTINGS_FILE        ${SRC_DIR}/tcl/settings.tcl
 set TEMPLATE_FILE        ${SRC_DIR}/template/template.tcl
-set CELLS_FILE           ${RUN_DIR}/cells.tcl
 set NETLIST_DIR          ${SRC_DIR}/netlist_wrk
 set USERDATA             ${SRC_DIR}/userdata/userdata.lib
 

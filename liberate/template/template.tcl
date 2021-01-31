@@ -26,14 +26,17 @@ set_var min_transition 6e-12
 set_var max_transition 3e-10
 set_var min_output_cap 1e-16
 
-set cells { 
-    AND2X1 
+# reference cells
+set cells {
+    AND2X1
     BUFX8
     BUFX8_drv
     INVX1
-    INVX1_2
-    XOR2X1 
+    XOR2X1
 }
+# Overrides with working cells. Must update if new cells are added
+set cells { INVX1 INVX1_2 }
+
 
 ### Define templates - slew (0-100%) min,max=10ps,500ps
 define_template -type delay \
