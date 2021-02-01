@@ -10,8 +10,7 @@ set VDD                  1.0
 set TEMP                 70
 set SETTINGS_FILE        ${SRC_DIR}/tcl/settings.tcl
 set TEMPLATE_FILE        ${SRC_DIR}/template/template.tcl
-set CELLS_FILE           ${RUN_DIR}/cells.tcl
-set NETLIST_DIR          ${SRC_DIR}/netlist
+set NETLIST_DIR          ${SRC_DIR}/netlist_wrk
 set USERDATA             ${SRC_DIR}/userdata/userdata.lib
 
 #####----------------------------------------
@@ -46,10 +45,10 @@ set MODEL_INCLUDE_FILE   ${SRC_DIR}/models/spectre/include_${PROCESS}
 #####     CLIENTS - number of Distributed Resource Management (DRM) jobs; 0=disable DRM
 #####----------------------------------------
 ### run using debug mode ###
-set THREAD    1
+set THREAD    4 ; # 0=unlimited (sometimes slower), otherwise sets max threads
 set CLIENTS   0
 ### run using local mode ###
-#set THREAD    1
+# set THREAD    2
 # set CLIENTS   1
 # set RSH_CMD   "local"
 ### run using distributed mode ###
@@ -58,7 +57,7 @@ set CLIENTS   0
 # if {![info exists MEM]} {set MEM [expr ${THREAD}*2000]}   ;# default = 2G per thread
 # if {![info exists JOBNAME]} {set JOBNAME liberate}
 # set RSH_CMD   "bsub -q lnx64 -J ${JOBNAME} -W 255:0 -P LIBERATE:17.1:AE:test -n ${THREAD} -R \"(OSREL==EE60) rusage\[mem=$MEM\] span\[hosts=1\]\" -o %B/%L -e %B/%L"
-#set_var packet_arcs_per_thread 1   ;# use for large cells, default=10
+# set_var packet_arcs_per_thread 1   ;# use for large cells, default=10
 
 #####----------------------------------------
 ##### Print user define settings to output

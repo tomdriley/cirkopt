@@ -12,7 +12,7 @@ Liberate takes in tcl scripts and netlist files and generates ldb libraries cont
 ##  Steps
 1. Run Characterization
      1. Run characterization using Liberate.  cmd:
-         liberate tcl/char.tcl |& tee char.log
+         ./run.sh
      2. Check log file char.log for "ERROR" messages.
         Look for "Characterization statistics." Check the number of cells passed match the size of the run
         set. See notes for the number of cells to be run.
@@ -31,10 +31,9 @@ Liberate takes in tcl scripts and netlist files and generates ldb libraries cont
      2. See Makefile for example of commands for the rest of the PVT corners.
 
 ##  Notes
-1. RAK is setup to allow user to run 9 cells (all different cell types).
-   In the interest of fast turn around time, only AND2X1 and INVX1 is setup to be characterize initially.
-   User can update setup to run all the cells by modifying file cells.tcl:
-       comment out last line "set cells { AND2X1 INVX1 }", and run characterization
+1. Directory is setup to allow user to run 9 different cells (all different cell types).
+   User can update setup to run specific cells by modifying file template.tcl:
+      change the last "set cells { ... }" to include desired cells and run characterization
 2. File tcl/char.tcl is setup with some user programmability in mind.
    1. Change library name by setting variable LIBNAME
    2. Change Process,Voltage,Temp (PVT)
