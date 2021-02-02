@@ -1,5 +1,5 @@
 ** Library name: gsclib045
-** Cell name: INVX1
+** Cell name: INVX1_2
 ** View name: schematic
 .subckt INVX1_2 A Y VDD VSS
 *.PININFO  VSS:I VDD:I A:I Y:O
