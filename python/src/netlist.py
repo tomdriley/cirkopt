@@ -57,15 +57,18 @@ class Netlist:
     def __init__(
             self,
             base_netlist_file: BaseNetlistFile,
+            cell_name: Optional[str] = None,
             device_widths: Optional[Tuple[float, ]] = None,
             device_lengths: Optional[Tuple[float, ]] = None,
             device_fingers: Optional[Tuple[int, ]] = None,
     ):
         self.base_netlist_file = base_netlist_file
-
         netlist_str = self.base_netlist_file.contents()
 
-        self.cell_name = re.search(SUBCIRKT_NAME_REGEX, netlist_str, re.IGNORECASE).group(1)
+        if cell_name is not None:
+            self.cell_name = cell_name
+        else:
+            self.cell_name = re.search(SUBCIRKT_NAME_REGEX, netlist_str, re.IGNORECASE).group(1)
 
         lines = netlist_str.split("\n")
         device_lines = tuple(l + " " for l in lines if len(l) > 0 and l[0].isalpha())
@@ -93,11 +96,12 @@ class Netlist:
 
     def mutate(
             self,
+            cell_name: str,
             device_widths: Tuple[float, ],
             device_lengths: Tuple[float, ],
             device_fingers: Tuple[int, ],
     ) -> 'Netlist':
-        return Netlist(self.base_netlist_file, device_widths, device_lengths, device_fingers)
+        return Netlist(self.base_netlist_file, cell_name, device_widths, device_lengths, device_fingers)
 
     def persist(self, file: File) -> None:
         """Writes netlist to new file located via path string."""
