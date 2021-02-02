@@ -101,7 +101,13 @@ class Netlist:
             device_lengths: Tuple[float, ],
             device_fingers: Tuple[int, ],
     ) -> 'Netlist':
-        return Netlist(self.base_netlist_file, cell_name, device_widths, device_lengths, device_fingers)
+        return Netlist(
+            self.base_netlist_file,
+            cell_name,
+            device_widths,
+            device_lengths,
+            device_fingers
+        )
 
     def persist(self, file: File) -> None:
         """Writes netlist to new file located via path string."""
