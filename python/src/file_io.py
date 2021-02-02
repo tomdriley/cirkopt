@@ -20,7 +20,10 @@ class File(IFile):
         self.path = path
 
     def write(self, content: str) -> None:
-        raise NotImplementedError("TODO: write content to file path")
+        with open(self.path, 'w') as writer:
+            writer.write(content)
 
     def read(self) -> str:
-        raise NotImplementedError("TODO: read content from file path")
+        with open(self.path, 'r') as reader:
+            file_str = reader.read()
+        return file_str
