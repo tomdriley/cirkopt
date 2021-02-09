@@ -17,7 +17,8 @@ jobs:
         python -m pip install pipenv
         cd python
         python -m pipenv install --dev
-    - run: |
+    - name: Run pylint
+      run: |
         cd python
         pipenv run pylint src/ tests/ --rcfile=.pylintrc
   test:
@@ -34,6 +35,7 @@ jobs:
         python -m pip install pipenv
         cd python
         python -m pipenv install --dev
-    - run: |
+    - name: Discover and run all unit tests
+      run: |
         cd python
         pipenv run python -m unittest discover
