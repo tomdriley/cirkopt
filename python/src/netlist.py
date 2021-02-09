@@ -3,7 +3,7 @@ import re
 from dataclasses import dataclass
 from typing import Optional, Tuple
 
-from file_io import IFile as File
+from src.file_io import IFile as File
 
 
 SUBCIRKT_NAME_REGEX = r".subckt\s+(.*?)\s+"
