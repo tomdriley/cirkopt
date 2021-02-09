@@ -19,4 +19,5 @@ jobs:
         python -m pipenv install --dev
     - name: Analysing the code with pylint
       run: |
+        cd python
         pipenv run pylint src/ tests/ --rcfile=.pylintrc
