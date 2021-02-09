@@ -1,7 +1,7 @@
 import os.path
 
-from file_io import File
-from netlist import BaseNetlistFile, Netlist
+from src.file_io import File
+from src.netlist import BaseNetlistFile, Netlist
 
 
 def main() -> None:

@@ -1,7 +1,7 @@
 import unittest
 import textwrap
 
-from netlist import BaseNetlistFile, Netlist
+from src.netlist import BaseNetlistFile, Netlist
 from tests.mock_file import MockFile
 
 
