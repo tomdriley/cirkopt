@@ -21,3 +21,7 @@ jobs:
       run: |
         cd python
         pipenv run pylint src/ tests/ --rcfile=.pylintrc
+    - name: Run tests
+      run: |
+        cd python
+        pipenv run python -m unittest discover
