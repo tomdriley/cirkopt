@@ -8,6 +8,7 @@ pytest = "*"
 pylint = "*"
 
 [packages]
+numpy = "*"
 
 [requires]
 python_version = "3.8" # This is the version that is on iccad
