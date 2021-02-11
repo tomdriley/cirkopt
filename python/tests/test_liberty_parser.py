@@ -1,7 +1,7 @@
 import unittest
 
 from src.liberty_parser import LibertyParser
-from tests.libery_example import liberty_example
+from tests.libery_example import LIBERTY_EXAMPLE
 from tests.mock_file import MockFile
 
 
@@ -9,12 +9,13 @@ class TestLibertyParser(unittest.TestCase):
 
     def test_actual(self):
         mock_file = MockFile()
-        mock_file.write(liberty_example)
+        mock_file.write(LIBERTY_EXAMPLE)
 
         parser = LibertyParser()
 
         root = parser.parse(mock_file)[0]
 
+        # Assert a handful of statments
         self.assertEqual(root[0], "library")
         self.assertEqual(root[1], "example_tt_1.0_70")
 

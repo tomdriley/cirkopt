@@ -1,4 +1,4 @@
-liberty_example = """
+LIBERTY_EXAMPLE = """
 library (example_tt_1.0_70) {
   /* Models written by Liberate 18.1.0.293 from Cadence Design Systems, Inc. on Mon Feb  1 21:39:01 EST 2021 */
   comment : "";
