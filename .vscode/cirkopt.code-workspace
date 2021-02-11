@@ -5,8 +5,37 @@
 		}
 	],
 	"settings": {
-		"python.linting.pylintEnabled": false,
-		"python.linting.flake8Enabled": true,
-		"python.linting.enabled": true
-	}
+		// Add *.pyc and __pycache__ to excluded files
+		"files.exclude": {
+			"**/.git": true,
+			"**/.svn": true,
+			"**/.hg": true,
+			"**/CVS": true,
+			"**/.DS_Store": true,
+			"**/*.pyc": true,
+			"**/__pycache__": true
+		},
+		// Python linter settings
+		"python.linting.pylintEnabled": true,
+		"python.linting.flake8Enabled": false,
+		"python.linting.enabled": true,
+		"python.linting.pylintArgs": [
+			"--rcfile=python/.pylintrc"
+		],
+		// Python Environment settings. 
+		// Update to result of "python3 -m pipenv --venv | sed 's/$/\/bin\/python/'" locally
+		// This requires that you have already installed pipenv
+		"python.pythonPath": "/home/tdriley/.local/share/virtualenvs/python-wu170vVP/bin/python",
+		// Python Testing Settings
+		"python.testing.unittestArgs": [
+			"-v",
+			"-s",
+			"./python/tests",
+			"-p",
+			"test_*.py"
+		],
+		"python.testing.pytestEnabled": false,
+		"python.testing.nosetestsEnabled": false,
+		"python.testing.unittestEnabled": true
+	},
 }
