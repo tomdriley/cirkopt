@@ -13,6 +13,19 @@ class TestLibertyParser(unittest.TestCase):
 
         parser = LibertyParser()
 
-        results = parser.parse(mock_file)
+        root = parser.parse(mock_file)[0]
 
-        results.pprint()
+        self.assertEqual(root[0], "library")
+        self.assertEqual(root[1], "example_tt_1.0_70")
+
+        self.assertEqual(root.comment, "")
+        self.assertEqual(root.date, "$Date: Fri Feb  5 19:21:22 2021 $")
+        self.assertEqual(root.revision, "1.0")
+        self.assertEqual(root.delay_model, "table_lookup")
+        self.assertEqual(root.default_cell_leakage_power, 0)
+
+        operating_conditions = root.operating_conditions
+        self.assertEqual(operating_conditions[0], "tt_1.0_70")
+        self.assertEqual(operating_conditions.process, 1)
+        self.assertEqual(operating_conditions.temperature, 70)
+        self.assertEqual(operating_conditions.voltage, 1)

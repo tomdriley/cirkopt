@@ -11,7 +11,10 @@ class LibertyParser():
         LPAREN, RPAREN, LBRACE, RBRACE, COLON, SEMI = map(pp.Suppress, "(){}:;")
         string = pp.Word(pp.alphanums + '_' + '.')
         dblQuotesString = pp.dblQuotedString().setParseAction(pp.removeQuotes)
-        number = ppc.number()
+        number = (
+                ppc.integer().setParseAction(ppc.convertToInteger) |
+                ppc.fnumber().setParseAction(ppc.convertToFloat)
+        )
 
         # Statement
         statement = pp.Forward().setName("statement")
@@ -21,7 +24,7 @@ class LibertyParser():
         attribute_value = pp.Forward().setName("attribute_value")
         attribute_name = string
 
-        attribute_value << (string | dblQuotesString | number)
+        attribute_value << (number | string | dblQuotesString)
         simple_attribute << pp.Group(attribute_name + COLON + attribute_value + SEMI)
 
         # Group Statement
@@ -29,7 +32,7 @@ class LibertyParser():
         group_name = string
         name = string
         group_statement << pp.Group(
-            group_name + LPAREN + name + RPAREN + LBRACE + pp.ZeroOrMore(statement) + RBRACE
+            group_name + LPAREN + name + RPAREN + LBRACE + pp.Dict(pp.ZeroOrMore(statement)) + RBRACE
         )
 
         # Statement Def
