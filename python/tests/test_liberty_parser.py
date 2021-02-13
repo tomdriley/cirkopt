@@ -1,7 +1,7 @@
 import unittest
 
 from src.liberty_parser import LibertyParser
-from tests.libery_example import LIBERTY_EXAMPLE
+from tests.liberty_example import LIBERTY_EXAMPLE
 from tests.mock_file import MockFile
 
 
@@ -25,6 +25,7 @@ class TestLibertyParser(unittest.TestCase):
         self.assertEqual(root.delay_model, "table_lookup")
         self.assertEqual(root.default_cell_leakage_power, 0)
         self.assertEqual(root.default_max_transition, 0.3)
+        self.assertEqual(list(root.capacitive_load_unit), [1, "pf"])
 
         operating_conditions = root.operating_conditions
         self.assertEqual(operating_conditions[0], "tt_1.0_70")

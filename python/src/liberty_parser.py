@@ -8,7 +8,7 @@ class LibertyParser:
 
     def __init__(self):
         # Basic tokens/types
-        lparen, rparen, lbrace, rbrace, colon, semi = map(pp.Suppress, "(){}:;")
+        lparen, rparen, lbrace, rbrace, colon, semi, dblquote = map(pp.Suppress, "(){}:;\"")
         string = pp.Word(pp.alphanums + '_' + '.')
         dbl_quotes_string = pp.dblQuotedString().setParseAction(pp.removeQuotes)
         real = ppc.real().setParseAction(ppc.convertToFloat)
@@ -24,6 +24,13 @@ class LibertyParser:
 
         attribute_value <<= (real | integer | string | dbl_quotes_string)
         simple_attribute <<= pp.Group(attribute_name + colon + attribute_value + semi)
+
+        # Complex Attribute
+        complex_attribute = pp.Forward().setName("complex_attribute")
+        parameter_list = pp.Group(dblquote + pp.delimitedList(attribute_value) + dblquote)
+        parameter = (parameter_list | attribute_value)
+        parameters = pp.delimitedList(parameter)
+        complex_attribute <<= pp.Group(attribute_name + lparen + parameters + rparen + semi)
 
         # Group Statement
         group_statement = pp.Forward().setName("group_statement")
@@ -41,7 +48,7 @@ class LibertyParser:
         group_statement.ignore(pp.cppStyleComment)
 
         # Statement Def
-        statement <<= (group_statement | simple_attribute)
+        statement <<= (group_statement | simple_attribute | complex_attribute)
 
         # Root liberty object
         liberty_object = pp.Forward().setName("liberty_object")
