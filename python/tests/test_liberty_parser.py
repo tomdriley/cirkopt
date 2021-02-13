@@ -46,6 +46,9 @@ class TestLibertyParser(unittest.TestCase):
         y = cell.pin[0]
         self.assertEqual(y.group_name, "pin")
         self.assertEqual(y.name, "Y")
+        a = cell.pin[1]
+        self.assertEqual(a.group_name, "pin")
+        self.assertEqual(a.name, "A")
 
         self.assertEqual(len(y.timing), 1)
         timing = y.timing[0]
