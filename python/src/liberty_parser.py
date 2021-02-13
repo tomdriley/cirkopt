@@ -1,18 +1,25 @@
 import pyparsing as pp
 
 from pyparsing import pyparsing_common as ppc
+from dataclasses import dataclass
+from typing import Any, Dict, List
+
 from src.file_io import IFile
 
 
-def to_multi_dict(string, loc, t):
-    tokens = t[0]
+@dataclass(frozen=True)
+class Group:
+    def __init__(self, adict: Dict):
+        self.__dict__.update(adict)
+
+
+def _to_multi_dict(input_string: str, location: int, toks: List[Any]) -> List[Any]:
+    tokens = toks[0]
     group = dict()
+    assert(len(tokens) == 3)
 
     group['group_name'] = tokens[0]
-    group['name'] = ''
-    # Name is optional
-    if len(tokens) == 3:
-        group['name'] = tokens[1]
+    group['name'] = tokens[1]
 
     for members in tokens[-1]:
         # Simple and complex attributes are [key, value]
@@ -24,8 +31,8 @@ def to_multi_dict(string, loc, t):
                 group[members[0]].append(members[2])
             else:
                 group[members[0]] = [members[2]]
-    t[0][-1] = group
-    return t
+    toks[0][-1] = group
+    return toks
 
 
 class LibertyParser:
@@ -63,12 +70,12 @@ class LibertyParser:
         group_statement <<= pp.Group(
             group_name +
             lparen +
-            pp.Optional(name) +
+            pp.Optional(name, default='') +
             rparen +
             lbrace +
             pp.Group(pp.ZeroOrMore(statement)) +
             rbrace
-        ).setParseAction(to_multi_dict)
+        ).setParseAction(_to_multi_dict)
         group_statement.ignore(pp.cppStyleComment)
 
         # Statement Def
@@ -81,4 +88,18 @@ class LibertyParser:
         self.liberty_object = liberty_object
 
     def parse(self, file: IFile):
-        return self.liberty_object.parseString(file.read())
+        def dict_to_group(r):
+            def handle_value(val):
+                if isinstance(val, pp.ParseResults):
+                    return val.asList()
+                if isinstance(val, list):
+                    return [dict_to_group(d) for d in val]
+                if isinstance(val, dict):
+                    return Group(val)
+                return val
+
+            return Group({key: handle_value(val) for key, val in r.items()})
+
+        root = self.liberty_object.parseString(file.read())[0][2]
+        result = dict_to_group(root)
+        return result
