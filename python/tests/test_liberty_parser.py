@@ -13,7 +13,7 @@ class TestLibertyParser(unittest.TestCase):
 
         parser = LibertyParser()
 
-        root = parser.parse(mock_file)[0]
+        root = parser.parse(mock_file)[0][2]
 
         # Assert a handful of statments
         self.assertEqual(root[0], "library")
