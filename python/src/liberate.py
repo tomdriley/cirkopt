@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import subprocess
 import os.path
+import shutil
 
 # Liberate project folder is defined relative to the location of this script
 PYTHON_SRC_DIRECTORY: str = os.path.dirname(os.path.abspath(__file__))
@@ -24,7 +25,12 @@ def run_liberate(
     characterizes SPICE (.sp) files and generate Liberty library (.lib or .ldb)
     """
 
-    # TODO: Add error checking that files given exist
+    if not os.path.isfile(char_tcl_path):
+        raise TypeError(f"No file found at path {char_tcl_path}")
+    if shutil.which(liberate_path) is None:
+        raise TypeError(f"'{liberate_path}' does not appear to be an executable")
+    # TODO: Support capturing output in log
+    # TODO: Run setup script before
 
     result = subprocess.run(args=[liberate_path, char_tcl_path], cwd=run_dir)
 
