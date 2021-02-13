@@ -13,7 +13,8 @@
 			"**/CVS": true,
 			"**/.DS_Store": true,
 			"**/*.pyc": true,
-			"**/__pycache__": true
+			"**/__pycache__": true,
+			"**/.mypy_cache": true
 		},
 		// Python linter settings
 		"python.linting.pylintEnabled": true,
@@ -22,6 +23,7 @@
 		"python.linting.pylintArgs": [
 			"--rcfile=python/.pylintrc"
 		],
+		"python.formatting.provider": "black",
 		// Python Environment settings. 
 		// Update to result of "python3 -m pipenv --venv | sed 's/$/\/bin\/python/'" locally
 		// This requires that you have already installed pipenv
