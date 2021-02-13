@@ -7,7 +7,9 @@ from tests.mock_file import MockFile
 
 class TestLibertyParser(unittest.TestCase):
 
+    # pylint: disable=no-member
     def test_actual(self):
+
         mock_file = MockFile()
         mock_file.write(LIBERTY_EXAMPLE)
 

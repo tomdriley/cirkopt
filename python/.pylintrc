@@ -16,4 +16,5 @@ disable=missing-module-docstring,
         consider-using-enumerate,
         too-many-arguments,
         too-many-locals,
-        too-few-public-methods
+        too-few-public-methods,
+        invalid-name

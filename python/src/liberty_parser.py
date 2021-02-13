@@ -1,8 +1,8 @@
-import pyparsing as pp
-
-from pyparsing import pyparsing_common as ppc
 from dataclasses import dataclass
 from typing import Any, Dict, List
+
+import pyparsing as pp
+from pyparsing import pyparsing_common as ppc
 
 from src.file_io import IFile
 
@@ -13,10 +13,12 @@ class Group:
         self.__dict__.update(adict)
 
 
+# pylint: disable=unused-argument
 def _to_multi_dict(input_string: str, location: int, toks: List[Any]) -> List[Any]:
     tokens = toks[0]
     group = dict()
-    assert(len(tokens) == 3)
+    # Should be [group name, name, [members]]
+    assert len(tokens) == 3
 
     group['group_name'] = tokens[0]
     group['name'] = tokens[1]
@@ -88,8 +90,8 @@ class LibertyParser:
         self.liberty_object = liberty_object
 
     def parse(self, file: IFile):
-        def dict_to_group(r):
-            def handle_value(val):
+        def dict_to_group(adict: Dict) -> Group:
+            def handle_value(val: Any) -> Any:
                 if isinstance(val, pp.ParseResults):
                     return val.asList()
                 if isinstance(val, list):
@@ -98,7 +100,7 @@ class LibertyParser:
                     return Group(val)
                 return val
 
-            return Group({key: handle_value(val) for key, val in r.items()})
+            return Group({key: handle_value(val) for key, val in adict.items()})
 
         root = self.liberty_object.parseString(file.read())[0][2]
         result = dict_to_group(root)
