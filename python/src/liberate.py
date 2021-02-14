@@ -2,7 +2,7 @@
 import subprocess
 import os.path
 import shutil
-from collections import namedtuple
+from typing import NamedTuple, List
 
 # Liberate project folder is defined relative to the location of this script
 PYTHON_SRC_DIRECTORY: str = os.path.dirname(os.path.abspath(__file__))
@@ -14,7 +14,9 @@ CHAR_TCL_DEFAULT_PATH: str = os.path.join(
 )
 LIBERATE_DEFAULT_CMD: str = "liberate"
 
-LiberateResult = namedtuple("LiberateResult", ["args", "returncode", "stdout"])
+LiberateResult = NamedTuple(
+    "LiberateResult", [("args", List[str]), ("returncode", int), ("stdout", str)]
+)
 
 
 def run_liberate(
@@ -40,6 +42,7 @@ def run_liberate(
         check=True,
         stderr=subprocess.STDOUT,
         stdout=subprocess.PIPE,
+        text=True,
     )
 
     return LiberateResult(
