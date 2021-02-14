@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from typing import Any, Dict, List
 
-import pyparsing as pp
+import pyparsing as pp  # type: ignore
 from pyparsing import pyparsing_common as ppc
 
 from src.file_io import IFile
@@ -20,8 +20,8 @@ def _to_multi_dict(input_string: str, location: int, toks: List[Any]) -> List[An
     # Should be [group name, name, [member]]
     assert len(tokens) == 3
 
-    group['group_name'] = tokens[0]
-    group['name'] = tokens[1]
+    group["group_name"] = tokens[0]
+    group["name"] = tokens[1]
 
     duplicate_attribute_names = set()
     for member in tokens[-1]:
@@ -31,18 +31,26 @@ def _to_multi_dict(input_string: str, location: int, toks: List[Any]) -> List[An
         is_attribute = len(member) == 2
         is_group = len(member) == 3
         existing_member_is_list_of_dicts = (
-                existing_member is not None
-                and isinstance(existing_member, list)
-                and isinstance(existing_member[-1], dict)
+            existing_member is not None
+            and isinstance(existing_member, list)
+            and isinstance(existing_member[-1], dict)
         )
 
         # Error if attribute's name has already been defined group name
         if is_attribute and existing_member_is_list_of_dicts:
-            raise Exception(f"Member name '{member_name}' already defined as group name")
+            raise Exception(
+                f"Member name '{member_name}' already defined as group name"
+            )
 
         # Error if group name has already been defined by an attribute
-        if is_group and existing_member is not None and not existing_member_is_list_of_dicts:
-            raise Exception(f"Group with group name '{member_name}' already defined as attribute")
+        if (
+            is_group
+            and existing_member is not None
+            and not existing_member_is_list_of_dicts
+        ):
+            raise Exception(
+                f"Group with group name '{member_name}' already defined as attribute"
+            )
 
         if is_attribute and existing_member is not None:
             # If there are duplicate attribute-value mappings,
@@ -70,8 +78,10 @@ class LibertyParser:
     # pylint: disable=too-many-locals
     def __init__(self):
         # Basic tokens/types
-        lparen, rparen, lbrace, rbrace, colon, semi, dblquote = map(pp.Suppress, "(){}:;\"")
-        string = pp.Word(pp.alphanums + '_' + '.')
+        lparen, rparen, lbrace, rbrace, colon, semi, dblquote = map(
+            pp.Suppress, '(){}:;"'
+        )
+        string = pp.Word(pp.alphanums + "_" + ".")
         dbl_quotes_string = pp.dblQuotedString().setParseAction(pp.removeQuotes)
         real = ppc.real().setParseAction(ppc.convertToFloat)
         integer = ppc.integer().setParseAction(ppc.convertToInteger)
@@ -84,33 +94,37 @@ class LibertyParser:
         attribute_value = pp.Forward().setName("attribute_value")
         attribute_name = string
 
-        attribute_value <<= (real | integer | string | dbl_quotes_string)
+        attribute_value <<= real | integer | string | dbl_quotes_string
         simple_attribute <<= pp.Group(attribute_name + colon + attribute_value + semi)
 
         # Complex Attribute
         complex_attribute = pp.Forward().setName("complex_attribute")
-        parameter_list = dblquote + pp.Group(pp.delimitedList(attribute_value)) + dblquote
-        parameter = (parameter_list | attribute_value)
+        parameter_list = (
+            dblquote + pp.Group(pp.delimitedList(attribute_value)) + dblquote
+        )
+        parameter = parameter_list | attribute_value
         parameters = pp.Group(pp.delimitedList(parameter))
-        complex_attribute <<= pp.Group(attribute_name + lparen + parameters + rparen + semi)
+        complex_attribute <<= pp.Group(
+            attribute_name + lparen + parameters + rparen + semi
+        )
 
         # Group Statement
         group_statement = pp.Forward().setName("group_statement")
         group_name = string
         name = string
         group_statement <<= pp.Group(
-            group_name +
-            lparen +
-            pp.Optional(name, default='') +
-            rparen +
-            lbrace +
-            pp.Group(pp.ZeroOrMore(statement)) +
-            rbrace
+            group_name
+            + lparen
+            + pp.Optional(name, default="")
+            + rparen
+            + lbrace
+            + pp.Group(pp.ZeroOrMore(statement))
+            + rbrace
         ).setParseAction(_to_multi_dict)
         group_statement.ignore(pp.cppStyleComment)
 
         # Statement Def
-        statement <<= (group_statement | simple_attribute | complex_attribute)
+        statement <<= group_statement | simple_attribute | complex_attribute
 
         # Root liberty object
         liberty_object = pp.Forward().setName("liberty_object")
