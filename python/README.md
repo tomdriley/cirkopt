@@ -10,6 +10,7 @@ pipenv install --dev
 
 ```
 pipenv run pylint src/ tests/ --rcfile=.pylintrc
+pipenv run mypy src/ tests/
 ```
 
 ## Running all tests
