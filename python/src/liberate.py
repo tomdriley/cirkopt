@@ -19,7 +19,7 @@ def run_liberate(
     liberate_path: str = LIBERATE_DEFAULT_PATH,
     char_tcl_path: str = CHAR_TCL_DEFAULT_PATH,
     run_dir: str = LIBERATE_DEFAULT_PROJECT_DIRECTORY,
-) -> None:
+) -> subprocess.CompletedProcess:
     """Run Cadence Liberate
 
     characterizes SPICE (.sp) files and generate Liberty library (.lib or .ldb)
@@ -29,10 +29,16 @@ def run_liberate(
         raise TypeError(f"No file found at path {char_tcl_path}")
     if shutil.which(liberate_path) is None:
         raise TypeError(f"'{liberate_path}' does not appear to be an executable")
+
     # TODO: Support capturing output in log
     # TODO: Run setup script before
 
-    result = subprocess.run(args=[liberate_path, char_tcl_path], cwd=run_dir)
+    return subprocess.run(
+        args=[liberate_path, char_tcl_path],
+        cwd=run_dir,
+        check=True,
+        capture_output=True,
+    )
 
 
 if __name__ == "__main__":
