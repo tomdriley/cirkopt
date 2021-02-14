@@ -7,4 +7,4 @@ class TestLiberate(unittest.TestCase):
         with self.assertRaises(TypeError):
             liberate.run_liberate(char_tcl_path="/does/not/exist")
         with self.assertRaises(TypeError):
-            liberate.run_liberate(liberate_path="/does/not/exist")
+            liberate.run_liberate(liberate_cmd="/does/not/exist")
