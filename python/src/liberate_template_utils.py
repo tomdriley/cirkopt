@@ -26,5 +26,7 @@ def update_liberate_template_cell_names(
             set_name_lines_end_idx = idx
             looking_for_end_idx = False
 
-    new_lines = lines[:set_name_lines_start_idx] + cell_name_block_lines + lines[set_name_lines_end_idx:]
+    new_lines = lines[:set_name_lines_start_idx] \
+                + cell_name_block_lines \
+                + lines[set_name_lines_end_idx:]
     file.write("\n".join(new_lines))
