@@ -147,6 +147,7 @@ class LibertyParser:
         def dict_to_group(adict: Dict) -> Group:
             return Group({key: handle_value(val) for key, val in adict.items()})
 
-        root = self.liberty_object.parseString(file.read())[0][2]
+        file_string = file.read().replace("\\\n", "")
+        root = self.liberty_object.parseString(file_string)[0][2]
         result = dict_to_group(root)
         return result
