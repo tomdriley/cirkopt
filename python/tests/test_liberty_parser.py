@@ -8,8 +8,7 @@ from tests.mock_file import MockFile
 class TestLibertyParser(unittest.TestCase):
 
     # pylint: disable=no-member
-    def test_actual(self):
-
+    def test_parsing_valid_example(self):
         mock_file = MockFile()
         mock_file.write(LIBERTY_EXAMPLE)
 
@@ -27,7 +26,8 @@ class TestLibertyParser(unittest.TestCase):
         self.assertEqual(root.delay_model, "table_lookup")
         self.assertEqual(root.default_cell_leakage_power, 0)
         self.assertEqual(root.default_max_transition, 0.3)
-        self.assertListEqual(root.capacitive_load_unit, [1, "pf"])
+        self.assertTupleEqual(root.capacitive_load_unit, (1, "pf"))
+        self.assertTupleEqual(root.voltage_map, (('VDD', 1), ('VSS', 0)))
 
         self.assertEqual(len(root.operating_conditions), 1)
         operating_conditions = root.operating_conditions[0]
@@ -59,6 +59,44 @@ class TestLibertyParser(unittest.TestCase):
         cell_rise = timing.cell_rise[0]
         self.assertEqual(cell_rise.group_name, "cell_rise")
         self.assertEqual(cell_rise.name, "delay_template")
-        self.assertEqual(cell_rise.index_1, [[0.006, 0.3]])
-        self.assertEqual(cell_rise.index_2, [[0.0001, 0.07]])
-        self.assertEqual(cell_rise.values, [[0.011013, 0.366337], [0.080447, 0.540745]])
+        self.assertTupleEqual(cell_rise.index_1, ((0.006, 0.3), ))
+        self.assertTupleEqual(cell_rise.index_2, ((0.0001, 0.07), ))
+        self.assertTupleEqual(cell_rise.values, ((0.011013, 0.366337), (0.080447, 0.540745)))
+
+    def test_attribute_name_duplicated_as_group_name(self):
+        mock_file = MockFile()
+
+        file_with_attribute_duplicated_as_group_name = """
+        library (bruh) {
+          comment : "";
+          comment (comment_as_group) {
+          }
+        }
+        """
+        mock_file.write(file_with_attribute_duplicated_as_group_name)
+
+        parser = LibertyParser()
+
+        with self.assertRaises(Exception) as context:
+            parser.parse(mock_file)
+
+        self.assertIn("Group with group name 'comment' already defined as attribute", context.exception.args)
+
+    def test_group_name_duplicated_as_attribute_name(self):
+        mock_file = MockFile()
+
+        file_with_group_name_duplicated_as_attribute = """
+        library (bruh) {
+          comment (comment_as_group) {
+          }
+          comment : "";
+        }
+        """
+        mock_file.write(file_with_group_name_duplicated_as_attribute)
+
+        parser = LibertyParser()
+
+        with self.assertRaises(Exception) as context:
+            parser.parse(mock_file)
+
+        self.assertIn("Member name 'comment' already defined as group name", context.exception.args)

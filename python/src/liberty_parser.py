@@ -17,28 +17,56 @@ class Group:
 def _to_multi_dict(input_string: str, location: int, toks: List[Any]) -> List[Any]:
     tokens = toks[0]
     group = dict()
-    # Should be [group name, name, [members]]
+    # Should be [group name, name, [member]]
     assert len(tokens) == 3
 
     group['group_name'] = tokens[0]
     group['name'] = tokens[1]
 
-    for members in tokens[-1]:
-        # Simple and complex attributes are [key, value]
-        if len(members) == 2:
-            group[members[0]] = members[1]
-        # Grouped statements are [group name, name, dict of members]
-        elif len(members) == 3:
-            if members[0] in group:
-                group[members[0]].append(members[2])
+    duplicate_attribute_names = set()
+    for member in tokens[-1]:
+        member_name = member[0]
+        existing_member = group[member_name] if member_name in group else None
+
+        is_attribute = len(member) == 2
+        is_group = len(member) == 3
+        existing_member_is_list_of_dicts = (
+                existing_member is not None
+                and isinstance(existing_member, list)
+                and isinstance(existing_member[-1], dict)
+        )
+
+        # Error if attribute's name has already been defined group name
+        if is_attribute and existing_member_is_list_of_dicts:
+            raise Exception(f"Member name '{member_name}' already defined as group name")
+
+        # Error if group name has already been defined by an attribute
+        if is_group and existing_member is not None and not existing_member_is_list_of_dicts:
+            raise Exception(f"Group with group name '{member_name}' already defined as attribute")
+
+        if is_attribute and existing_member is not None:
+            # If there are duplicate attribute-value mappings, store the values as an array in order of first appearance
+            if member_name in duplicate_attribute_names:
+                existing_member.append(member[1])
             else:
-                group[members[0]] = [members[2]]
+                group[member_name] = [existing_member, member[1]]
+                duplicate_attribute_names.add(member_name)
+        elif is_attribute:
+            group[member_name] = member[1]
+        elif is_group and existing_member is not None:
+            group[member_name].append(member[2])
+        elif is_group:
+            group[member_name] = [member[2]]
+        else:
+            raise Exception(f"Unexpected tokens in group: {toks}")
+
     toks[0][-1] = group
     return toks
 
 
 class LibertyParser:
 
+    # pylint: disable=too-many-locals
     def __init__(self):
         # Basic tokens/types
         lparen, rparen, lbrace, rbrace, colon, semi, dblquote = map(pp.Suppress, "(){}:;\"")
@@ -89,17 +117,19 @@ class LibertyParser:
 
         self.liberty_object = liberty_object
 
-    def parse(self, file: IFile):
-        def dict_to_group(adict: Dict) -> Group:
-            def handle_value(val: Any) -> Any:
-                if isinstance(val, pp.ParseResults):
-                    return val.asList()
-                if isinstance(val, list):
-                    return [dict_to_group(d) for d in val]
-                if isinstance(val, dict):
-                    return Group(val)
-                return val
+    def parse(self, file: IFile) -> Group:
+        def handle_value(val: Any) -> Any:
+            if isinstance(val, pp.ParseResults):
+                return tuple(handle_value(v) for v in val.asList())
+            if isinstance(val, list) and isinstance(val[-1], dict):
+                return tuple(dict_to_group(d) for d in val)
+            if isinstance(val, list):
+                return tuple(handle_value(v) for v in val)
+            if isinstance(val, dict):
+                return Group(val)
+            return val
 
+        def dict_to_group(adict: Dict) -> Group:
             return Group({key: handle_value(val) for key, val in adict.items()})
 
         root = self.liberty_object.parseString(file.read())[0][2]
