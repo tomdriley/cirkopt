@@ -45,7 +45,8 @@ def _to_multi_dict(input_string: str, location: int, toks: List[Any]) -> List[An
             raise Exception(f"Group with group name '{member_name}' already defined as attribute")
 
         if is_attribute and existing_member is not None:
-            # If there are duplicate attribute-value mappings, store the values as an array in order of first appearance
+            # If there are duplicate attribute-value mappings,
+            # store the values as an array in order of first appearance
             if member_name in duplicate_attribute_names:
                 existing_member.append(member[1])
             else:

@@ -80,7 +80,10 @@ class TestLibertyParser(unittest.TestCase):
         with self.assertRaises(Exception) as context:
             parser.parse(mock_file)
 
-        self.assertIn("Group with group name 'comment' already defined as attribute", context.exception.args)
+        self.assertIn(
+            "Group with group name 'comment' already defined as attribute",
+            context.exception.args
+        )
 
     def test_group_name_duplicated_as_attribute_name(self):
         mock_file = MockFile()
