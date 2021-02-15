@@ -21,6 +21,9 @@ jobs:
       run: |
         cd python
         pipenv run pylint src/ tests/ --rcfile=.pylintrc
+    - name: Run mypy
+      run: |
+        cd python
         pipenv run mypy src/ tests/
   test:
     runs-on: ubuntu-latest
