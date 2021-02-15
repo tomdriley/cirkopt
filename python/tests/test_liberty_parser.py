@@ -44,7 +44,6 @@ class TestLibertyParser(unittest.TestCase):
         self.assertTrue("Y" in cell.pin)
         self.assertTrue("A" in cell.pin)
         y = cell.pin["Y"]
-        a = cell.pin["A"]
 
         timing = y.timing
         self.assertEqual(len(timing.cell_rise), 1)
