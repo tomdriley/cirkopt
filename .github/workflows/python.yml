@@ -20,7 +20,7 @@ jobs:
     - name: Run pylint
       run: |
         cd python
-        pipenv run mypy src/ tests/
+        pipenv run pylint src/ tests/ --rcfile=.pylintrc
     - name: Run mypy
       run: |
         cd python
