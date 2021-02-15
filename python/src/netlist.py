@@ -18,7 +18,7 @@ def _extract(text: str, regex: str, return_type: Type[ReturnType]) -> ReturnType
     match = re.search(regex, text, re.IGNORECASE)
     if match:
         str_value = match.group(1)
-        return return_type(str_value)
+        return return_type(str_value)  # type: ignore
     raise ValueError(f"No match of {regex} found in {text}")
 
 
