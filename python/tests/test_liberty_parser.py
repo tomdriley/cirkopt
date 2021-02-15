@@ -1,7 +1,7 @@
 import unittest
 
 from src.liberty_parser import LibertyParser
-from tests.liberty_example import LIBERTY_EXAMPLE
+from tests.liberty_example import LIBERTY_EXAMPLE, LIBERTY_EXAMPLE_MORE_CELLS
 from tests.mock_file import MockFile
 
 
@@ -17,51 +17,44 @@ class TestLibertyParser(unittest.TestCase):
         root = parser.parse(mock_file)
 
         # Assert a handful of statments
-        self.assertEqual(root.group_name, "library")
-        self.assertEqual(root.name, "example_tt_1.0_70")
+        self.assertTrue("example_tt_1.0_70" in root.library)
+        ldb = root.library["example_tt_1.0_70"]
 
-        self.assertEqual(root.comment, "")
-        self.assertEqual(root.date, "$Date: Mon Feb  1 21:38:31 2021 $")
-        self.assertEqual(root.revision, "1.0")
-        self.assertEqual(root.delay_model, "table_lookup")
-        self.assertEqual(root.default_cell_leakage_power, 0)
-        self.assertEqual(root.default_max_transition, 0.3)
-        self.assertTupleEqual(root.capacitive_load_unit, (1, "pf"))
-        self.assertTupleEqual(root.voltage_map, (('VDD', 1), ('VSS', 0)))
+        self.assertEqual(ldb.comment, "")
+        self.assertEqual(ldb.date, "$Date: Mon Feb  1 21:38:31 2021 $")
+        self.assertEqual(ldb.revision, "1.0")
+        self.assertEqual(ldb.delay_model, "table_lookup")
+        self.assertEqual(ldb.default_cell_leakage_power, 0)
+        self.assertEqual(ldb.default_max_transition, 0.3)
+        self.assertTupleEqual(ldb.capacitive_load_unit, (1, "pf"))
+        self.assertTupleEqual(ldb.voltage_map, (("VDD", 1), ("VSS", 0)))
 
-        self.assertEqual(len(root.operating_conditions), 1)
-        operating_conditions = root.operating_conditions[0]
-        self.assertEqual(operating_conditions.group_name, "operating_conditions")
-        self.assertEqual(operating_conditions.name, "tt_1.0_70")
+        self.assertEqual(len(ldb.operating_conditions), 1)
+        self.assertTrue("tt_1.0_70" in ldb.operating_conditions)
+        operating_conditions = ldb.operating_conditions["tt_1.0_70"]
         self.assertEqual(operating_conditions.process, 1)
         self.assertEqual(operating_conditions.temperature, 70)
         self.assertEqual(operating_conditions.voltage, 1)
 
-        self.assertEqual(len(root.cell), 1)
-        cell = root.cell[0]
-        self.assertEqual(cell.group_name, "cell")
-        self.assertEqual(cell.name, "INVX1_4")
+        self.assertEqual(len(ldb.cell), 1)
+        self.assertTrue("INVX1_4" in ldb.cell)
+        cell = ldb.cell["INVX1_4"]
 
         self.assertEqual(len(cell.pin), 2)
-        y = cell.pin[0]
-        self.assertEqual(y.group_name, "pin")
-        self.assertEqual(y.name, "Y")
-        a = cell.pin[1]
-        self.assertEqual(a.group_name, "pin")
-        self.assertEqual(a.name, "A")
+        self.assertTrue("Y" in cell.pin)
+        self.assertTrue("A" in cell.pin)
+        y = cell.pin["Y"]
+        a = cell.pin["A"]
 
-        self.assertEqual(len(y.timing), 1)
-        timing = y.timing[0]
-        self.assertEqual(timing.group_name, "timing")
-        self.assertEqual(timing.name, "")
-
+        timing = y.timing
         self.assertEqual(len(timing.cell_rise), 1)
-        cell_rise = timing.cell_rise[0]
-        self.assertEqual(cell_rise.group_name, "cell_rise")
-        self.assertEqual(cell_rise.name, "delay_template")
-        self.assertTupleEqual(cell_rise.index_1, ((0.006, 0.3), ))
-        self.assertTupleEqual(cell_rise.index_2, ((0.0001, 0.07), ))
-        self.assertTupleEqual(cell_rise.values, ((0.011013, 0.366337), (0.080447, 0.540745)))
+        self.assertTrue("delay_template" in timing.cell_rise)
+        cell_rise = timing.cell_rise["delay_template"]
+        self.assertTupleEqual(cell_rise.index_1, ((0.006, 0.3),))
+        self.assertTupleEqual(cell_rise.index_2, ((0.0001, 0.07),))
+        self.assertTupleEqual(
+            cell_rise.values, ((0.011013, 0.366337), (0.080447, 0.540745))
+        )
 
     def test_attribute_name_duplicated_as_group_name(self):
         mock_file = MockFile()
@@ -82,7 +75,7 @@ class TestLibertyParser(unittest.TestCase):
 
         self.assertIn(
             "Group with group name 'comment' already defined as attribute",
-            context.exception.args
+            context.exception.args,
         )
 
     def test_group_name_duplicated_as_attribute_name(self):
@@ -102,4 +95,24 @@ class TestLibertyParser(unittest.TestCase):
         with self.assertRaises(Exception) as context:
             parser.parse(mock_file)
 
-        self.assertIn("Member name 'comment' already defined as group name", context.exception.args)
+        self.assertIn(
+            "Member name 'comment' already defined as group name",
+            context.exception.args,
+        )
+
+    def test_multiple_cells(self):
+        mock_file = MockFile()
+        mock_file.write(LIBERTY_EXAMPLE_MORE_CELLS)
+
+        parser = LibertyParser()
+
+        root = parser.parse(mock_file)
+
+        self.assertTrue("example_tt_1.0_70" in root.library)
+        ldb = root.library["example_tt_1.0_70"]
+
+        self.assertEqual(len(ldb.cell), 10)
+
+        INVX1_8 = ldb.cell["INVX1_8"]
+        self.assertEqual(INVX1_8.cell_leakage_power, 0.105498)
+        self.assertEqual(INVX1_8.pin["Y"].timing.cell_fall.values[1][0], 0.0318036)
