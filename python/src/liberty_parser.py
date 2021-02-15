@@ -121,7 +121,6 @@ class LibertyParser:
             + pp.Group(pp.ZeroOrMore(statement))
             + rbrace
         ).setParseAction(_to_multi_dict)
-        group_statement.ignore(pp.cppStyleComment)
 
         # Statement Def
         statement <<= group_statement | simple_attribute | complex_attribute
@@ -129,6 +128,8 @@ class LibertyParser:
         # Root liberty object
         liberty_object = pp.Forward().setName("liberty_object")
         liberty_object <<= statement
+        liberty_object.ignore(pp.cppStyleComment)
+        liberty_object.ignore('\\')
 
         self.liberty_object = liberty_object
 
@@ -147,7 +148,6 @@ class LibertyParser:
         def dict_to_group(adict: Dict) -> Group:
             return Group({key: handle_value(val) for key, val in adict.items()})
 
-        file_string = file.read().replace("\\\n", "")
-        root = self.liberty_object.parseString(file_string)[0][2]
+        root = self.liberty_object.parseString(file.read())[0][2]
         result = dict_to_group(root)
         return result
