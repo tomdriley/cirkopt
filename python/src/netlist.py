@@ -1,31 +1,29 @@
 import re
 
 from dataclasses import dataclass
-from typing import Optional, Tuple
+from typing import Optional, Tuple, Type, TypeVar
 
 from src.file_io import IFile as File
 
 
 SUBCIRKT_NAME_REGEX = r".subckt\s+(.*?)\s+"
-DEVICE_WIDTH_REGEX = r"W=(.*?)\s"
-DEVICE_LENGTH_REGEX = r"L=(.*?)\s"
-DEVICE_FINGERS_REGEX = r"M=(.*?)\s"
+WIDTH_REGEX = r"W=(.*?)\s"
+LENGTH_REGEX = r"L=(.*?)\s"
+FINGERS_REGEX = r"M=(.*?)\s"
+
+ReturnType = TypeVar('ReturnType')
 
 
-def _extract_float(line: str, regex: str) -> float:
-    match = re.search(regex, line, re.IGNORECASE)
+def _extract(text: str, regex: str, return_type: Type[ReturnType]) -> ReturnType:
+    match = re.search(regex, text, re.IGNORECASE)
     if match:
         str_value = match.group(1)
-        return float(str_value)
-    raise ValueError(f"No match of {regex} found in {line}")
+        return return_type(str_value)  # type: ignore
+    raise ValueError(f"No match of {regex} found in {text}")
 
 
-def _extract_int(line: str, regex: str) -> int:
-    match = re.search(regex, line, re.IGNORECASE)
-    if match:
-        str_value = match.group(1)
-        return int(str_value)
-    raise ValueError(f"No match of {regex} found in {line}")
+def _replace(regex: str, new: str, text: str) -> str:
+    return re.sub(regex, new, text, count=1)
 
 
 @dataclass()
@@ -76,37 +74,25 @@ class Netlist:
         if cell_name is not None:
             self.cell_name = cell_name
         else:
-            match = re.search(SUBCIRKT_NAME_REGEX, netlist_str, re.IGNORECASE)
-            if match:
-                self.cell_name = match.group(1)
-            else:
-                raise ValueError(
-                    f"No match of {SUBCIRKT_NAME_REGEX} found in {netlist_str}"
-                )
+            self.cell_name = _extract(netlist_str, SUBCIRKT_NAME_REGEX, str)
 
         lines = netlist_str.split("\n")
-        device_lines = tuple(l + " " for l in lines if len(l) > 0 and l[0].isalpha())
+        device_lines = [l + " " for l in lines if len(l) > 0 and l[0].isalpha()]
 
         if device_widths is not None:
             self.device_widths = device_widths
         else:
-            self.device_widths = tuple(
-                _extract_float(l, DEVICE_WIDTH_REGEX) for l in device_lines
-            )
+            self.device_widths = tuple(_extract(l, WIDTH_REGEX, float) for l in device_lines)
 
         if device_lengths is not None:
             self.device_lengths = device_lengths
         else:
-            self.device_lengths = tuple(
-                _extract_float(l, DEVICE_LENGTH_REGEX) for l in device_lines
-            )
+            self.device_lengths = tuple(_extract(l, LENGTH_REGEX, float) for l in device_lines)
 
         if device_fingers is not None:
             self.device_fingers = device_fingers
         else:
-            self.device_fingers = tuple(
-                _extract_int(l, DEVICE_FINGERS_REGEX) for l in device_lines
-            )
+            self.device_fingers = tuple(_extract(l, FINGERS_REGEX, int) for l in device_lines)
 
     def mutate(
         self,
@@ -116,11 +102,11 @@ class Netlist:
         device_fingers: Tuple[int, ...],
     ) -> "Netlist":
         return Netlist(
-            self.base_netlist_file,
-            cell_name,
-            device_widths,
-            device_lengths,
-            device_fingers,
+            base_netlist_file=self.base_netlist_file,
+            cell_name=cell_name,
+            device_widths=device_widths,
+            device_lengths=device_lengths,
+            device_fingers=device_fingers,
         )
 
     def persist(self, file: File) -> None:
@@ -129,14 +115,8 @@ class Netlist:
         netlist_str = self.base_netlist_file.contents()
 
         # Update old name to self.cell_name
-        match = re.search(SUBCIRKT_NAME_REGEX, netlist_str, re.IGNORECASE)
-        if match:
-            old_netlist_name = match.group(1)
-        else:
-            raise ValueError(
-                f"No match of {SUBCIRKT_NAME_REGEX} found in {netlist_str}"
-            )
-        new_netlist_str = netlist_str.replace(old_netlist_name, self.cell_name)
+        old_cell_name = _extract(netlist_str, SUBCIRKT_NAME_REGEX, str)
+        new_netlist_str = netlist_str.replace(old_cell_name, self.cell_name)
 
         lines = new_netlist_str.split("\n")
 
@@ -146,38 +126,20 @@ class Netlist:
             if len(device_line) == 0 or not device_line[0].isalpha():
                 continue
 
-            match = re.search(DEVICE_WIDTH_REGEX, device_line, re.IGNORECASE)
-            if match:
-                old_width_str = match.group()
-            else:
-                raise ValueError(
-                    f"No match of {DEVICE_WIDTH_REGEX} found in {device_line}"
-                )
-
-            match = re.search(DEVICE_LENGTH_REGEX, device_line, re.IGNORECASE)
-            if match:
-                old_length_str = match.group()
-            else:
-                raise ValueError(
-                    f"No match of {DEVICE_LENGTH_REGEX} found in {device_line}"
-                )
-
-            match = re.search(DEVICE_FINGERS_REGEX, device_line, re.IGNORECASE)
-            if match:
-                old_fingers_str = match.group()
-            else:
-                raise ValueError(
-                    f"No match of {DEVICE_FINGERS_REGEX} found in {device_line}"
-                )
-
-            device_line = device_line.replace(
-                old_width_str, f"W={self.device_widths[current_device]} ", 1
+            device_line = _replace(
+                regex=WIDTH_REGEX,
+                new=f"W={self.device_widths[current_device]} ",
+                text=device_line
             )
-            device_line = device_line.replace(
-                old_length_str, f"L={self.device_lengths[current_device]} ", 1
+            device_line = _replace(
+                regex=LENGTH_REGEX,
+                new=f"L={self.device_lengths[current_device]} ",
+                text=device_line
             )
-            device_line = device_line.replace(
-                old_fingers_str, f"M={self.device_fingers[current_device]} ", 1
+            device_line = _replace(
+                regex=FINGERS_REGEX,
+                new=f"M={self.device_fingers[current_device]} ",
+                text=device_line
             )
 
             lines[i] = device_line.rstrip()
