@@ -16,8 +16,10 @@ class Param(Enum):
 
 class ParamSweepCandidateGenerator(CandidateGenerator[Netlist]):
     """
-    Given N values for a Param, generate N netlists where each device in each netlist is given one value for the param.
-    For example,
+    Given N values for a Param, generate N netlists where each device in each
+    netlist is given one value for the param.
+    For example, given Param.WIDTH and values (260e-9, 310e-9) two netlists
+    would be generated, one with all device widths set to 260e-9 and the other 310e-9
     """
     candidates: Sequence[Netlist]
 

@@ -3,7 +3,8 @@ import os.path
 from src.file_io import File
 from src.liberty_parser import LibertyParser
 from src.netlist import BaseNetlistFile, Netlist
-from src.single_param_sweep import NoopCostFunction, Param, ParamSweepCandidateGenerator, SingleParamSweep
+from src.single_param_sweep import NoopCostFunction, Param, \
+    ParamSweepCandidateGenerator, SingleParamSweep
 
 
 def main():
@@ -13,7 +14,10 @@ def main():
     sim_file = File(sim_result_path)
 
     reference_netlist_name = "INVX1"
-    reference_netlist_path = os.path.join(curr_path, f"../../liberate/netlist_wrk/{reference_netlist_name}.sp")
+    reference_netlist_path = os.path.join(
+        curr_path,
+        f"../../liberate/netlist_wrk/{reference_netlist_name}.sp"
+    )
     reference_netlist_file = File(reference_netlist_path)
     base_netlist_file = BaseNetlistFile(reference_netlist_file)
     reference_netlist = Netlist(base_netlist_file)
@@ -32,7 +36,12 @@ def main():
     )
     cost_function = NoopCostFunction()
     liberty_parser = LibertyParser()
-    single_param_sweep = SingleParamSweep(cost_function, candidate_generator, liberty_parser, sim_file)
+    single_param_sweep = SingleParamSweep(
+        cost_function,
+        candidate_generator,
+        liberty_parser,
+        sim_file
+    )
     single_param_sweep.search()
 
     # TODO: Graph the results of simulation

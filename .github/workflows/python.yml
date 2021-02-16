@@ -20,11 +20,11 @@ jobs:
     - name: Run pylint
       run: |
         cd python
-        pipenv run pylint src/ tests/ --rcfile=.pylintrc
+        pipenv run pylint src/ tests/ scripts/ --rcfile=.pylintrc
     - name: Run mypy
       run: |
         cd python
-        pipenv run mypy src/ tests/
+        pipenv run mypy src/ tests/ scripts/
   test:
     runs-on: ubuntu-latest
     steps:
