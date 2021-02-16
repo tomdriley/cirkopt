@@ -3,7 +3,7 @@ import os.path
 from src.file_io import File
 from src.liberty_parser import LibertyParser
 from src.netlist import BaseNetlistFile, Netlist
-from src.single_param_sweep import NoopCostFunction, ParamSweepCandidateGenerator, SingleParamSweep
+from src.single_param_sweep import NoopCostFunction, Param, ParamSweepCandidateGenerator, SingleParamSweep
 
 
 def main():
@@ -23,8 +23,13 @@ def main():
         netlist_file = File(path)
         netlist.persist(netlist_file)
 
-    # TODO: add some mechanism to parametrize new W/L/M values
-    candidate_generator = ParamSweepCandidateGenerator(reference_netlist, persist_netlist_in_run_dir)
+    # TODO: add some mechanism to parametrize new W/L/M values via command line
+    candidate_generator = ParamSweepCandidateGenerator(
+        reference_netlist=reference_netlist,
+        netlist_persister=persist_netlist_in_run_dir,
+        param=Param.WIDTH,
+        values=(260e-9, 310e-9)
+    )
     cost_function = NoopCostFunction()
     liberty_parser = LibertyParser()
     single_param_sweep = SingleParamSweep(cost_function, candidate_generator, liberty_parser, sim_file)

@@ -2,7 +2,11 @@
 import subprocess
 import os.path
 import shutil
-from typing import NamedTuple, List
+
+from typing import NamedTuple, List, Sequence
+
+from src.file_io import File
+from src.liberate_template_utils import update_liberate_template_cell_names
 
 # Liberate project folder is defined relative to the location of this script
 PYTHON_SRC_DIRECTORY: str = os.path.dirname(os.path.abspath(__file__))
@@ -20,9 +24,10 @@ LiberateResult = NamedTuple(
 
 
 def run_liberate(
-    liberate_cmd: str = LIBERATE_DEFAULT_CMD,
-    char_tcl_path: str = CHAR_TCL_DEFAULT_PATH,
-    run_dir: str = LIBERATE_DEFAULT_PROJECT_DIRECTORY,
+        cell_names: Sequence[str],
+        liberate_cmd: str = LIBERATE_DEFAULT_CMD,
+        char_tcl_path: str = CHAR_TCL_DEFAULT_PATH,
+        run_dir: str = LIBERATE_DEFAULT_PROJECT_DIRECTORY,
 ) -> LiberateResult:
     """Run Cadence Liberate
 
@@ -33,6 +38,10 @@ def run_liberate(
         raise TypeError(f"No file found at path {char_tcl_path}")
     if shutil.which(liberate_cmd) is None:
         raise TypeError(f"'{liberate_cmd}' does not appear to be an executable")
+
+    # Update cells to simulate
+    char_tcl_file = File(char_tcl_path)
+    update_liberate_template_cell_names(char_tcl_file, cell_names)
 
     # TODO: Run setup script before
 
@@ -51,4 +60,4 @@ def run_liberate(
 
 
 if __name__ == "__main__":
-    print(run_liberate())
+    print(run_liberate(cell_names=[""]))
