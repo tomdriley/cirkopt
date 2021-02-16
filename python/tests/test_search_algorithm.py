@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Any, Callable, Sequence
+from typing import Any, Dict, Callable, Sequence
 from unittest import TestCase
 
 from src.search_algorithm import CandidateClass, CandidateGenerator, \
@@ -16,9 +16,9 @@ class TestCandidate(CandidateClass):
 
 
 class TestCandidateGenerator(CandidateGenerator[TestCandidate]):
-    dict_equal_assert: Callable[[CostMap, CostMap], None]
+    dict_equal_assert: Callable[[Dict, Dict], None]
 
-    def __init__(self, dict_equal_assert: Callable[[CostMap, CostMap], None]):
+    def __init__(self, dict_equal_assert: Callable[[Dict, Dict], None]):
         self.dict_equal_assert = dict_equal_assert
 
     # pylint: disable=no-self-use
@@ -66,6 +66,7 @@ class TestSearchAlgorithm(SearchAlgorithm[TestCandidate, Any]):
 
 class TestSearchAlgorithms(TestCase):
     def test_search_algorithm_classes(self):
+        dict_equal_assert: Callable[[Dict, Dict], None] = self.assertDictEqual  # type: ignore
         candidate_generator = TestCandidateGenerator(self.assertDictEqual)
         cost_function = TestCostFunction()
         search_algorithm = TestSearchAlgorithm(cost_function, candidate_generator)
