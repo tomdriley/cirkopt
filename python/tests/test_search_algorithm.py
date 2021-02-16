@@ -67,7 +67,7 @@ class TestSearchAlgorithm(SearchAlgorithm[TestCandidate, Any]):
 class TestSearchAlgorithms(TestCase):
     def test_search_algorithm_classes(self):
         dict_equal_assert: Callable[[Dict, Dict], None] = self.assertDictEqual  # type: ignore
-        candidate_generator = TestCandidateGenerator(self.assertDictEqual)
+        candidate_generator = TestCandidateGenerator(dict_equal_assert)
         cost_function = TestCostFunction()
         search_algorithm = TestSearchAlgorithm(cost_function, candidate_generator)
 
