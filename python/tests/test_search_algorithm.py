@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Any, Dict, Callable, Sequence
+from typing import Any, Sequence
 from unittest import TestCase
 
 from src.search_algorithm import CandidateClass, CandidateGenerator, \
@@ -16,11 +16,6 @@ class TestCandidate(CandidateClass):
 
 
 class TestCandidateGenerator(CandidateGenerator[TestCandidate]):
-    dict_equal_assert: Callable[[Dict, Dict], None]
-
-    def __init__(self, dict_equal_assert: Callable[[Dict, Dict], None]):
-        self.dict_equal_assert = dict_equal_assert
-
     # pylint: disable=no-self-use
     def get_initial_population(self) -> Sequence[TestCandidate]:
         return tuple(TestCandidate(f"cand_{i}", float(i)) for i in range(5))
@@ -31,7 +26,7 @@ class TestCandidateGenerator(CandidateGenerator[TestCandidate]):
             cost_map: CostMap
     ) -> Sequence[TestCandidate]:
         expected_cost_map = {candidate.ckey: candidate.cost for candidate in current_candidates}
-        self.dict_equal_assert(cost_map, expected_cost_map)
+        assert cost_map == expected_cost_map
         return current_candidates
 
 
@@ -66,10 +61,7 @@ class TestSearchAlgorithm(SearchAlgorithm[TestCandidate, Any]):
 
 class TestSearchAlgorithms(TestCase):
     def test_search_algorithm_classes(self):
-        def dict_equal_assert(first: Dict, second: Dict):
-            self.assertDictEqual(first, second)
-
-        candidate_generator = TestCandidateGenerator(dict_equal_assert)
+        candidate_generator = TestCandidateGenerator()
         cost_function = TestCostFunction()
         search_algorithm = TestSearchAlgorithm(cost_function, candidate_generator)
 
