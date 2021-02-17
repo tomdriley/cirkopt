@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from typing import Optional, Tuple, Type, TypeVar
 
 from src.file_io import IFile as File
+from src.search_algorithm import CandidateClass
 
 
 SUBCIRKT_NAME_REGEX = r".subckt\s+(.*?)\s+"
@@ -40,7 +41,7 @@ class BaseNetlistFile:
 
 
 @dataclass(frozen=False)
-class Netlist:
+class Netlist(CandidateClass):
     """Store device characteristics for a given netlist.
 
     Immutable, so create a new one if you wish change the properties
@@ -93,6 +94,9 @@ class Netlist:
             self.device_fingers = device_fingers
         else:
             self.device_fingers = tuple(_extract(l, FINGERS_REGEX, int) for l in device_lines)
+
+    def key(self) -> str:
+        return self.cell_name
 
     def mutate(
         self,
