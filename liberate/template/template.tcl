@@ -35,17 +35,9 @@ set cells {
     XOR2X1
 }
 # Overrides with working cells. Must update if new cells are added
-set cells { 
-    INVX1
-    INVX1_2
-    INVX1_3
-    INVX1_4
-    INVX1_5
-    INVX1_6
-    INVX1_7
-    INVX1_8
-    INVX1_9
-    INVX1_10
+set cells {
+    INVX1_00
+    INVX1_01
 }
 
 

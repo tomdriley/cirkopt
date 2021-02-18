@@ -3,7 +3,7 @@ import subprocess
 import os.path
 import shutil
 
-from typing import NamedTuple, List, Sequence
+from typing import NamedTuple, List, Sequence, Optional
 
 from src.file_io import File
 from src.liberate_template_utils import update_liberate_template_cell_names
@@ -16,6 +16,9 @@ LIBERATE_DEFAULT_PROJECT_DIRECTORY: str = os.path.abspath(
 CHAR_TCL_DEFAULT_PATH: str = os.path.join(
     LIBERATE_DEFAULT_PROJECT_DIRECTORY, "tcl/char.tcl"
 )
+TEMPLATE_TCL_DEFAULT_PATH: str = os.path.join(
+    LIBERATE_DEFAULT_PROJECT_DIRECTORY, "template/template.tcl"
+)
 LIBERATE_DEFAULT_CMD: str = "liberate"
 
 LiberateResult = NamedTuple(
@@ -24,10 +27,10 @@ LiberateResult = NamedTuple(
 
 
 def run_liberate(
-        cell_names: Sequence[str],
-        liberate_cmd: str = LIBERATE_DEFAULT_CMD,
-        char_tcl_path: str = CHAR_TCL_DEFAULT_PATH,
-        run_dir: str = LIBERATE_DEFAULT_PROJECT_DIRECTORY,
+    cell_names: Optional[Sequence[str]] = None,
+    liberate_cmd: str = LIBERATE_DEFAULT_CMD,
+    char_tcl_path: str = CHAR_TCL_DEFAULT_PATH,
+    run_dir: str = LIBERATE_DEFAULT_PROJECT_DIRECTORY,
 ) -> LiberateResult:
     """Run Cadence Liberate
 
@@ -40,8 +43,9 @@ def run_liberate(
         raise TypeError(f"'{liberate_cmd}' does not appear to be an executable")
 
     # Update cells to simulate
-    char_tcl_file = File(char_tcl_path)
-    update_liberate_template_cell_names(char_tcl_file, cell_names)
+    if cell_names is not None:
+        template_tcl_file = File(TEMPLATE_TCL_DEFAULT_PATH)
+        update_liberate_template_cell_names(template_tcl_file, cell_names)
 
     # TODO: Run setup script before
 
@@ -57,7 +61,3 @@ def run_liberate(
     return LiberateResult(
         args=results.args, returncode=results.returncode, stdout=results.stdout
     )
-
-
-if __name__ == "__main__":
-    print(run_liberate(cell_names=[""]))
