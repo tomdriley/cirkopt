@@ -9,6 +9,7 @@ pylint = "*"
 
 [packages]
 pyparsing = "*"
+matplotlib = "*"
 
 [requires]
 python_version = "3.8" # This is the version that is on iccad
