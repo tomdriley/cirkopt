@@ -19,6 +19,7 @@ def graph_cell_delay(
     library = liberty_parser.parse(sim_file)
 
     di1, di2 = delay_index
+    # pylint: disable=no-member
     rise_times = [
         single(lambda p: p.name == pin, cell.pin).timing[0].cell_rise[0].values[di1][di2]
         for cell in library.cell

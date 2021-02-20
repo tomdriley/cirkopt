@@ -21,10 +21,10 @@ class Param(Enum):
     def __str__(self):
         if self == Param.WIDTH:
             return "Width"
-        elif self == Param.LENGTH:
+        if self == Param.LENGTH:
             return "Length"
-        else:
-            return "Fingers"
+
+        return "Fingers"
 
 
 class ParamSweepCandidateGenerator(CandidateGenerator[Netlist]):
