@@ -5,7 +5,12 @@ from src.file_io import IFile
 from src.liberate import run_liberate
 from src.liberty_parser import Group, LibertyParser
 from src.netlist import Netlist
-from src.search_algorithm import CandidateGenerator, CostFunction, CostMap, SearchAlgorithm
+from src.search_algorithm import (
+    CandidateGenerator,
+    CostFunction,
+    CostMap,
+    SearchAlgorithm,
+)
 
 
 class Param(Enum):
@@ -21,14 +26,15 @@ class ParamSweepCandidateGenerator(CandidateGenerator[Netlist]):
     For example, given Param.WIDTH and values (260e-9, 310e-9) two netlists
     would be generated, one with all device widths set to 260e-9 and the other 310e-9
     """
+
     candidates: Sequence[Netlist]
 
     def __init__(
-            self,
-            reference_netlist: Netlist,
-            netlist_persister: Callable[[Netlist], None],
-            param: Param,
-            values: Sequence[Union[float, int]],
+        self,
+        reference_netlist: Netlist,
+        netlist_persister: Callable[[Netlist], None],
+        param: Param,
+        values: Sequence[Union[float, int]],
     ):
         base_name = reference_netlist.cell_name
 
@@ -36,17 +42,19 @@ class ParamSweepCandidateGenerator(CandidateGenerator[Netlist]):
             widths = reference_netlist.device_widths
             lengths = reference_netlist.device_lengths
             fingers = reference_netlist.device_fingers
-            cell_name = base_name + f"_{version}"
+            cell_name = base_name + f"_{version:02}"
 
             if param == Param.WIDTH:
                 widths = tuple(float(val) for _ in range(len(widths)))
             elif param == Param.LENGTH:
                 lengths = tuple(float(val) for _ in range(len(lengths)))
             else:
-                lengths = tuple(float(val) for _ in range(len(lengths)))
+                fingers = tuple(int(val) for _ in range(len(lengths)))
             return reference_netlist.mutate(cell_name, widths, lengths, fingers)
 
-        self.candidates = tuple(new_netlist(idx, value) for idx, value in enumerate(values))
+        self.candidates = tuple(
+            new_netlist(idx, value) for idx, value in enumerate(values)
+        )
         for candidate in self.candidates:
             netlist_persister(candidate)
 
@@ -55,31 +63,33 @@ class ParamSweepCandidateGenerator(CandidateGenerator[Netlist]):
         return self.candidates
 
     def get_next_population(
-            self,
-            current_candidates: Sequence[Netlist],
-            cost_map: CostMap
+        self, current_candidates: Sequence[Netlist], cost_map: CostMap
     ) -> Sequence[Netlist]:
         return self.candidates
 
 
 class NoopCostFunction(CostFunction[Netlist, Any]):
     """Noop cost function"""
+
     # pylint: disable=no-self-use,unused-argument
-    def calculate(self, candidates: Sequence[Netlist], simulation_result: Any) -> CostMap:
+    def calculate(
+        self, candidates: Sequence[Netlist], simulation_result: Any
+    ) -> CostMap:
         return {candidate.key(): 0.0 for candidate in candidates}
 
 
 class SingleParamSweep(SearchAlgorithm[Netlist, Group]):
     """Does 1 simulation that simulates all candidates provided by candidate_generator."""
+
     liberty_parser: LibertyParser
     sim_file: IFile
 
     def __init__(
-            self,
-            cost_function: NoopCostFunction,
-            candidate_generator: ParamSweepCandidateGenerator,
-            liberty_parser: LibertyParser,
-            sim_file: IFile
+        self,
+        cost_function: NoopCostFunction,
+        candidate_generator: ParamSweepCandidateGenerator,
+        liberty_parser: LibertyParser,
+        sim_file: IFile,
     ):
         self.cost_function = cost_function
         self.candidate_generator = candidate_generator
