@@ -1,3 +1,4 @@
+import os
 from abc import ABCMeta, abstractmethod
 
 
@@ -24,6 +25,8 @@ class File(IFile):
             writer.write(content)
 
     def read(self) -> str:
+        if not os.path.isfile(self.path):
+            raise FileNotFoundError(self.path)
         with open(self.path, 'r') as reader:
             file_str = reader.read()
         return file_str

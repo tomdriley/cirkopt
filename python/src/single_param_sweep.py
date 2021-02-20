@@ -18,6 +18,14 @@ class Param(Enum):
     LENGTH = 2
     FINGERS = 3
 
+    def __str__(self):
+        if self == Param.WIDTH:
+            return "Width"
+        elif self == Param.LENGTH:
+            return "Length"
+        else:
+            return "Fingers"
+
 
 class ParamSweepCandidateGenerator(CandidateGenerator[Netlist]):
     """
