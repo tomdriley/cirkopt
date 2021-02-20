@@ -16,7 +16,7 @@ def graph_cell_delay(
         out_path: str
 ) -> None:
     liberty_parser = LibertyParser()
-    library = liberty_parser.parse(sim_file)
+    library = liberty_parser.parse(sim_file)  # type: ignore
 
     di1, di2 = delay_index
     # pylint: disable=no-member
