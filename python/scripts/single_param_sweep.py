@@ -13,11 +13,7 @@ from src.single_param_sweep import (
 )
 
 
-def _persist_netlist_in_run_dir(netlist: Netlist):
-    netlist_file = File(f"{netlist_work_dir_path}/{netlist.cell_name}.sp")
-    netlist.persist(netlist_file)
-
-
+# pylint: disable=too-many-locals
 def main(
     sim_result_rel_path: str,
     reference_netlist_rel_path: str,
@@ -43,10 +39,14 @@ def main(
     if not os.path.isdir(out_dir_path):
         os.mkdir(out_dir_path)
 
+    def persist_netlist_in_run_dir(netlist: Netlist):
+        netlist_file = File(f"{netlist_work_dir_path}/{netlist.cell_name}.sp")
+        netlist.persist(netlist_file)
+
     sim_file = File(sim_result_path)
     candidate_generator = ParamSweepCandidateGenerator(
         reference_netlist=Netlist(BaseNetlistFile(File(reference_netlist_path))),
-        netlist_persister=_persist_netlist_in_run_dir,
+        netlist_persister=persist_netlist_in_run_dir,
         param=param,
         values=values
     )
