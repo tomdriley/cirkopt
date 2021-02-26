@@ -2,11 +2,10 @@
 import subprocess
 import os.path
 import shutil
+from logging import info
 from typing import NamedTuple, List, Sequence, Optional
 from src.file_io import File
 from src.liberate_template_utils import update_liberate_template_cell_names
-import logging
-from logging import DEBUG, debug, INFO, info, WARNING, warning
 
 # Liberate project folder is defined relative to the location of this script
 PYTHON_SRC_DIRECTORY: str = os.path.dirname(os.path.abspath(__file__))

@@ -1,9 +1,8 @@
 from abc import ABCMeta, abstractmethod
 from typing import Dict, Generic, Sequence, TypeVar
+from logging import info
 
 from src.utils import single
-import logging
-from logging import DEBUG, debug, INFO, info, WARNING, warning
 
 SimulationResult = TypeVar("SimulationResult")
 CostMap = Dict[str, float]

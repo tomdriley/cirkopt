@@ -1,12 +1,11 @@
 from dataclasses import dataclass
 from typing import Any, Dict, List
+from logging import info
 
 import pyparsing as pp  # type: ignore
 from pyparsing import pyparsing_common as ppc
 
 from src.file_io import IFile
-import logging
-from logging import DEBUG, debug, INFO, info, WARNING, warning
 
 
 @dataclass(frozen=True)
