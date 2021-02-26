@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+# Set up path relative to python root folder so we can find the other packages
 import sys
 import os.path
 
@@ -7,25 +8,23 @@ PYTHON_SCRIPTS_DIRECTORY: str = os.path.dirname(os.path.abspath(__file__))
 PYTHON_DIRECTORY: str = os.path.abspath(os.path.join(PYTHON_SCRIPTS_DIRECTORY, ".."))
 sys.path.append(PYTHON_DIRECTORY)
 
+# Other imports
 import argparse
 from scripts.single_param_sweep import main as sweep_param
-
-CIRKOPT_SHORT_DESCRIPTION: str = "SPICE circuit optimizer"
-CIRKOPT_USAGE: str = """
-cirkopt <command> [<args>]
-
-The most commonly used commands are:
-   explore     Generate plots showing search space
-   search      Find an optimal design
-"""
+from src.single_param_sweep import Param
 
 # Basically a copy of this blog post [1].
 # [1]: https://chase-seibert.github.io/blog/2014/03/21/python-multilevel-argparse.html
 class Cirkopt(object):
     def __init__(self):
         parser = argparse.ArgumentParser(
-            description=CIRKOPT_SHORT_DESCRIPTION,
-            usage=CIRKOPT_USAGE,
+            description="SPICE circuit optimizer",
+            usage="""
+cirkopt <command> [<args>]
+
+The most commonly used commands are:
+explore     Generate plots showing search space
+search      Find an optimal design""",
         )
         parser.add_argument("command", help="Sub command to run")
         # parse_args defaults to [1:] for args, but you need to
@@ -77,12 +76,19 @@ class Cirkopt(object):
         # now that we're inside a subcommand, ignore the first
         # TWO argvs, ie the command (cirkopt) and the subcommand (explore)
         args = parser.parse_args(sys.argv[2:])
+
+        param_dict = {
+            "width": Param.WIDTH,
+            "length": Param.LENGTH,
+            "fingers": Param.FINGERS,
+        }
+
         print(f"Exploring search space.")
         sweep_param(
             sim_result_rel_path=args.ldb,
             reference_netlist_rel_path=args.netlist,
             netlist_work_dir_rel_path=args.workdir,
-            param=Param.WIDTH,
+            param=param_dict[args.param],
             values=[i * 100e-9 for i in range(2, 11)],
             graph_pin=args.outpin,
             graph_delay_index=(0, 1),
