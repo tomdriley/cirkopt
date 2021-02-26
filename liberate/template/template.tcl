@@ -38,6 +38,13 @@ set cells {
 set cells {
     INVX1_00
     INVX1_01
+    INVX1_02
+    INVX1_03
+    INVX1_04
+    INVX1_05
+    INVX1_06
+    INVX1_07
+    INVX1_08
 }
 
 
