@@ -11,6 +11,8 @@ from src.single_param_sweep import (
     ParamSweepCandidateGenerator,
     SingleParamSweep,
 )
+import logging
+from logging import DEBUG, debug, INFO, info, WARNING, warning
 
 
 # pylint: disable=too-many-locals
@@ -22,7 +24,7 @@ def main(
     values: Sequence[Union[float, int]],
     graph_pin: str,
     graph_delay_index: Tuple[int, int],
-    out_dir_rel_path: str
+    out_dir_rel_path: str,
 ):
     curr_path = os.path.abspath(os.path.dirname(__file__))
     sim_result_path = os.path.join(curr_path, sim_result_rel_path)
@@ -37,6 +39,7 @@ def main(
         raise NotADirectoryError(netlist_work_dir_path)
 
     if not os.path.isdir(out_dir_path):
+        info(f"Creating output directory {out_dir_path}")
         os.mkdir(out_dir_path)
 
     def persist_netlist_in_run_dir(netlist: Netlist):
@@ -48,24 +51,26 @@ def main(
         reference_netlist=Netlist(BaseNetlistFile(File(reference_netlist_path))),
         netlist_persister=persist_netlist_in_run_dir,
         param=param,
-        values=values
+        values=values,
     )
     single_param_sweep = SingleParamSweep(
         NoopCostFunction(), candidate_generator, LibertyParser(), sim_file
     )
 
     # Do the sweep
+    info("Starting single parameter linear sweep.")
     single_param_sweep.search()
 
     # Graph the results of simulation
     param_str = str(param)
+    info("Generating graph of results.")
     graph_cell_delay(
         sim_file=sim_file,
         pin=graph_pin,
         delay_index=graph_delay_index,
         x_axis=values,
         x_axis_title=param_str,
-        out_path=f"{out_dir_path}/sweep-{param_str.lower()}.png"
+        out_path=f"{out_dir_path}/sweep-{param_str.lower()}.png",
     )
 
 
@@ -79,5 +84,5 @@ if __name__ == "__main__":
         values=[i * 100e-9 for i in range(2, 11)],
         graph_pin="Y",
         graph_delay_index=(0, 1),
-        out_dir_rel_path="../out"
+        out_dir_rel_path="../out",
     )

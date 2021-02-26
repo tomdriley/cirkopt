@@ -44,7 +44,6 @@ set cells {
     INVX1_05
     INVX1_06
     INVX1_07
-    INVX1_08
 }
 
 

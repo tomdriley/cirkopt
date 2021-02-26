@@ -2,11 +2,11 @@
 import subprocess
 import os.path
 import shutil
-
 from typing import NamedTuple, List, Sequence, Optional
-
 from src.file_io import File
 from src.liberate_template_utils import update_liberate_template_cell_names
+import logging
+from logging import DEBUG, debug, INFO, info, WARNING, warning
 
 # Liberate project folder is defined relative to the location of this script
 PYTHON_SRC_DIRECTORY: str = os.path.dirname(os.path.abspath(__file__))
@@ -49,6 +49,7 @@ def run_liberate(
 
     # TODO: Run setup script before
 
+    info("Running liberate.")
     results = subprocess.run(
         args=[liberate_cmd, char_tcl_path],
         cwd=run_dir,
