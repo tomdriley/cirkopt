@@ -1,8 +1,11 @@
 {
 	"folders": [
 		{
-			"path": ".."
-		}
+			"path": "../python",
+		},
+		{
+			"path": "../liberate",
+		},
 	],
 	"settings": {
 		// Add *.pyc and __pycache__ to excluded files
