@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 import subprocess
 import os.path
+import sys
 import shutil
-
+from logging import info, error
 from typing import NamedTuple, List, Sequence, Optional
-
 from src.file_io import File
 from src.liberate_template_utils import update_liberate_template_cell_names
 
@@ -40,7 +40,11 @@ def run_liberate(
     if not os.path.isfile(char_tcl_path):
         raise TypeError(f"No file found at path {char_tcl_path}")
     if shutil.which(liberate_cmd) is None:
-        raise TypeError(f"'{liberate_cmd}' does not appear to be an executable")
+        error(
+            f"'{liberate_cmd}' does not appear to be an executable, "
+            + "did you forget to source the setup script?"
+        )
+        sys.exit()
 
     # Update cells to simulate
     if cell_names is not None:
@@ -49,6 +53,7 @@ def run_liberate(
 
     # TODO: Run setup script before
 
+    info("Running liberate.")
     results = subprocess.run(
         args=[liberate_cmd, char_tcl_path],
         cwd=run_dir,

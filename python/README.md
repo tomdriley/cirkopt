@@ -9,8 +9,8 @@ pipenv install --dev
 ## Running linter
 
 ```
-pipenv run pylint src/ tests/ --rcfile=.pylintrc
-pipenv run mypy src/ tests/
+pipenv run pylint src/ tests/ scripts/ --rcfile=.pylintrc
+pipenv run mypy src/ tests/ scripts/
 ```
 
 ## Running all tests

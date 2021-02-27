@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from typing import Any, Dict, List
+from logging import info
 
 import pyparsing as pp  # type: ignore
 from pyparsing import pyparsing_common as ppc
@@ -38,10 +39,16 @@ def _to_multi_dict(input_string: str, location: int, toks: List[Any]) -> List[An
 
         # Error if attribute's name has already been defined group name
         if is_attribute and existing_member_is_list_of_dicts:
-            raise Exception(f"Member name '{member_name}' already defined as group name")
+            raise Exception(
+                f"Member name '{member_name}' already defined as group name"
+            )
 
         # Error if group name has already been defined by an attribute
-        if is_group and existing_member is not None and not existing_member_is_list_of_dicts:
+        if (
+            is_group
+            and existing_member is not None
+            and not existing_member_is_list_of_dicts
+        ):
             raise Exception(
                 f"Group with group name '{member_name}' already defined as attribute"
             )
@@ -72,7 +79,9 @@ class LibertyParser:
     # pylint: disable=too-many-locals
     def __init__(self):
         # Basic tokens/types
-        lparen, rparen, lbrace, rbrace, colon, semi, dblquote = map(pp.Suppress, '(){}:;"')
+        lparen, rparen, lbrace, rbrace, colon, semi, dblquote = map(
+            pp.Suppress, '(){}:;"'
+        )
         string = pp.Word(pp.alphanums + "_" + ".")
         dbl_quotes_string = pp.dblQuotedString().setParseAction(pp.removeQuotes)
         real = ppc.real().setParseAction(ppc.convertToFloat)
@@ -91,10 +100,14 @@ class LibertyParser:
 
         # Complex Attribute
         complex_attribute = pp.Forward().setName("complex_attribute")
-        parameter_list = dblquote + pp.Group(pp.delimitedList(attribute_value)) + dblquote
+        parameter_list = (
+            dblquote + pp.Group(pp.delimitedList(attribute_value)) + dblquote
+        )
         parameter = parameter_list | attribute_value
         parameters = pp.Group(pp.delimitedList(parameter))
-        complex_attribute <<= pp.Group(attribute_name + lparen + parameters + rparen + semi)
+        complex_attribute <<= pp.Group(
+            attribute_name + lparen + parameters + rparen + semi
+        )
 
         # Group Statement
         group_statement = pp.Forward().setName("group_statement")
@@ -117,11 +130,13 @@ class LibertyParser:
         liberty_object = pp.Forward().setName("liberty_object")
         liberty_object <<= statement
         liberty_object.ignore(pp.cppStyleComment)
-        liberty_object.ignore('\\')
+        liberty_object.ignore("\\")
 
         self.liberty_object = liberty_object
 
     def parse(self, file: IFile) -> Group:
+        info("Parsing LDB library.")
+
         def handle_value(val: Any) -> Any:
             if isinstance(val, pp.ParseResults):
                 return tuple(handle_value(v) for v in val.asList())
