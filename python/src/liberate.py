@@ -46,7 +46,7 @@ def _waiting_animation(complete_condition, refresh_rate_Hz: int = 10) -> None:
         sys.stdout.flush()
         time.sleep(1 / refresh_rate_Hz)
     # Clear text then print message
-    sys.stdout.write("\r                     \r")
+    sys.stdout.write("\r" + " " * len(loading_msg) + "\r")
     info("Liberate completed.")
 
 
