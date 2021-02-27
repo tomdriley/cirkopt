@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import subprocess
 import os.path
-from sys import exit
+import sys
 import shutil
 from logging import info, error
 from typing import NamedTuple, List, Sequence, Optional
@@ -41,9 +41,10 @@ def run_liberate(
         raise TypeError(f"No file found at path {char_tcl_path}")
     if shutil.which(liberate_cmd) is None:
         error(
-            f"'{liberate_cmd}' does not appear to be an executable, did you forget to source the setup script?"
+            f"'{liberate_cmd}' does not appear to be an executable, "
+            + "did you forget to source the setup script?"
         )
-        exit()
+        sys.exit()
 
     # Update cells to simulate
     if cell_names is not None:
