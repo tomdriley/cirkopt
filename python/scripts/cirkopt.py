@@ -129,7 +129,7 @@ search      Find an optimal design""",
         args = parser.parse_args(sys.argv[2:])
         logging.basicConfig(
             format="%(levelname)s (%(asctime)s): %(message)s",
-            datefmt="%m/%d/%Y %I:%M:%S %p",
+            datefmt="%I:%M:%S %p",
             level=args.loglevel,
         )
         # Print all the arguments given

@@ -42,7 +42,7 @@ def graph_cell_delay(
     info("Generating graph of results.")
 
     mpl_logger = logging.getLogger("matplotlib")
-    if logging.getLogger().level < logging.WARNING:
+    if logging.getLogger().getEffectiveLevel() < logging.WARNING:
         debug("Suppressing matplotlib logs below warning.")
         mpl_logger.setLevel(logging.WARNING)
 

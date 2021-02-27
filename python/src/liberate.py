@@ -4,6 +4,8 @@ import os.path
 import sys
 import shutil
 import time
+from itertools import cycle
+import logging
 from logging import info, error
 from typing import NamedTuple, List, Sequence, Optional
 from src.file_io import File
@@ -28,10 +30,24 @@ LiberateResult = NamedTuple(
 
 
 def _waiting_animation(complete_condition, refresh_rate_Hz: int = 10) -> None:
-    while complete_condition() is None:
-        print(".", end="", flush=True)
+    if logging.getLogger().getEffectiveLevel() > logging.INFO:
+        # Don't print anything
+        while complete_condition() is None:
+            # Wait for completion
+            pass
+        return
+    # Copy of [1]
+    # [1] https://stackoverflow.com/questions/22029562/python-how-to-make-simple-animated-loading-while-process-is-running
+    for c in cycle(["|", "/", "-", "\\"]):
+        if complete_condition() is not None:
+            break
+        loading_msg = "Running Liberate..." + c
+        sys.stdout.write("\r" + loading_msg)
+        sys.stdout.flush()
         time.sleep(1 / refresh_rate_Hz)
-    print("")
+    # Clear text then print message
+    sys.stdout.write("\r                     \r")
+    info("Liberate completed.")
 
 
 def run_liberate(
