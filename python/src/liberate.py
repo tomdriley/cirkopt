@@ -3,6 +3,7 @@ import subprocess
 import os.path
 import sys
 import shutil
+import time
 from logging import info, error
 from typing import NamedTuple, List, Sequence, Optional
 from src.file_io import File
@@ -24,6 +25,11 @@ LIBERATE_DEFAULT_CMD: str = "liberate"
 LiberateResult = NamedTuple(
     "LiberateResult", [("args", List[str]), ("returncode", int), ("stdout", str)]
 )
+
+
+def _waiting_animation(refresh_rate_Hz: int = 10):
+    print(".", end="", flush=True)
+    time.sleep(1 / refresh_rate_Hz)
 
 
 def run_liberate(
@@ -54,14 +60,24 @@ def run_liberate(
     # TODO: Run setup script before
 
     info("Running liberate.")
-    results = subprocess.run(
+    results = subprocess.Popen(
         args=[liberate_cmd, char_tcl_path],
         cwd=run_dir,
-        check=True,
         stderr=subprocess.STDOUT,
         stdout=subprocess.PIPE,
         text=True,
     )
+    while results.poll() is None:
+        _waiting_animation()
+    print("")
+    # Convert to CompletedProcess so we can check the return code
+    results = subprocess.CompletedProcess(
+        args=results.args,
+        returncode=results.returncode,
+        stdout=results.stdout,
+        stderr=results.stderr,
+    )
+    results.check_returncode()
 
     return LiberateResult(
         args=results.args, returncode=results.returncode, stdout=results.stdout
