@@ -78,20 +78,20 @@ def run_liberate(
     # TODO: Run setup script before
 
     info("Running liberate.")
-    results = subprocess.Popen(
+    r: subprocess.Popen = subprocess.Popen(
         args=[liberate_cmd, char_tcl_path],
         cwd=run_dir,
         stderr=subprocess.STDOUT,
         stdout=subprocess.PIPE,
         text=True,
     )
-    _waiting_animation(complete_condition=results.poll)
+    _waiting_animation(complete_condition=r.poll)
     # Convert to CompletedProcess so we can check the return code
-    results = subprocess.CompletedProcess(
-        args=results.args,
-        returncode=results.returncode,
-        stdout=results.stdout,
-        stderr=results.stderr,
+    results: subprocess.CompletedProcess = subprocess.CompletedProcess(
+        args=r.args,
+        returncode=r.returncode,
+        stdout=r.stdout,
+        stderr=r.stderr,
     )
     results.check_returncode()
 
