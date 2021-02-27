@@ -19,13 +19,7 @@ class Param(Enum):
     FINGERS = 3
 
     def __str__(self):
-        if self == Param.WIDTH:
-            return "Width"
-        if self == Param.LENGTH:
-            return "Length"
-
-        return "Fingers"
-
+        return self.name.capitalize()
 
 class ParamSweepCandidateGenerator(CandidateGenerator[Netlist]):
     """

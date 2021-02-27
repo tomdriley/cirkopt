@@ -5,7 +5,7 @@ import sys
 import os.path
 import argparse
 import logging
-from logging import DEBUG, INFO, info, WARNING, error
+from logging import DEBUG, debug, INFO, info, WARNING, error
 from numpy import arange
 
 PYTHON_SCRIPTS_DIRECTORY: str = os.path.dirname(os.path.abspath(__file__))
@@ -52,7 +52,9 @@ search      Find an optimal design""",
         parser.add_argument(
             "--param",
             help="Paramater to sweep, e.g.: width",
-            default="width",
+            type=lambda input: Param[input.upper()],
+            choices=tuple(Param),
+            default=Param.WIDTH,
         )
         parser.add_argument(
             "--range",
@@ -69,8 +71,10 @@ search      Find an optimal design""",
         )
         parser.add_argument(
             "--outindex",
-            help="Index of value from LDB table to show, comma separated, e.g.: 0,1",
-            default="0,1",
+            help="Index of value from LDB table to show, space separated, e.g.: 0 1",
+            nargs=2,
+            type=int,
+            default=[0, 1],
         )
         parser.add_argument(
             "--outdir",
@@ -123,19 +127,16 @@ search      Find an optimal design""",
         # now that we're inside a subcommand, ignore the first
         # TWO argvs, ie the command (cirkopt) and the subcommand (explore)
         args = parser.parse_args(sys.argv[2:])
-
         logging.basicConfig(
             format="%(levelname)s (%(asctime)s): %(message)s",
             datefmt="%m/%d/%Y %I:%M:%S %p",
             level=args.loglevel,
         )
+        # Print all the arguments given
+        for key in args.__dict__:
+            debug(f"{key:<10}: {args.__dict__[key]}")
 
-        param_dict = {
-            "width": Param.WIDTH,
-            "length": Param.LENGTH,
-            "fingers": Param.FINGERS,
-        }
-
+        # Additional parsing
         r = args.range.split(":")
         if len(r) != 3:
             raise TypeError(
@@ -143,22 +144,15 @@ search      Find an optimal design""",
             )
         values = arange(float(r[0]), float(r[2]), float(r[1]))
 
-        i = args.outindex.split(",")
-        if len(i) != 2:
-            raise TypeError(
-                "Index argument must be 2 values separated by , (comma), e.g. 0,1"
-            )
-        index = tuple(int(x) for x in i)
-
         info("Exploring search space.")
         sweep_param(
             sim_result_rel_path=args.ldb,
             reference_netlist_rel_path=args.netlist,
             netlist_work_dir_rel_path=args.workdir,
-            param=param_dict[args.param],
+            param=args.param,
             values=values,
             graph_pin=args.outpin,
-            graph_delay_index=index,
+            graph_delay_index=args.outindex,
             out_dir_rel_path=args.outdir,
         )
 
