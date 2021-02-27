@@ -27,9 +27,11 @@ LiberateResult = NamedTuple(
 )
 
 
-def _waiting_animation(refresh_rate_Hz: int = 10):
-    print(".", end="", flush=True)
-    time.sleep(1 / refresh_rate_Hz)
+def _waiting_animation(complete_condition, refresh_rate_Hz: int = 10) -> None:
+    while complete_condition() is None:
+        print(".", end="", flush=True)
+        time.sleep(1 / refresh_rate_Hz)
+    print("")
 
 
 def run_liberate(
@@ -67,9 +69,7 @@ def run_liberate(
         stdout=subprocess.PIPE,
         text=True,
     )
-    while results.poll() is None:
-        _waiting_animation()
-    print("")
+    _waiting_animation(complete_condition=results.poll)
     # Convert to CompletedProcess so we can check the return code
     results = subprocess.CompletedProcess(
         args=results.args,
