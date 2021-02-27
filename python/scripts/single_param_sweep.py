@@ -1,5 +1,6 @@
 import os
 from typing import Union, Sequence, Tuple
+from logging import info
 
 from src.file_io import File
 from src.liberty_parser import LibertyParser
@@ -11,8 +12,6 @@ from src.single_param_sweep import (
     ParamSweepCandidateGenerator,
     SingleParamSweep,
 )
-import logging
-from logging import DEBUG, debug, INFO, info, WARNING, warning
 
 
 # pylint: disable=too-many-locals
