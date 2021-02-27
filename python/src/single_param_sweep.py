@@ -19,7 +19,8 @@ class Param(Enum):
     FINGERS = 3
 
     def __str__(self):
-        return self.name.capitalize()
+        return self.name.capitalize() # pylint: disable=no-member # bug in pylint
+
 
 class ParamSweepCandidateGenerator(CandidateGenerator[Netlist]):
     """
