@@ -3,7 +3,7 @@ from typing import Any, Callable, Sequence, Union
 
 from src.file_io import IFile
 from src.liberate import run_liberate
-from src.liberty_parser import Group, LibertyParser
+from src.liberty_parser import LibertyResult, LibertyParser
 from src.netlist import Netlist
 from src.search_algorithm import (
     CandidateGenerator,
@@ -19,7 +19,7 @@ class Param(Enum):
     FINGERS = 3
 
     def __str__(self):
-        return self.name.capitalize() # pylint: disable=no-member # bug in pylint
+        return self.name.capitalize()  # pylint: disable=no-member # bug in pylint
 
 
 class ParamSweepCandidateGenerator(CandidateGenerator[Netlist]):
@@ -81,7 +81,7 @@ class NoopCostFunction(CostFunction[Netlist, Any]):
         return {candidate.key(): 0.0 for candidate in candidates}
 
 
-class SingleParamSweep(SearchAlgorithm[Netlist, Group]):
+class SingleParamSweep(SearchAlgorithm[Netlist, LibertyResult]):
     """Does 1 simulation that simulates all candidates provided by candidate_generator."""
 
     liberty_parser: LibertyParser
@@ -103,7 +103,7 @@ class SingleParamSweep(SearchAlgorithm[Netlist, Group]):
         return iteration == 1
 
     # pylint: disable=unused-argument
-    def _simulate(self, candidates: Sequence[Netlist]) -> Group:
+    def _simulate(self, candidates: Sequence[Netlist]) -> LibertyResult:
         cell_names = tuple(netlist.cell_name for netlist in candidates)
         # TODO: paramaterize other args
         run_liberate(cell_names=cell_names)
