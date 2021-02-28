@@ -11,6 +11,7 @@ from src.search_algorithm import (
     CostMap,
     SearchAlgorithm,
 )
+from src.netlist_cost_functions import NoopCostFunction
 
 
 class Param(Enum):
@@ -69,16 +70,6 @@ class ParamSweepCandidateGenerator(CandidateGenerator[Netlist]):
         self, current_candidates: Sequence[Netlist], cost_map: CostMap
     ) -> Sequence[Netlist]:
         return self.candidates
-
-
-class NoopCostFunction(CostFunction[Netlist, Any]):
-    """Noop cost function"""
-
-    # pylint: disable=no-self-use,unused-argument
-    def calculate(
-        self, candidates: Sequence[Netlist], simulation_result: Any
-    ) -> CostMap:
-        return {candidate.key(): 0.0 for candidate in candidates}
 
 
 class SingleParamSweep(SearchAlgorithm[Netlist, LibertyResult]):
