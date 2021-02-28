@@ -27,7 +27,7 @@ set_var set_var_failure_action   error
 
 
 ### Input waveform ###
-set_var predriver_waveform       2 ;# 2=use pre-driver waveform
+set_var predriver_waveform       0 ;# 0=linear slew driver, 2=use pre-driver waveform
 
 
 ### Arc Generation

@@ -84,7 +84,7 @@ class LibertyParser:
         )
         string = pp.Word(pp.alphanums + "_" + ".")
         dbl_quotes_string = pp.dblQuotedString().setParseAction(pp.removeQuotes)
-        real = ppc.real().setParseAction(ppc.convertToFloat)
+        real = ppc.sci_real().setParseAction(ppc.convertToFloat)
         integer = ppc.integer().setParseAction(ppc.convertToInteger)
 
         # Statement
