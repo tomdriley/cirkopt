@@ -20,7 +20,7 @@ from scripts.single_param_sweep import (  # pylint: disable=wrong-import-positio
 from src.single_param_sweep import Param  # pylint: disable=wrong-import-position
 
 # Basically a copy of this blog post [1].
-# [1]: https://chase-seibert.github.io/blog/2014/03/21/python-multilevel-argparse.html
+# [1] https://chase-seibert.github.io/blog/2014/03/21/python-multilevel-argparse.html
 class Cirkopt:
     def __init__(self):
         parser = argparse.ArgumentParser(
@@ -129,7 +129,7 @@ search      Find an optimal design""",
         args = parser.parse_args(sys.argv[2:])
         logging.basicConfig(
             format="%(levelname)s (%(asctime)s): %(message)s",
-            datefmt="%m/%d/%Y %I:%M:%S %p",
+            datefmt="%I:%M:%S %p",
             level=args.loglevel,
         )
         # Print all the arguments given

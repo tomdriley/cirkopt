@@ -62,7 +62,6 @@ def main(
 
     # Graph the results of simulation
     param_str = str(param)
-    info("Generating graph of results.")
     graph_cell_delay(
         sim_file=sim_file,
         pin=graph_pin,

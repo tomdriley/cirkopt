@@ -3,6 +3,9 @@ import subprocess
 import os.path
 import sys
 import shutil
+import time
+from itertools import cycle
+import logging
 from logging import info, error
 from typing import NamedTuple, List, Sequence, Optional
 from src.file_io import File
@@ -24,6 +27,27 @@ LIBERATE_DEFAULT_CMD: str = "liberate"
 LiberateResult = NamedTuple(
     "LiberateResult", [("args", List[str]), ("returncode", int), ("stdout", str)]
 )
+
+
+def _waiting_animation(complete_condition, refresh_rate_Hz: int = 10) -> None:
+    if logging.getLogger().getEffectiveLevel() > logging.INFO:
+        # Don't print anything
+        while complete_condition() is None:
+            # Wait for completion
+            pass
+        return
+    # Copy of [1]
+    # [1] https://stackoverflow.com/questions/22029562/python-how-to-make-simple-animated-loading-while-process-is-running
+    for c in cycle(["|", "/", "-", "\\"]):
+        if complete_condition() is not None:
+            break
+        loading_msg = "Running Liberate..." + c
+        sys.stdout.write("\r" + loading_msg)
+        sys.stdout.flush()
+        time.sleep(1 / refresh_rate_Hz)
+    # Clear text then print message
+    sys.stdout.write("\r" + " " * len(loading_msg) + "\r")
+    info("Liberate completed.")
 
 
 def run_liberate(
@@ -54,14 +78,22 @@ def run_liberate(
     # TODO: Run setup script before
 
     info("Running liberate.")
-    results = subprocess.run(
+    r: subprocess.Popen = subprocess.Popen(
         args=[liberate_cmd, char_tcl_path],
         cwd=run_dir,
-        check=True,
         stderr=subprocess.STDOUT,
         stdout=subprocess.PIPE,
         text=True,
     )
+    _waiting_animation(complete_condition=r.poll)
+    # Convert to CompletedProcess so we can check the return code
+    results: subprocess.CompletedProcess = subprocess.CompletedProcess(
+        args=r.args,
+        returncode=r.returncode,
+        stdout=r.stdout,
+        stderr=r.stderr,
+    )
+    results.check_returncode()
 
     return LiberateResult(
         args=results.args, returncode=results.returncode, stdout=results.stdout
