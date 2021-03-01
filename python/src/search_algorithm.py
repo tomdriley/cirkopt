@@ -1,5 +1,5 @@
 from abc import ABCMeta, abstractmethod
-from typing import Dict, Generic, Sequence, TypeVar
+from typing import Dict, Generic, Sequence, TypeVar, Callable, Optional
 from logging import info
 
 from src.utils import single
@@ -18,15 +18,7 @@ class CandidateClass:
 
 Candidate = TypeVar("Candidate", bound=CandidateClass)
 
-
-class CostFunction(Generic[Candidate, SimulationResult]):
-    __metaclass__ = ABCMeta
-
-    @abstractmethod
-    def calculate(
-        self, candidates: Sequence[Candidate], simulation_result: SimulationResult
-    ) -> CostMap:
-        pass
+CostFunction = Callable[[Sequence[Candidate], SimulationResult], CostMap]
 
 
 class CandidateGenerator(Generic[Candidate]):
@@ -46,8 +38,8 @@ class CandidateGenerator(Generic[Candidate]):
 class SearchAlgorithm(Generic[Candidate, SimulationResult]):
     __metaclass__ = ABCMeta
 
-    cost_function: CostFunction
     candidate_generator: CandidateGenerator[Candidate]
+    _cost_function: Optional[CostFunction]
 
     def search(self) -> Candidate:
         info("Generating initial population.")
@@ -57,7 +49,7 @@ class SearchAlgorithm(Generic[Candidate, SimulationResult]):
         while True:
             info(f"Starting iteration {iteration}")
             simulation_result = self._simulate(candidates)
-            cost_map = self.cost_function.calculate(candidates, simulation_result)
+            cost_map = self.cost_function(candidates, simulation_result)
 
             iteration += 1
             if self._should_stop(iteration):
@@ -78,3 +70,9 @@ class SearchAlgorithm(Generic[Candidate, SimulationResult]):
     @abstractmethod
     def _simulate(self, candidates: Sequence[Candidate]) -> SimulationResult:
         pass
+
+    def cost_function(
+        self, candidates: Sequence[Candidate], results: SimulationResult
+    ) -> CostMap:
+        assert self._cost_function is not None
+        return self._cost_function(candidates, results)

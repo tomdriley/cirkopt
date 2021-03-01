@@ -7,11 +7,11 @@ from src.liberty_parser import LibertyParser
 from src.liberate_grapher import graph_cell_delay
 from src.netlist import BaseNetlistFile, Netlist
 from src.single_param_sweep import (
-    NoopCostFunction,
     Param,
     ParamSweepCandidateGenerator,
     SingleParamSweep,
 )
+from src.netlist_cost_functions import noop_cost_function
 
 
 # pylint: disable=too-many-locals
@@ -53,7 +53,7 @@ def main(
         values=values,
     )
     single_param_sweep = SingleParamSweep(
-        NoopCostFunction(), candidate_generator, LibertyParser(), sim_file
+        candidate_generator, LibertyParser(), sim_file
     )
 
     # Do the sweep

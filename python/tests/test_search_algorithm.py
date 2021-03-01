@@ -2,8 +2,13 @@ from dataclasses import dataclass
 from typing import Any, Sequence
 from unittest import TestCase
 
-from src.search_algorithm import CandidateClass, CandidateGenerator, \
-    CostFunction, CostMap, SearchAlgorithm
+from src.search_algorithm import (
+    CandidateClass,
+    CandidateGenerator,
+    CostFunction,
+    CostMap,
+    SearchAlgorithm,
+)
 
 
 @dataclass(frozen=True)
@@ -21,19 +26,19 @@ class TestCandidateGenerator(CandidateGenerator[TestCandidate]):
         return tuple(TestCandidate(f"cand_{i}", float(i)) for i in range(5))
 
     def get_next_population(
-            self,
-            current_candidates: Sequence[TestCandidate],
-            cost_map: CostMap
+        self, current_candidates: Sequence[TestCandidate], cost_map: CostMap
     ) -> Sequence[TestCandidate]:
-        expected_cost_map = {candidate.ckey: candidate.cost for candidate in current_candidates}
+        expected_cost_map = {
+            candidate.ckey: candidate.cost for candidate in current_candidates
+        }
         assert cost_map == expected_cost_map
         return current_candidates
 
 
-class TestCostFunction(CostFunction[TestCandidate, Any]):
-    # pylint: disable=no-self-use,unused-argument
-    def calculate(self, candidates: Sequence[TestCandidate], simulation_result: Any) -> CostMap:
-        return {candidate.ckey: candidate.cost for candidate in candidates}
+def test_cost_function(
+    candidates: Sequence[TestCandidate], simulation_result: Any
+) -> CostMap:
+    return {candidate.ckey: candidate.cost for candidate in candidates}
 
 
 class TestSearchAlgorithm(SearchAlgorithm[TestCandidate, Any]):
@@ -41,11 +46,11 @@ class TestSearchAlgorithm(SearchAlgorithm[TestCandidate, Any]):
     iteration: int
 
     def __init__(
-            self,
-            cost_function: TestCostFunction,
-            candidate_generator: TestCandidateGenerator
+        self,
+        candidate_generator: TestCandidateGenerator,
+        cost_function=test_cost_function,
     ):
-        self.cost_function = cost_function
+        self._cost_function = cost_function
         self.candidate_generator = candidate_generator
         self.num_times_simulate_called = 0
         self.iteration = 0
@@ -62,8 +67,7 @@ class TestSearchAlgorithm(SearchAlgorithm[TestCandidate, Any]):
 class TestSearchAlgorithms(TestCase):
     def test_search_algorithm_classes(self):
         candidate_generator = TestCandidateGenerator()
-        cost_function = TestCostFunction()
-        search_algorithm = TestSearchAlgorithm(cost_function, candidate_generator)
+        search_algorithm = TestSearchAlgorithm(candidate_generator)
 
         result = search_algorithm.search()
 

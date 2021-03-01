@@ -11,7 +11,7 @@ from src.search_algorithm import (
     CostMap,
     SearchAlgorithm,
 )
-from src.netlist_cost_functions import NoopCostFunction
+from src.netlist_cost_functions import noop_cost_function
 
 
 class Param(Enum):
@@ -80,12 +80,12 @@ class SingleParamSweep(SearchAlgorithm[Netlist, LibertyResult]):
 
     def __init__(
         self,
-        cost_function: NoopCostFunction,
         candidate_generator: ParamSweepCandidateGenerator,
         liberty_parser: LibertyParser,
         sim_file: IFile,
+        cost_function=noop_cost_function,
     ):
-        self.cost_function = cost_function
+        self._cost_function = cost_function
         self.candidate_generator = candidate_generator
         self.liberty_parser = liberty_parser
         self.sim_file = sim_file

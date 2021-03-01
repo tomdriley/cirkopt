@@ -4,11 +4,8 @@ from src.search_algorithm import CostFunction, CostMap
 from src.netlist import Netlist
 
 
-class NoopCostFunction(CostFunction[Netlist, Any]):
+def noop_cost_function(
+    candidates: Sequence[Netlist], simulation_result: Any
+) -> CostMap:
     """Noop cost function"""
-
-    # pylint: disable=no-self-use,unused-argument
-    def calculate(
-        self, candidates: Sequence[Netlist], simulation_result: Any
-    ) -> CostMap:
-        return {candidate.key(): 0.0 for candidate in candidates}
+    return {candidate.key(): 0.0 for candidate in candidates}
