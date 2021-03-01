@@ -24,7 +24,7 @@ TEMPLATE_TCL_DEFAULT_PATH: str = os.path.join(
 )
 LIBERATE_DEFAULT_CMD: str = "liberate"
 
-LiberateResult = NamedTuple(
+LiberateCompletedProcess = NamedTuple(
     "LiberateResult", [("args", List[str]), ("returncode", int), ("stdout", str)]
 )
 
@@ -95,6 +95,6 @@ def run_liberate(
     )
     results.check_returncode()
 
-    return LiberateResult(
+    return LiberateCompletedProcess(
         args=results.args, returncode=results.returncode, stdout=results.stdout
     )
