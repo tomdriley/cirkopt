@@ -3,7 +3,6 @@ from typing import Union, Sequence, Tuple
 from logging import info
 
 from src.file_io import File
-from src.liberty_parser import LibertyParser
 from src.liberate_grapher import graph_cell_delay
 from src.netlist import BaseNetlistFile, Netlist
 from src.single_param_sweep import (
@@ -11,12 +10,10 @@ from src.single_param_sweep import (
     ParamSweepCandidateGenerator,
     SingleParamSweep,
 )
-from src.netlist_cost_functions import noop_cost_function
 
 
 # pylint: disable=too-many-locals
 def main(
-    sim_result_rel_path: str,
     reference_netlist_rel_path: str,
     netlist_work_dir_rel_path: str,
     param: Param,
@@ -59,7 +56,7 @@ def main(
     # Graph the results of simulation
     param_str = str(param)
     graph_cell_delay(
-        sim_file=sim_file,
+        ldb=single_param_sweep.get_ldb(),
         pin=graph_pin,
         delay_index=graph_delay_index,
         x_axis=values,
@@ -71,7 +68,6 @@ def main(
 if __name__ == "__main__":
     # TODO: use command line args instead of hard coding
     main(
-        sim_result_rel_path="../../liberate/lib/example_tt_1.0_70_nldm.lib",
         reference_netlist_rel_path="../../liberate/netlist_ref/INVX1.sp",
         netlist_work_dir_rel_path="../../liberate/netlist_wrk",
         param=Param.WIDTH,

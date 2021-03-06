@@ -4,21 +4,18 @@ from logging import info, debug
 
 import matplotlib.pyplot as plt  # type: ignore
 
-from src.file_io import IFile
-from src.liberty_parser import LibertyParser
+from src.liberty_parser import LibertyResult
 from src.utils import single
 
 
 def graph_cell_delay(
-    sim_file: IFile,
+    ldb: LibertyResult,
     pin: str,
     delay_index: Tuple[int, int],
     x_axis: Sequence[float],
     x_axis_title: str,
     out_path: str,
 ) -> None:
-    liberty_parser = LibertyParser()
-    library = liberty_parser.parse(sim_file)
 
     di1, di2 = delay_index
     # pylint: disable=no-member
@@ -27,14 +24,14 @@ def graph_cell_delay(
         .timing[0]
         .cell_rise[0]
         .values[di1][di2]
-        for cell in library.cell  # type: ignore
+        for cell in ldb.cell  # type: ignore
     ]
     fall_times = [
         single(lambda p: p.name == pin, cell.pin)
         .timing[0]
         .cell_fall[0]
         .values[di1][di2]
-        for cell in library.cell  # type: ignore
+        for cell in ldb.cell  # type: ignore
     ]
 
     assert len({len(rise_times), len(fall_times), len(x_axis)}) == 1
