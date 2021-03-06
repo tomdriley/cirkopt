@@ -2,7 +2,7 @@ from enum import Enum
 from typing import Any, Callable, Sequence, Union
 
 from src.file_io import IFile
-from src.liberate import run_liberate
+from src.liberate import liberate_simulator
 from src.liberty_parser import LibertyResult, LibertyParser
 from src.netlist import Netlist
 from src.search_algorithm import (
@@ -75,27 +75,15 @@ class ParamSweepCandidateGenerator(CandidateGenerator[Netlist]):
 class SingleParamSweep(SearchAlgorithm[Netlist, LibertyResult]):
     """Does 1 simulation that simulates all candidates provided by candidate_generator."""
 
-    liberty_parser: LibertyParser
-    sim_file: IFile
-
     def __init__(
         self,
         candidate_generator: ParamSweepCandidateGenerator,
-        liberty_parser: LibertyParser,
-        sim_file: IFile,
         cost_function=noop_cost_function,
+        simulator=liberate_simulator,
     ):
-        self._cost_function = cost_function
         self.candidate_generator = candidate_generator
-        self.liberty_parser = liberty_parser
-        self.sim_file = sim_file
+        self._cost_function = cost_function
+        self._simulate = simulator
 
     def _should_stop(self, iteration: int):
         return iteration == 1
-
-    # pylint: disable=unused-argument
-    def _simulate(self, candidates: Sequence[Netlist]) -> LibertyResult:
-        cell_names = tuple(netlist.cell_name for netlist in candidates)
-        # TODO: paramaterize other args
-        run_liberate(cell_names=cell_names)
-        return self.liberty_parser.parse(self.sim_file)

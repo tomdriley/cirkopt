@@ -26,7 +26,6 @@ def main(
     out_dir_rel_path: str,
 ):
     curr_path = os.path.abspath(os.path.dirname(__file__))
-    sim_result_path = os.path.join(curr_path, sim_result_rel_path)
     reference_netlist_path = os.path.join(curr_path, reference_netlist_rel_path)
     netlist_work_dir_path = os.path.join(curr_path, netlist_work_dir_rel_path)
     out_dir_path = os.path.join(curr_path, out_dir_rel_path)
@@ -45,16 +44,13 @@ def main(
         netlist_file = File(f"{netlist_work_dir_path}/{netlist.cell_name}.sp")
         netlist.persist(netlist_file)
 
-    sim_file = File(sim_result_path)
     candidate_generator = ParamSweepCandidateGenerator(
         reference_netlist=Netlist(BaseNetlistFile(File(reference_netlist_path))),
         netlist_persister=persist_netlist_in_run_dir,
         param=param,
         values=values,
     )
-    single_param_sweep = SingleParamSweep(
-        candidate_generator, LibertyParser(), sim_file
-    )
+    single_param_sweep = SingleParamSweep(candidate_generator)
 
     # Do the sweep
     info("Starting single parameter linear sweep.")
