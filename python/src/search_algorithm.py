@@ -19,6 +19,7 @@ class CandidateClass:
 Candidate = TypeVar("Candidate", bound=CandidateClass)
 
 CostFunction = Callable[[Sequence[Candidate], SimulationResult], CostMap]
+Simulator = Callable[[Sequence[Candidate]], SimulationResult]
 
 
 class CandidateGenerator(Generic[Candidate]):
@@ -40,36 +41,42 @@ class SearchAlgorithm(Generic[Candidate, SimulationResult]):
 
     candidate_generator: CandidateGenerator[Candidate]
     _cost_function: Optional[CostFunction]
+    _simulate: Optional[Simulator]
+    candidates: Sequence[Candidate]
+    iteration: int
+    simulation_result: SimulationResult
+    cost_map: CostMap
 
     def search(self) -> Candidate:
         info("Generating initial population.")
-        candidates = self.candidate_generator.get_initial_population()
+        self.candidates = self.candidate_generator.get_initial_population()
 
-        iteration = 0
+        self.iteration = 0
         while True:
-            info(f"Starting iteration {iteration}")
-            simulation_result = self._simulate(candidates)
-            cost_map = self.cost_function(candidates, simulation_result)
+            info(f"Starting iteration {self.iteration}")
 
-            iteration += 1
-            if self._should_stop(iteration):
+            self.simulation_result = self.simulate(self.candidates)
+            self.cost_map = self.cost_function(self.candidates, self.simulation_result)
+
+            self.iteration += 1
+            if self._should_stop():
                 break
 
-            candidates = self.candidate_generator.get_next_population(
-                candidates, cost_map
+            self.candidates = self.candidate_generator.get_next_population(
+                self.candidates, self.cost_map
             )
 
         info("Selecting best candidate.")
-        best_candidate_name, _ = min(cost_map.items(), key=lambda item: item[1])
-        return single(lambda c: c.key() == best_candidate_name, candidates)
+        best_candidate_name, _ = min(self.cost_map.items(), key=lambda item: item[1])
+        return single(lambda c: c.key() == best_candidate_name, self.candidates)
 
     @abstractmethod
-    def _should_stop(self, iteration: int) -> bool:
+    def _should_stop(self) -> bool:
         pass
 
-    @abstractmethod
-    def _simulate(self, candidates: Sequence[Candidate]) -> SimulationResult:
-        pass
+    def simulate(self, candidates: Sequence[Candidate]) -> SimulationResult:
+        assert self._simulate is not None
+        return self._simulate(candidates)
 
     def cost_function(
         self, candidates: Sequence[Candidate], results: SimulationResult
