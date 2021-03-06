@@ -1,13 +1,11 @@
 from enum import Enum
-from typing import Any, Callable, Sequence, Union
+from typing import Callable, Sequence, Union
 
-from src.file_io import IFile
 from src.liberate import liberate_simulator
-from src.liberty_parser import LibertyResult, LibertyParser
+from src.liberty_parser import LibertyResult
 from src.netlist import Netlist
 from src.search_algorithm import (
     CandidateGenerator,
-    CostFunction,
     CostMap,
     SearchAlgorithm,
 )
@@ -85,5 +83,8 @@ class SingleParamSweep(SearchAlgorithm[Netlist, LibertyResult]):
         self._cost_function = cost_function
         self._simulate = simulator
 
-    def _should_stop(self, iteration: int):
-        return iteration == 1
+    def _should_stop(self):
+        return self.iteration == 1
+
+    def get_ldb(self):
+        return self.simulation_result

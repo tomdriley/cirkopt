@@ -5,7 +5,6 @@ from unittest import TestCase
 from src.search_algorithm import (
     CandidateClass,
     CandidateGenerator,
-    CostFunction,
     CostMap,
     SearchAlgorithm,
 )
@@ -43,14 +42,14 @@ class TestCandidateGenerator(CandidateGenerator[TestCandidate]):
 
 def test_cost_function(
     candidates: Sequence[TestCandidate],
-    simulation_result: Mapping[TestCandidate, float],
+    simulation_result: Mapping[str, float],
 ) -> CostMap:
     return {
         candidate.key(): simulation_result[candidate.key()] for candidate in candidates
     }
 
 
-def test_simulator(candidates: Sequence[TestCandidate]) -> Dict[TestCandidate, float]:
+def test_simulator(candidates: Sequence[TestCandidate]) -> Dict[str, float]:
     result = {candidate.key(): 0.0 for candidate in candidates}
     if candidates[0].value < candidates[1].value:
         result[candidates[0].key()] = 1.0
@@ -59,7 +58,7 @@ def test_simulator(candidates: Sequence[TestCandidate]) -> Dict[TestCandidate, f
     return result
 
 
-class TestSearchAlgorithm(SearchAlgorithm[TestCandidate, Dict[TestCandidate, float]]):
+class TestSearchAlgorithm(SearchAlgorithm[TestCandidate, Dict[str, float]]):
     num_times_simulate_called: int
     iteration: int
 

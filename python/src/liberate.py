@@ -7,7 +7,7 @@ import time
 from itertools import cycle
 import logging
 from logging import info, error
-from typing import NamedTuple, List, Sequence, Optional
+from typing import NamedTuple, List, Sequence
 from src.file_io import File
 from src.liberate_template_utils import update_liberate_template_cell_names
 from src.liberty_parser import LibertyParser, LibertyResult
