@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Any, Sequence
+from typing import Sequence, Mapping, Dict
 from unittest import TestCase
 
 from src.search_algorithm import (
@@ -13,35 +13,53 @@ from src.search_algorithm import (
 
 @dataclass(frozen=True)
 class TestCandidate(CandidateClass):
-    ckey: str = ""
-    cost: float = 0.0
+    name: str = ""
+    value: float = 0.0
 
     def key(self) -> str:
-        return self.ckey
+        return self.name
 
 
 class TestCandidateGenerator(CandidateGenerator[TestCandidate]):
     # pylint: disable=no-self-use
+    def __init__(self, initial_population: Sequence[float]):
+        self._initial_population = initial_population
+
     def get_initial_population(self) -> Sequence[TestCandidate]:
-        return tuple(TestCandidate(f"cand_{i}", float(i)) for i in range(5))
+        return tuple(
+            TestCandidate(f"cand_{i}", val)
+            for i, val in enumerate(self._initial_population)
+        )
 
     def get_next_population(
         self, current_candidates: Sequence[TestCandidate], cost_map: CostMap
     ) -> Sequence[TestCandidate]:
-        expected_cost_map = {
-            candidate.ckey: candidate.cost for candidate in current_candidates
-        }
-        assert cost_map == expected_cost_map
-        return current_candidates
+        return tuple(
+            candidate
+            for candidate in current_candidates
+            if cost_map[candidate.key()] == 0.0
+        )
 
 
 def test_cost_function(
-    candidates: Sequence[TestCandidate], simulation_result: Any
+    candidates: Sequence[TestCandidate],
+    simulation_result: Mapping[TestCandidate, float],
 ) -> CostMap:
-    return {candidate.ckey: candidate.cost for candidate in candidates}
+    return {
+        candidate.key(): simulation_result[candidate.key()] for candidate in candidates
+    }
 
 
-class TestSearchAlgorithm(SearchAlgorithm[TestCandidate, Any]):
+def test_simulator(candidates: Sequence[TestCandidate]) -> Dict[TestCandidate, float]:
+    result = {candidate.key(): 0.0 for candidate in candidates}
+    if candidates[0].value < candidates[1].value:
+        result[candidates[0].key()] = 1.0
+    else:
+        result[candidates[1].key()] = 1.0
+    return result
+
+
+class TestSearchAlgorithm(SearchAlgorithm[TestCandidate, Dict[TestCandidate, float]]):
     num_times_simulate_called: int
     iteration: int
 
@@ -49,29 +67,32 @@ class TestSearchAlgorithm(SearchAlgorithm[TestCandidate, Any]):
         self,
         candidate_generator: TestCandidateGenerator,
         cost_function=test_cost_function,
+        simulate=test_simulator,
     ):
-        self._cost_function = cost_function
         self.candidate_generator = candidate_generator
-        self.num_times_simulate_called = 0
-        self.iteration = 0
+        self._cost_function = cost_function
+        self._simulate = simulate
 
-    def _should_stop(self, iteration: int):
-        self.iteration = iteration
-        return iteration == 5
-
-    # pylint: disable=unused-argument
-    def _simulate(self, candidates: Sequence[TestCandidate]) -> Any:
-        self.num_times_simulate_called += 1
+    def _should_stop(self):
+        return len(self.candidates) == 2
 
 
 class TestSearchAlgorithms(TestCase):
     def test_search_algorithm_classes(self):
-        candidate_generator = TestCandidateGenerator()
+        values = (3, 7.6, 5, 1.1)
+        candidate_generator = TestCandidateGenerator(values)
         search_algorithm = TestSearchAlgorithm(candidate_generator)
 
         result = search_algorithm.search()
 
-        self.assertEqual(5, search_algorithm.iteration)
-        self.assertEqual(5, search_algorithm.num_times_simulate_called)
-        self.assertEqual(result.ckey, "cand_0")
-        self.assertEqual(result.cost, 0.0)
+        self.assertEqual(search_algorithm.iteration, 3)
+        self.assertEqual(result.name, "cand_1")
+        self.assertEqual(result.value, 7.6)
+        self.assertEqual(
+            search_algorithm.candidates,
+            (TestCandidate("cand_1", 7.6), TestCandidate("cand_3", 1.1)),
+        )
+        self.assertEqual(
+            search_algorithm.simulation_result, {"cand_1": 0.0, "cand_3": 1.0}
+        )
+        self.assertEqual(search_algorithm.cost_map, search_algorithm.simulation_result)
