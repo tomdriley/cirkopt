@@ -83,8 +83,8 @@ class SingleParamSweep(SearchAlgorithm[Netlist, LibertyResult]):
         self._cost_function = cost_function
         self._simulate = simulator
 
-    def _should_stop(self):
+    def _should_stop(self) -> bool:
         return self.iteration == 1
 
-    def get_ldb(self):
+    def get_ldb(self) -> LibertyResult:
         return self.simulation_result
