@@ -79,7 +79,7 @@ class SingleParamSweep(SearchAlgorithm[Netlist, LibertyResult]):
         cost_function=noop_cost_function,
         simulator=liberate_simulator,
     ):
-        self.candidate_generator = candidate_generator
+        self._candidate_generator = candidate_generator
         self._cost_function = cost_function
         self._simulate = simulator
 
