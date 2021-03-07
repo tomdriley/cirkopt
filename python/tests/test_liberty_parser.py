@@ -27,7 +27,7 @@ class TestLibertyParser(unittest.TestCase):
         self.assertEqual(root.default_cell_leakage_power, 0)
         self.assertEqual(root.default_max_transition, 0.3)
         self.assertTupleEqual(root.capacitive_load_unit, (1, "pf"))
-        self.assertTupleEqual(root.voltage_map, (('VDD', 1), ('VSS', 0)))
+        self.assertTupleEqual(root.voltage_map, (("VDD", 1), ("VSS", 0)))
 
         self.assertEqual(len(root.operating_conditions), 1)
         operating_conditions = root.operating_conditions[0]
@@ -58,21 +58,25 @@ class TestLibertyParser(unittest.TestCase):
             y = cell.pin[0]
             self.assertEqual(y.group_name, "pin")
             self.assertEqual(y.name, "Y")
+            self.assertEqual(y.direction, "output")
             a = cell.pin[1]
             self.assertEqual(a.group_name, "pin")
             self.assertEqual(a.name, "A")
+            self.assertEqual(a.direction, "input")
 
             self.assertEqual(len(y.timing), 1)
             timing = y.timing[0]
             self.assertEqual(timing.group_name, "timing")
             self.assertEqual(timing.name, "")
 
+            self.assertFalse(hasattr(a, "timing"))
+
             self.assertEqual(len(timing.cell_rise), 1)
             cell_rise = timing.cell_rise[0]
             self.assertEqual(cell_rise.group_name, "cell_rise")
             self.assertEqual(cell_rise.name, "delay_template")
-            self.assertTupleEqual(cell_rise.index_1, ((0.006, 0.3), ))
-            self.assertTupleEqual(cell_rise.index_2, ((0.0001, 0.07), ))
+            self.assertTupleEqual(cell_rise.index_1, ((0.006, 0.3),))
+            self.assertTupleEqual(cell_rise.index_2, ((0.0001, 0.07),))
             self.assertTupleEqual(cell_rise.values, expected_cell_rise_values[idx])
 
     def test_attribute_name_duplicated_as_group_name(self):
@@ -94,7 +98,7 @@ class TestLibertyParser(unittest.TestCase):
 
         self.assertIn(
             "Group with group name 'comment' already defined as attribute",
-            context.exception.args
+            context.exception.args,
         )
 
     def test_group_name_duplicated_as_attribute_name(self):
@@ -114,4 +118,7 @@ class TestLibertyParser(unittest.TestCase):
         with self.assertRaises(Exception) as context:
             parser.parse(mock_file)
 
-        self.assertIn("Member name 'comment' already defined as group name", context.exception.args)
+        self.assertIn(
+            "Member name 'comment' already defined as group name",
+            context.exception.args,
+        )
