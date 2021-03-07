@@ -9,6 +9,7 @@ from tests.liberty_example import LIBERTY_EXAMPLE, LIBERTY_F3E7F6B4_EXAMPLE
 
 
 class TestDelayCostFunction(unittest.TestCase):
+    # pylint: disable=no-member
     def test_longest_delay(self):
         # Parse ldb to create LibertyResult
         mock_file = MockFile()
