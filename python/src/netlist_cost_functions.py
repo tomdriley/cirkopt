@@ -19,6 +19,7 @@ def longest_delay(cell: Group, delay_idx: Tuple[int, int]) -> float:
     # Get list of output pins, e.g. usually just <Y>
     output_pins = (pin for pin in cell.pin if pin.direction == "output")
     # Get all possible timing arcs, e.g. <A -> Y>, <B -> Y> for NAND or NOR
+    # python magic to unroll 2D array
     timing_arcs = (timing for pin in output_pins for timing in pin.timing)
     # Corresponding rising delay for each arch
     rise_delays = (

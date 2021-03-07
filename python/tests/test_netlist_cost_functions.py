@@ -1,9 +1,11 @@
 import unittest
 
+from src.netlist import Netlist, BaseNetlistFile
 from src.liberty_parser import LibertyParser
 from src.netlist_cost_functions import delay_cost_function, longest_delay
-from tests.liberty_example import LIBERTY_EXAMPLE
 from tests.mock_file import MockFile
+from tests.netlist_example import NETLIST_F3E7F6B4_EXAMPLES
+from tests.liberty_example import LIBERTY_EXAMPLE, LIBERTY_F3E7F6B4_EXAMPLE
 
 
 class TestDelayCostFunction(unittest.TestCase):
@@ -23,10 +25,35 @@ class TestDelayCostFunction(unittest.TestCase):
         self.assertEqual(delay5_01, 0.388352)
 
     def test_delay_cost_function(self):
+        # Parse netlists to create candidates
+        netlists = list()
+        for netlist_file in NETLIST_F3E7F6B4_EXAMPLES
+            netlist_mock_file = MockFile()
+            netlist_mock_file.write(netlist_file)
+            base_netlist_file = BaseNetlistFile(netlist_mock_file)
+            netlists.append(Netlist(base_netlist_file))
+
         # Parse ldb to create LibertyResult
-        mock_file = MockFile()
-        mock_file.write(LIBERTY_EXAMPLE)
-        liberty_result = LibertyParser().parse(mock_file)
+        ldb_file = MockFile()
+        ldb_file.write(LIBERTY_EXAMPLE)
+        liberty_result = LibertyParser().parse(ldb_file)
 
         # Calculate worse case delays
-        # TODO
+        cost_map = delay_cost_function(
+            candidates=netlists,
+            simulation_result=liberty_result,
+            delay_idx=(0,0),
+        )
+
+        expected_mock_file = {
+            "INVX1_00": 0.00958782,
+            "INVX1_01": 0.00865761,
+            "INVX1_02": 0.00810281,
+            "INVX1_03": 0.00776497,
+            "INVX1_04": 0.007472,
+            "INVX1_05": 0.00727783,
+            "INVX1_06": 0.00714249,
+            "INVX1_07": 0.0035648,
+            "INVX1_08": ,
+        }
+
