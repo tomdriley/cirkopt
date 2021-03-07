@@ -49,6 +49,9 @@ def delay_cost_function(
 
     for candidate in candidates:
         if candidate.key() not in cost_map:
-            raise ValueError("Not all candidates have a simulation result")
+            missing = {candidate.key() for candidate in candidates} - cost_map.keys()
+            raise ValueError(
+                f"Not all candidates have a simulation result: {missing}, {cost_map.keys()}"
+            )
 
     return cost_map
