@@ -20,7 +20,6 @@ class TestCandidate(CandidateClass):
 
 
 class TestCandidateGenerator(CandidateGenerator[TestCandidate]):
-    # pylint: disable=no-self-use
     def __init__(self, initial_population: Sequence[float]):
         self._initial_population = initial_population
 
