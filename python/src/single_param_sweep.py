@@ -84,7 +84,7 @@ class SingleParamSweep(SearchAlgorithm[Netlist, LibertyResult]):
         self._simulate = simulator
 
     def _should_stop(self) -> bool:
-        return self.iteration == 1
+        return self._iteration == 1
 
     def get_ldb(self) -> LibertyResult:
-        return self.simulation_result
+        return self._simulation_result

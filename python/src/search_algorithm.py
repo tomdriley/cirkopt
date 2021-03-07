@@ -39,36 +39,38 @@ class CandidateGenerator(Generic[Candidate]):
 class SearchAlgorithm(Generic[Candidate, SimulationResult]):
     __metaclass__ = ABCMeta
 
-    candidate_generator: CandidateGenerator[Candidate]
+    _candidate_generator: CandidateGenerator[Candidate]
     _cost_function: Optional[CostFunction]
     _simulate: Optional[Simulator]
-    candidates: Sequence[Candidate]
-    iteration: int
-    simulation_result: SimulationResult
-    cost_map: CostMap
+    _candidates: Sequence[Candidate]
+    _iteration: int
+    _simulation_result: SimulationResult
+    _cost_map: CostMap
 
     def search(self) -> Candidate:
         info("Generating initial population.")
-        self.candidates = self.candidate_generator.get_initial_population()
+        self._candidates = self._candidate_generator.get_initial_population()
 
-        self.iteration = 0
+        self._iteration = 0
         while True:
-            info(f"Starting iteration {self.iteration}")
+            info(f"Starting iteration {self._iteration}")
 
-            self.simulation_result = self.simulate(self.candidates)
-            self.cost_map = self.cost_function(self.candidates, self.simulation_result)
+            self._simulation_result = self.simulate(self._candidates)
+            self._cost_map = self.cost_function(
+                self._candidates, self._simulation_result
+            )
 
-            self.iteration += 1
+            self._iteration += 1
             if self._should_stop():
                 break
 
-            self.candidates = self.candidate_generator.get_next_population(
-                self.candidates, self.cost_map
+            self._candidates = self._candidate_generator.get_next_population(
+                self._candidates, self._cost_map
             )
 
         info("Selecting best candidate.")
-        best_candidate_name, _ = min(self.cost_map.items(), key=lambda item: item[1])
-        return single(lambda c: c.key() == best_candidate_name, self.candidates)
+        best_candidate_name, _ = min(self._cost_map.items(), key=lambda item: item[1])
+        return single(lambda c: c.key() == best_candidate_name, self._candidates)
 
     @abstractmethod
     def _should_stop(self) -> bool:
