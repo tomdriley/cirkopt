@@ -1,16 +1,15 @@
 from enum import Enum
-from typing import Any, Callable, Sequence, Union
+from typing import Callable, Sequence, Union
 
-from src.file_io import IFile
-from src.liberate import run_liberate
-from src.liberty_parser import Group, LibertyParser
+from src.liberate import liberate_simulator
+from src.liberty_parser import LibertyResult
 from src.netlist import Netlist
 from src.search_algorithm import (
     CandidateGenerator,
-    CostFunction,
     CostMap,
     SearchAlgorithm,
 )
+from src.netlist_cost_functions import noop_cost_function
 
 
 class Param(Enum):
@@ -19,7 +18,7 @@ class Param(Enum):
     FINGERS = 3
 
     def __str__(self):
-        return self.name.capitalize() # pylint: disable=no-member # bug in pylint
+        return self.name.capitalize()  # pylint: disable=no-member # bug in pylint
 
 
 class ParamSweepCandidateGenerator(CandidateGenerator[Netlist]):
@@ -71,40 +70,21 @@ class ParamSweepCandidateGenerator(CandidateGenerator[Netlist]):
         return self.candidates
 
 
-class NoopCostFunction(CostFunction[Netlist, Any]):
-    """Noop cost function"""
-
-    # pylint: disable=no-self-use,unused-argument
-    def calculate(
-        self, candidates: Sequence[Netlist], simulation_result: Any
-    ) -> CostMap:
-        return {candidate.key(): 0.0 for candidate in candidates}
-
-
-class SingleParamSweep(SearchAlgorithm[Netlist, Group]):
+class SingleParamSweep(SearchAlgorithm[Netlist, LibertyResult]):
     """Does 1 simulation that simulates all candidates provided by candidate_generator."""
-
-    liberty_parser: LibertyParser
-    sim_file: IFile
 
     def __init__(
         self,
-        cost_function: NoopCostFunction,
         candidate_generator: ParamSweepCandidateGenerator,
-        liberty_parser: LibertyParser,
-        sim_file: IFile,
+        cost_function=noop_cost_function,
+        simulator=liberate_simulator,
     ):
-        self.cost_function = cost_function
         self.candidate_generator = candidate_generator
-        self.liberty_parser = liberty_parser
-        self.sim_file = sim_file
+        self._cost_function = cost_function
+        self._simulate = simulator
 
-    def _should_stop(self, iteration: int):
-        return iteration == 1
+    def _should_stop(self) -> bool:
+        return self._iteration == 1
 
-    # pylint: disable=unused-argument
-    def _simulate(self, candidates: Sequence[Netlist]) -> Group:
-        cell_names = tuple(netlist.cell_name for netlist in candidates)
-        # TODO: paramaterize other args
-        run_liberate(cell_names=cell_names)
-        return self.liberty_parser.parse(self.sim_file)
+    def get_ldb(self) -> LibertyResult:
+        return self._simulation_result

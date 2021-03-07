@@ -1,5 +1,5 @@
 from abc import ABCMeta, abstractmethod
-from typing import Dict, Generic, Sequence, TypeVar
+from typing import Dict, Generic, Sequence, TypeVar, Callable, Optional
 from logging import info
 
 from src.utils import single
@@ -18,15 +18,8 @@ class CandidateClass:
 
 Candidate = TypeVar("Candidate", bound=CandidateClass)
 
-
-class CostFunction(Generic[Candidate, SimulationResult]):
-    __metaclass__ = ABCMeta
-
-    @abstractmethod
-    def calculate(
-        self, candidates: Sequence[Candidate], simulation_result: SimulationResult
-    ) -> CostMap:
-        pass
+CostFunction = Callable[[Sequence[Candidate], SimulationResult], CostMap]
+Simulator = Callable[[Sequence[Candidate]], SimulationResult]
 
 
 class CandidateGenerator(Generic[Candidate]):
@@ -46,35 +39,49 @@ class CandidateGenerator(Generic[Candidate]):
 class SearchAlgorithm(Generic[Candidate, SimulationResult]):
     __metaclass__ = ABCMeta
 
-    cost_function: CostFunction
-    candidate_generator: CandidateGenerator[Candidate]
+    _candidate_generator: CandidateGenerator[Candidate]
+    _cost_function: Optional[CostFunction]
+    _simulate: Optional[Simulator]
+    _candidates: Sequence[Candidate]
+    _iteration: int
+    _simulation_result: SimulationResult
+    _cost_map: CostMap
 
     def search(self) -> Candidate:
         info("Generating initial population.")
-        candidates = self.candidate_generator.get_initial_population()
+        self._candidates = self._candidate_generator.get_initial_population()
 
-        iteration = 0
+        self._iteration = 0
         while True:
-            info(f"Starting iteration {iteration}")
-            simulation_result = self._simulate(candidates)
-            cost_map = self.cost_function.calculate(candidates, simulation_result)
+            info(f"Starting iteration {self._iteration}")
 
-            iteration += 1
-            if self._should_stop(iteration):
+            self._simulation_result = self.simulate(self._candidates)
+            self._cost_map = self.cost_function(
+                self._candidates, self._simulation_result
+            )
+
+            self._iteration += 1
+            if self._should_stop():
                 break
 
-            candidates = self.candidate_generator.get_next_population(
-                candidates, cost_map
+            self._candidates = self._candidate_generator.get_next_population(
+                self._candidates, self._cost_map
             )
 
         info("Selecting best candidate.")
-        best_candidate_name, _ = min(cost_map.items(), key=lambda item: item[1])
-        return single(lambda c: c.key() == best_candidate_name, candidates)
+        best_candidate_name, _ = min(self._cost_map.items(), key=lambda item: item[1])
+        return single(lambda c: c.key() == best_candidate_name, self._candidates)
 
     @abstractmethod
-    def _should_stop(self, iteration: int) -> bool:
+    def _should_stop(self) -> bool:
         pass
 
-    @abstractmethod
-    def _simulate(self, candidates: Sequence[Candidate]) -> SimulationResult:
-        pass
+    def simulate(self, candidates: Sequence[Candidate]) -> SimulationResult:
+        assert self._simulate is not None
+        return self._simulate(candidates)
+
+    def cost_function(
+        self, candidates: Sequence[Candidate], results: SimulationResult
+    ) -> CostMap:
+        assert self._cost_function is not None
+        return self._cost_function(candidates, results)
