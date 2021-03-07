@@ -5,8 +5,9 @@ import sys
 import os.path
 import argparse
 import logging
-import numpy as np
 from logging import DEBUG, debug, INFO, info, WARNING, error
+
+import numpy as np
 
 PYTHON_SCRIPTS_DIRECTORY: str = os.path.dirname(os.path.abspath(__file__))
 PYTHON_DIRECTORY: str = os.path.abspath(os.path.join(PYTHON_SCRIPTS_DIRECTORY, ".."))

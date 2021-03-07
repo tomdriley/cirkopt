@@ -17,7 +17,8 @@ def noop_cost_function(
 def longest_delay(cell: Group, delay_idx: Tuple[int, int]) -> float:
     assert hasattr(cell, "pin")
     # Get list of output pins, e.g. usually just <Y>
-    output_pins = (pin for pin in cell.pin if pin.direction == "output")
+    pins = cell.pin  # type: ignore
+    output_pins = (pin for pin in pins if pin.direction == "output")
     # Get all possible timing arcs, e.g. <A -> Y>, <B -> Y> for NAND or NOR
     # python magic to unroll 2D array
     timing_arcs = (timing for pin in output_pins for timing in pin.timing)
@@ -43,9 +44,9 @@ def delay_cost_function(
     delay_idx: Tuple[int, int],
 ) -> CostMap:
     """ Longest delay """
-    cost_map = {
-        cell.name: longest_delay(cell, delay_idx) for cell in simulation_result.cell
-    }
+    assert hasattr(simulation_result, "cell")
+    cells = simulation_result.cell  # type: ignore
+    cost_map = {cell.name: longest_delay(cell, delay_idx) for cell in cells}
 
     for candidate in candidates:
         if candidate.key() not in cost_map:

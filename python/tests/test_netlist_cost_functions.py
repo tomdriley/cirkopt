@@ -1,7 +1,7 @@
 import unittest
 
 from src.netlist import Netlist, BaseNetlistFile
-from src.liberty_parser import LibertyParser
+from src.liberty_parser import LibertyParser  # type: ignore
 from src.netlist_cost_functions import delay_cost_function, longest_delay
 from tests.mock_file import MockFile
 from tests.netlist_example import NETLIST_F3E7F6B4_EXAMPLES
