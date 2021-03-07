@@ -1,6 +1,6 @@
 import unittest
 
-from src.fixed_point import fixed, floating
+from src.fixed_point import fixed, floating, Rounding
 
 
 class TestFixedPoint(unittest.TestCase):
@@ -20,6 +20,14 @@ class TestFixedPoint(unittest.TestCase):
         self.assertEqual(fixed(0.26, 0.5), 1)
         self.assertEqual(fixed(0.25, 0.5), 0)  # rounds down
         self.assertEqual(fixed(0.24, 0.5), 0)
+
+        self.assertEqual(fixed(1.26, 0.5, Rounding.DOWN), 2)
+        self.assertEqual(fixed(1.25, 0.5, Rounding.DOWN), 2)
+        self.assertEqual(fixed(1.24, 0.5, Rounding.DOWN), 2)
+
+        self.assertEqual(fixed(1.26, 0.5, Rounding.UP), 3)
+        self.assertEqual(fixed(1.25, 0.5, Rounding.UP), 3)
+        self.assertEqual(fixed(1.24, 0.5, Rounding.UP), 3)
 
         self.assertEqual(fixed(1.26e-9, 0.5e-9), 3)
         self.assertEqual(fixed(1.25e-9, 0.5e-9), 2)
