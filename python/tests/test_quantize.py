@@ -3,9 +3,9 @@ import unittest
 from src.quantize import quantize, scale, Rounding
 
 
-class TestFixedPoint(unittest.TestCase):
+class TestQuantize(unittest.TestCase):
 
-    def test_fixed(self):
+    def test_quantize(self):
         with self.assertRaises(ValueError) as context:
             quantize(1.0, 0)
             self.assertIn("Precision cannot be less than or equal to 0", context.exception.args)
@@ -33,7 +33,7 @@ class TestFixedPoint(unittest.TestCase):
         self.assertEqual(quantize(1.25e-9, 0.5e-9), 2)
         self.assertEqual(quantize(1.24e-9, 0.5e-9), 2)
 
-    def test_floating(self):
+    def test_scale(self):
         with self.assertRaises(ValueError) as context:
             scale(1, 0)
             self.assertIn("Precision cannot be less than or equal to 0", context.exception.args)
