@@ -27,12 +27,14 @@ def _replace(regex: str, new: str, text: str) -> str:
     return re.sub(regex, new, text, count=1)
 
 
-@dataclass()
 class BaseNetlistFile:
     """An immutable view of a netlist file. [Netlist] uses this to avoid duplicating file reads."""
 
     file: File
     _cached: Optional[str] = None
+
+    def __init__(self, file: File):
+        self.file = file
 
     def contents(self) -> str:
         if self._cached is None:

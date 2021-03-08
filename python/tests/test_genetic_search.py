@@ -39,8 +39,9 @@ class TestGeneticSearch(unittest.TestCase):
             max_width=300e-9,
             min_length=45e-9,
             max_length=300e-9,
+            min_fingers=1,
+            max_fingers=3,
             precision=5e-9,
-            fingers_values=(1, 2, 3),
             reference_netlist=self.ref_netlist,
             netlist_persister=netlist_persister,
             seed=1234
@@ -49,11 +50,11 @@ class TestGeneticSearch(unittest.TestCase):
     def test_genetic_candidate_generator(self):
         # pylint: disable=protected-access
 
-        # Test computed memebers
-        self.assertEqual(self.candidate_generator._max_width, 60)
-        self.assertEqual(self.candidate_generator._max_length, 60)
-        self.assertEqual(self.candidate_generator._min_width, 9)
-        self.assertEqual(self.candidate_generator._min_length, 9)
+        # Test computed members
+        self.assertEqual(self.candidate_generator._bounds.max_width, 60)
+        self.assertEqual(self.candidate_generator._bounds.max_length, 60)
+        self.assertEqual(self.candidate_generator._bounds.min_width, 9)
+        self.assertEqual(self.candidate_generator._bounds.min_length, 9)
         self.assertEqual(self.candidate_generator._number_of_devices, 2)
         self.assertEqual(self.candidate_generator._id_num_digits, 2)
 
@@ -67,5 +68,23 @@ class TestGeneticSearch(unittest.TestCase):
             all(45e-9 <= length <= 300e-9 for candidate in initial_population for length in candidate.device_lengths)
         )
         self.assertTrue(
-            all(finger in {1, 2, 3} for candidate in initial_population for finger in candidate.device_fingers)
+            all(1 <= finger <= 3 for candidate in initial_population for finger in candidate.device_fingers)
+        )
+
+        cost_map = {candidate.key(): idx + 1 for idx, candidate in enumerate(initial_population)}
+        next_population = self.candidate_generator.get_next_population(initial_population, cost_map)
+        self.assertEqual(len(next_population), 100)
+        self.assertEqual(len(set(next_population)), 100)  # no duplicates
+
+        # Test elitism
+        self.assertEqual(initial_population[0], next_population[0])
+
+        self.assertTrue(
+            all(45e-9 <= width <= 300e-9 for candidate in next_population for width in candidate.device_widths)
+        )
+        self.assertTrue(
+            all(45e-9 <= length <= 300e-9 for candidate in next_population for length in candidate.device_lengths)
+        )
+        self.assertTrue(
+            all(1 <= finger <= 3 for candidate in next_population for finger in candidate.device_fingers)
         )
