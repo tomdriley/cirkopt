@@ -6,7 +6,8 @@ import os.path
 import argparse
 import logging
 from logging import DEBUG, debug, INFO, info, WARNING, error
-from numpy import arange
+
+import numpy as np
 
 PYTHON_SCRIPTS_DIRECTORY: str = os.path.dirname(os.path.abspath(__file__))
 PYTHON_DIRECTORY: str = os.path.abspath(os.path.join(PYTHON_SCRIPTS_DIRECTORY, ".."))
@@ -24,26 +25,20 @@ from src.single_param_sweep import Param  # pylint: disable=wrong-import-positio
 def _add_common_args(parser: argparse.ArgumentParser):
     parser.add_argument(
         "--outdir",
-        help=(
-            "Directory to place results in, e.g. graphs. "
-            "Does not include generated netlists or LDB library."
-        ),
+        help=("Directory to place results in, e.g. graphs. "
+              + "Does not include generated netlists or LDB library."),
         default=os.path.join(PYTHON_DIRECTORY, "out"),
     )
     parser.add_argument(
         "--workdir",
-        help=(
-            "Directory to place generated netlists. "
-            "Must match settings in Liberate configeration files. "
-        ),
+        help=("Directory to place generated netlists. "
+              + "Must match settings in Liberate configeration files. "),
         default=os.path.join(LIBERATE_DIRECTORY, "netlist_wrk"),
     )
     parser.add_argument(
         "--netlist",
-        help=(
-            "Path to reference netlist to modify. "
-            "Must match settings in Liberate configeration file."
-        ),
+        help=("Path to reference netlist to modify. "
+              + "Must match settings in Liberate configeration file."),
         default=os.path.join(LIBERATE_DIRECTORY, "netlist_ref/INVX1.sp"),
     )
     parser.add_argument(
@@ -102,11 +97,17 @@ search      Find an optimal design""",
         )
         parser.add_argument(
             "--range",
-            help=(
-                "Range of numbers to sweep over, MATLAB style (start:increment:end)"
-                " e.g.: 200e-9:100e-9:1000e-9"
-            ),
-            default="200e-9:100e-9:1000e-9",
+            help=("Range of numbers to sweep over, start then end, space separated"
+                  + " e.g.: 200e-9 1e-6"),
+            nargs=2,
+            type=float,
+            default=[200e-9, 1e-6],
+        )
+        parser.add_argument(
+            "--numsteps",
+            help="Number of values to simulate within range, e.g. 9",
+            type=int,
+            default=9,
         )
         parser.add_argument(
             "--outpin",
@@ -120,6 +121,7 @@ search      Find an optimal design""",
             type=int,
             default=[0, 1],
         )
+
         _add_common_args(parser)
 
         # now that we're inside a subcommand, ignore the first
@@ -135,12 +137,8 @@ search      Find an optimal design""",
             debug(f"{key:<10}: {args.__dict__[key]}")
 
         # Additional parsing
-        r = args.range.split(":")
-        if len(r) != 3:
-            raise TypeError(
-                "Range argument must be 3 values separated by : (colon), e.g. 200e-9:100e-9:1000e-9"
-            )
-        values = arange(float(r[0]), float(r[2]), float(r[1]))
+        values = np.linspace(start=args.range[0], stop=args.range[1], num=args.numsteps)
+        debug(f"values: {values}")
 
         info("Exploring search space.")
         sweep_param(
