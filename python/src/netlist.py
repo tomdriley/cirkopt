@@ -74,27 +74,19 @@ class Netlist(CandidateClass):
     ):
         netlist_str = base_netlist_file.contents()
 
-        if cell_name is not None:
-            cell_name = cell_name
-        else:
+        if cell_name is None:
             cell_name = _extract(netlist_str, SUBCIRKT_NAME_REGEX, str)
 
         lines = netlist_str.split("\n")
         device_lines = [l + " " for l in lines if len(l) > 0 and l[0].isalpha()]
 
-        if device_widths is not None:
-            device_widths = device_widths
-        else:
+        if device_widths is None:
             device_widths = tuple(_extract(l, WIDTH_REGEX, float) for l in device_lines)
 
-        if device_lengths is not None:
-            device_lengths = device_lengths
-        else:
+        if device_lengths is None:
             device_lengths = tuple(_extract(l, LENGTH_REGEX, float) for l in device_lines)
 
-        if device_fingers is not None:
-            device_fingers = device_fingers
-        else:
+        if device_fingers is None:
             device_fingers = tuple(_extract(l, FINGERS_REGEX, int) for l in device_lines)
         return cls(base_netlist_file, cell_name, device_widths, device_lengths, device_fingers)
 
