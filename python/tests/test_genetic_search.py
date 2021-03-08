@@ -47,4 +47,5 @@ class TestGeneticSearch(unittest.TestCase):
         )
 
     def test_genetic_candidate_generator(self):
+        # pylint: disable=protected-access
         self.assertEqual(self.candidate_generator._max_width, 60)
