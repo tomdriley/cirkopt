@@ -40,7 +40,7 @@ class BaseNetlistFile:
         return self._cached
 
 
-@dataclass(frozen=False)
+@dataclass(frozen=True)
 class Netlist(CandidateClass):
     """Store device characteristics for a given netlist.
 
@@ -61,39 +61,40 @@ class Netlist(CandidateClass):
     """Stores the device m values in order of device appearance in base_netlist_file"""
     device_fingers: Tuple[int, ...]
 
-    def __init__(
-        self,
+    @classmethod
+    def create(
+        cls,
         base_netlist_file: BaseNetlistFile,
         cell_name: Optional[str] = None,
         device_widths: Optional[Tuple[float, ...]] = None,
         device_lengths: Optional[Tuple[float, ...]] = None,
         device_fingers: Optional[Tuple[int, ...]] = None,
     ):
-        self.base_netlist_file = base_netlist_file
-        netlist_str = self.base_netlist_file.contents()
+        netlist_str = base_netlist_file.contents()
 
         if cell_name is not None:
-            self.cell_name = cell_name
+            cell_name = cell_name
         else:
-            self.cell_name = _extract(netlist_str, SUBCIRKT_NAME_REGEX, str)
+            cell_name = _extract(netlist_str, SUBCIRKT_NAME_REGEX, str)
 
         lines = netlist_str.split("\n")
         device_lines = [l + " " for l in lines if len(l) > 0 and l[0].isalpha()]
 
         if device_widths is not None:
-            self.device_widths = device_widths
+            device_widths = device_widths
         else:
-            self.device_widths = tuple(_extract(l, WIDTH_REGEX, float) for l in device_lines)
+            device_widths = tuple(_extract(l, WIDTH_REGEX, float) for l in device_lines)
 
         if device_lengths is not None:
-            self.device_lengths = device_lengths
+            device_lengths = device_lengths
         else:
-            self.device_lengths = tuple(_extract(l, LENGTH_REGEX, float) for l in device_lines)
+            device_lengths = tuple(_extract(l, LENGTH_REGEX, float) for l in device_lines)
 
         if device_fingers is not None:
-            self.device_fingers = device_fingers
+            device_fingers = device_fingers
         else:
-            self.device_fingers = tuple(_extract(l, FINGERS_REGEX, int) for l in device_lines)
+            device_fingers = tuple(_extract(l, FINGERS_REGEX, int) for l in device_lines)
+        return cls(base_netlist_file, cell_name, device_widths, device_lengths, device_fingers)
 
     def key(self) -> str:
         return self.cell_name
@@ -105,7 +106,7 @@ class Netlist(CandidateClass):
         device_lengths: Tuple[float, ...],
         device_fingers: Tuple[int, ...],
     ) -> "Netlist":
-        return Netlist(
+        return Netlist.create(
             base_netlist_file=self.base_netlist_file,
             cell_name=cell_name,
             device_widths=device_widths,

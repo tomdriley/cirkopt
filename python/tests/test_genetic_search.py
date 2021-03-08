@@ -23,13 +23,13 @@ class TestGeneticSearch(unittest.TestCase):
     def setUp(self):
         self.ref_netlist_file = MockFile()
         self.ref_netlist_file.write(TEST_NETLIST)
-        self.ref_netlist = Netlist(BaseNetlistFile(self.ref_netlist_file))
+        self.ref_netlist = Netlist.create(BaseNetlistFile(self.ref_netlist_file))
 
         def netlist_persister(netlist: Netlist):
             netlist.persist(MockFile())
 
         self.candidate_generator = GeneticCandidateGenerator.create(
-            num_individuals=10,
+            num_individuals=100,
             elitism=True,
             npoints=2,
             alpha=0.5,
@@ -48,4 +48,14 @@ class TestGeneticSearch(unittest.TestCase):
 
     def test_genetic_candidate_generator(self):
         # pylint: disable=protected-access
+
+        # Test computed memebers
         self.assertEqual(self.candidate_generator._max_width, 60)
+        self.assertEqual(self.candidate_generator._max_length, 60)
+        self.assertEqual(self.candidate_generator._min_width, 9)
+        self.assertEqual(self.candidate_generator._min_length, 9)
+        self.assertEqual(self.candidate_generator._number_of_devices, 2)
+        self.assertEqual(self.candidate_generator._id_num_digits, 2)
+
+        initial_population = self.candidate_generator.get_initial_population()
+        self.assertEqual(len(initial_population), 100)

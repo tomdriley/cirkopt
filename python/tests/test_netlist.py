@@ -33,7 +33,7 @@ class TestNetlist(unittest.TestCase):
         mock_file.write(TEST_NETLIST)
 
         netflist_file = BaseNetlistFile(mock_file)
-        netlist = Netlist(netflist_file)
+        netlist = Netlist.create(netflist_file)
 
         self.assertEqual(netlist.cell_name, "INVX1_3")
         self.assertEqual(netlist.device_widths, (250e-9, 300e-9))
@@ -45,7 +45,7 @@ class TestNetlist(unittest.TestCase):
         mock_file.write(TEST_NETLIST)
 
         netflist_file = BaseNetlistFile(mock_file)
-        netlist = Netlist(netflist_file)
+        netlist = Netlist.create(netflist_file)
 
         new_netlist = netlist.mutate(
             cell_name="INVX1_4",
