@@ -18,6 +18,7 @@ disable=missing-module-docstring,
         too-few-public-methods,
         invalid-name,
         fixme,
+        duplicate-code,
 
 [FORMAT]
 

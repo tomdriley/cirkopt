@@ -19,8 +19,7 @@ def fixed(val: float, precision: float, rounding: Rounding = Rounding.HALF_UP) -
     if rounding == Rounding.DOWN:
         return floor(val / precision)
 
-    if rounding == Rounding.UP:
-        return ceil(val / precision)
+    return ceil(val / precision)
 
 
 def floating(val: int, precision: float) -> float:
