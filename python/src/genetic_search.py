@@ -77,10 +77,10 @@ class GeneticCandidateGenerator(CandidateGenerator[Netlist]):
             alpha: float,
             pmutation: float,
             mutation_std_deviation: float,
-            min_width: int,
-            max_width: int,
-            min_length: int,
-            max_length: int,
+            min_width: float,
+            max_width: float,
+            min_length: float,
+            max_length: float,
             precision: float,
             fingers_values: Sequence[int],
             reference_netlist: Netlist,
@@ -95,10 +95,10 @@ class GeneticCandidateGenerator(CandidateGenerator[Netlist]):
             _alpha=alpha,
             _pmutation=pmutation,
             _mutation_std_deviation=mutation_std_deviation,
-            _min_width=quantize(min_width, precision, Rounding.UP),
-            _max_width=quantize(max_width, precision, Rounding.DOWN),
-            _min_length=quantize(min_length, precision, Rounding.UP),
-            _max_length=quantize(max_length, precision, Rounding.DOWN),
+            _min_width=quantize(min_width, precision, Rounding.HALF_UP),  # TODO: look into rounding up
+            _max_width=quantize(max_width, precision, Rounding.HALF_UP),  # TODO: look into rounding down
+            _min_length=quantize(min_length, precision, Rounding.HALF_UP),  # TODO: look into rounding up
+            _max_length=quantize(max_length, precision, Rounding.HALF_UP),  # TODO: look into rounding down
             _precision=precision,
             _fingers_values=fingers_values,
             _reference_netlist=reference_netlist,
