@@ -59,3 +59,13 @@ class TestGeneticSearch(unittest.TestCase):
 
         initial_population = self.candidate_generator.get_initial_population()
         self.assertEqual(len(initial_population), 100)
+
+        self.assertTrue(
+            all(45e-9 <= width <= 300e-9 for candidate in initial_population for width in candidate.device_widths)
+        )
+        self.assertTrue(
+            all(45e-9 <= length <= 300e-9 for candidate in initial_population for length in candidate.device_lengths)
+        )
+        self.assertTrue(
+            all(finger in {1, 2, 3} for candidate in initial_population for finger in candidate.device_fingers)
+        )
