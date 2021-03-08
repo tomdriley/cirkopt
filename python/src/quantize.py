@@ -9,9 +9,9 @@ class Rounding(Enum):
     HALF_UP = 3  # Round to nearest integer, round up on ties
 
 
-def fixed(val: float, precision: float, rounding: Rounding = Rounding.HALF_UP) -> int:
+def quantize(val: float, precision: float, rounding: Rounding = Rounding.HALF_UP) -> int:
     if precision <= 0:
-        raise Exception("Precision cannot be 0")
+        raise ValueError("Precision cannot be 0")
 
     if rounding == Rounding.HALF_UP:
         return round(val / precision)
@@ -19,10 +19,13 @@ def fixed(val: float, precision: float, rounding: Rounding = Rounding.HALF_UP) -
     if rounding == Rounding.DOWN:
         return floor(val / precision)
 
-    return ceil(val / precision)
+    if rounding == Rounding.UP:
+        return ceil(val / precision)
+
+    raise ValueError("rounding not one of UP, DOWN, or HALF_UP")
 
 
-def floating(val: int, precision: float) -> float:
+def scale(val: int, precision: float) -> float:
     if precision <= 0:
-        raise Exception("Precision cannot be 0")
+        raise ValueError("Precision cannot be 0")
     return val * precision

@@ -5,7 +5,7 @@ from typing import Callable, Optional, Sequence, Tuple
 from numpy.random import default_rng
 import numpy as np
 
-from src.fixed_point import fixed, floating, Rounding
+from src.quantize import quantize, scale, Rounding
 from src.liberate import liberate_simulator
 from src.liberty_parser import LibertyResult
 from src.netlist import Netlist
@@ -20,8 +20,8 @@ CostFunction = Callable[[Sequence[Netlist], LibertyResult], CostMap]
 
 def _normalize(netlist: Netlist, precision: float) -> Tuple[int, ...]:
     """Returns the netlist's fixed point widths, fixed point lengths and fingers in a 1d tuple"""
-    widths = (fixed(w, precision) for w in netlist.device_widths)
-    lengths = (fixed(l, precision) for l in netlist.device_lengths)
+    widths = (quantize(w, precision) for w in netlist.device_widths)
+    lengths = (quantize(l, precision) for l in netlist.device_lengths)
     fingers = iter(netlist.device_fingers)
     return tuple(chain(widths, lengths, fingers))
 
@@ -33,8 +33,8 @@ def _denormalize(
     """Returns the normalized netlist's floating point widths, floating point lengths and fingers"""
     ndevices = normalized_netlist.shape[0]
     return (
-        tuple(floating(w, precision) for w in normalized_netlist[:ndevices]),
-        tuple(floating(l, precision) for l in normalized_netlist[ndevices:-ndevices]),
+        tuple(scale(w, precision) for w in normalized_netlist[:ndevices]),
+        tuple(scale(l, precision) for l in normalized_netlist[ndevices:-ndevices]),
         tuple(normalized_netlist[-ndevices:])
     )
 
@@ -79,10 +79,10 @@ class GeneticCandidateGenerator(CandidateGenerator[Netlist]):
         self._num_individuals = num_individuals
         self._elitism = elitism
 
-        self._min_width = fixed(min_width, precision, Rounding.UP)
-        self._max_width = fixed(max_width, precision, Rounding.DOWN)
-        self._min_length = fixed(min_length, precision, Rounding.UP)
-        self._max_length = fixed(max_length, precision, Rounding.DOWN)
+        self._min_width = quantize(min_width, precision, Rounding.UP)
+        self._max_width = quantize(max_width, precision, Rounding.DOWN)
+        self._min_length = quantize(min_length, precision, Rounding.UP)
+        self._max_length = quantize(max_length, precision, Rounding.DOWN)
         self._precision = precision
         self._fingers_values = fingers_values
 
@@ -110,8 +110,8 @@ class GeneticCandidateGenerator(CandidateGenerator[Netlist]):
 
             return self._reference_netlist.mutate(
                 cell_name=self._get_netlist_name(idx),
-                device_widths=tuple(floating(w, self._precision) for w in widths),  # convert from fixed point
-                device_lengths=tuple(floating(l, self._precision) for l in lengths),
+                device_widths=tuple(scale(w, self._precision) for w in widths),  # convert from fixed point
+                device_lengths=tuple(scale(l, self._precision) for l in lengths),
                 device_fingers=fingers
             )
 
