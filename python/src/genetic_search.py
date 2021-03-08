@@ -177,11 +177,11 @@ class GeneticCandidateGenerator(CandidateGenerator[Netlist]):
 
             # Perform crossover
             parent_a, parent_b = mating_pool[parent_indices]
-            child_a, child_b = self.n_point_arithmetic_crossover(parent_a, parent_b)
+            child_a, child_b = self._n_point_arithmetic_crossover(parent_a, parent_b)
 
             # Perform mutation
-            child_a = self.gaussian_mutation(child_a)
-            child_b = self.gaussian_mutation(child_b)
+            child_a = self._gaussian_mutation(child_a)
+            child_b = self._gaussian_mutation(child_b)
 
             if maybe_add_child_to_offspring(child_a, num_children):
                 num_children += 1
@@ -204,7 +204,7 @@ class GeneticCandidateGenerator(CandidateGenerator[Netlist]):
         self._persist_netlists(netlists)
         return netlists
 
-    def n_point_arithmetic_crossover(
+    def _n_point_arithmetic_crossover(
             self,
             parent_a: np.ndarray,
             parent_b: np.ndarray,
@@ -226,7 +226,7 @@ class GeneticCandidateGenerator(CandidateGenerator[Netlist]):
 
         return child_a.round().astype(np.uint16), child_b.round().astype(np.uint16)
 
-    def gaussian_mutation(self, individual: np.ndarray) -> np.ndarray:
+    def _gaussian_mutation(self, individual: np.ndarray) -> np.ndarray:
         """Apply additive gaussian noise to each device parameter with a probability of self._pmutation"""
         p = self._pmutation
         mutation_mask = self._rng.choice([0, 1], len(individual), p=[1-p, p]).asType(np.bool8)
