@@ -14,7 +14,7 @@ LIBERATE_DIRECTORY: str = os.path.abspath(os.path.join(PYTHON_DIRECTORY, "../lib
 sys.path.append(PYTHON_DIRECTORY)
 
 # These imports rely on changed sys.path
-from scripts.genetic_search import main as gsearch
+from scripts.genetic_search import main as gsearch  # pylint: disable=wrong-import-position
 from scripts.single_param_sweep import (  # pylint: disable=wrong-import-position
     main as sweep_param,
 )
@@ -165,63 +165,63 @@ search      Find an optimal design""",
             type=int,
             default=100,
         )
-        
+
         parser.add_argument(
             "--individuals",
             help="Number of search individuals per population",
             type=int,
             default=10,
         )
-        
+
         parser.add_argument(
             "--elitism",
             help="If the best candidate should continue to next population",
             type=bool,
             default=True,
         )
-        
+
         parser.add_argument(
             "--npoints",
             help="Number of crossover points, should be less than number of devices * 3",
             type=int,
             default=2,
         )
-        
+
         parser.add_argument(
             "--alpha",
             help="Alpha for n point crossover",
             type=float,
             default=0.5,
         )
-        
+
         parser.add_argument(
             "--pmutation",
             help="Probability of adding gaussian noise mutation to a given device param within a candidate",
             type=float,
             default=0.05,
         )
-        
+
         parser.add_argument(
             "--mutation-std-dev",
             help="Standard deviation of additive gaussian noise mutation",
             type=float,
             default=1.0,
         )
-        
+
         parser.add_argument(
             "--min-width",
             help="Minimum width for a device (inclusive)",
             type=float,
             default=45e-9,
         )
-        
+
         parser.add_argument(
             "--max-width",
             help="Maximum width for a device (inclusive)",
             type=float,
             default=300e-9,
         )
-        
+
         parser.add_argument(
             "--min-length",
             help="Minimum length for a device (inclusive)",
@@ -235,7 +235,7 @@ search      Find an optimal design""",
             type=float,
             default=300e-9,
         )
-        
+
         parser.add_argument(
             "--min-fingers",
             help="Minimum fingers for a device (inclusive)",
@@ -249,7 +249,7 @@ search      Find an optimal design""",
             type=int,
             default=3,
         )
-        
+
         parser.add_argument(
             "--precision",
             help="The smallest step size in device width and length to take (i.e 5nm would be 5e-9)",

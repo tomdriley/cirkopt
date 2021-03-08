@@ -1,5 +1,5 @@
 import os
-from logging import info, log
+from logging import info
 
 import matplotlib.pyplot as plt  # type: ignore
 
@@ -76,14 +76,14 @@ def main(
     )
 
     # Do the sweep
-    log("Starting genetic search.")
+    info("Starting genetic search.")
     best_netlist = genetic_search.search()
-    log("Search complete")
-    log(f"Find netlist is named {best_netlist.cell_name} in {netlist_work_dir_path}")
+    info("Search complete")
+    info(f"Find netlist is named {best_netlist.cell_name} in {netlist_work_dir_path}")
 
     # Graph the results of search
     plt.figure()
-    plt.title(f"Minimum cost per iteration")
+    plt.title("Minimum cost per iteration")
     plt.plot(genetic_search.min_cost_per_iteration, "b")
     plt.ylabel("Cost")
     plt.xlabel("Iteration number")
