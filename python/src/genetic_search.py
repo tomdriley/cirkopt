@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from itertools import chain
 from math import ceil, log10
-from typing import Callable, Optional, Sequence, Tuple
+from typing import Callable, List, Optional, Sequence, Tuple
 
 from numpy.random import default_rng
 import numpy as np
@@ -17,6 +17,7 @@ from src.search_algorithm import (
 )
 
 CostFunction = Callable[[Sequence[Netlist], LibertyResult], CostMap]
+
 
 @dataclass(frozen=True)
 class Bounds:
@@ -254,8 +255,9 @@ class GeneticCandidateGenerator(CandidateGenerator[Netlist]):
             self._netlist_persister(netlist)
 
 
-class GeneticSearch(SearchAlgorithm):
+class GeneticSearch(SearchAlgorithm[Netlist, LibertyResult]):
     _max_iterations: int
+    min_cost_per_iteration: List[float]
 
     def __init__(
         self,
@@ -267,6 +269,11 @@ class GeneticSearch(SearchAlgorithm):
         self._cost_function = cost_function
         self._simulate = liberate_simulator
         self._max_iterations = max_iterations
+        self.min_cost_per_iteration = [0] * max_iterations
 
     def _should_stop(self) -> bool:
         return self._iteration >= self._max_iterations
+
+    def _post_simulation(self):
+        min_cost = min(self._cost_map.values())
+        self.min_cost_per_iteration.append(min_cost)

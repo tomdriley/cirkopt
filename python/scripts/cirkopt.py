@@ -14,10 +14,54 @@ LIBERATE_DIRECTORY: str = os.path.abspath(os.path.join(PYTHON_DIRECTORY, "../lib
 sys.path.append(PYTHON_DIRECTORY)
 
 # These imports rely on changed sys.path
+from scripts.genetic_search import main as gsearch
 from scripts.single_param_sweep import (  # pylint: disable=wrong-import-position
     main as sweep_param,
 )
 from src.single_param_sweep import Param  # pylint: disable=wrong-import-position
+
+
+def _add_common_args(parser: argparse.ArgumentParser):
+    parser.add_argument(
+        "--outdir",
+        help=(
+            "Directory to place results in, e.g. graphs. "
+            "Does not include generated netlists or LDB library."
+        ),
+        default=os.path.join(PYTHON_DIRECTORY, "out"),
+    )
+    parser.add_argument(
+        "--workdir",
+        help=(
+            "Directory to place generated netlists. "
+            "Must match settings in Liberate configeration files. "
+        ),
+        default=os.path.join(LIBERATE_DIRECTORY, "netlist_wrk"),
+    )
+    parser.add_argument(
+        "--netlist",
+        help=(
+            "Path to reference netlist to modify. "
+            "Must match settings in Liberate configeration file."
+        ),
+        default=os.path.join(LIBERATE_DIRECTORY, "netlist_ref/INVX1.sp"),
+    )
+    parser.add_argument(
+        "--debug",
+        help="Print lots of debugging statements",
+        action="store_const",
+        dest="loglevel",
+        const=DEBUG,
+        default=WARNING,
+    )
+    parser.add_argument(
+        "--verbose",
+        help="Be verbose",
+        action="store_const",
+        dest="loglevel",
+        const=INFO,
+    )
+
 
 # Basically a copy of this blog post [1].
 # [1] https://chase-seibert.github.io/blog/2014/03/21/python-multilevel-argparse.html
@@ -76,45 +120,7 @@ search      Find an optimal design""",
             type=int,
             default=[0, 1],
         )
-        parser.add_argument(
-            "--outdir",
-            help=(
-                "Directory to place results in, e.g. graphs. "
-                "Does not include generated netlists or LDB library."
-            ),
-            default=os.path.join(PYTHON_DIRECTORY, "out"),
-        )
-        parser.add_argument(
-            "--workdir",
-            help=(
-                "Directory to place generated netlists. "
-                "Must match settings in Liberate configeration files. "
-            ),
-            default=os.path.join(LIBERATE_DIRECTORY, "netlist_wrk"),
-        )
-        parser.add_argument(
-            "--netlist",
-            help=(
-                "Path to reference netlist to modify. "
-                "Must match settings in Liberate configeration file."
-            ),
-            default=os.path.join(LIBERATE_DIRECTORY, "netlist_ref/INVX1.sp"),
-        )
-        parser.add_argument(
-            "--debug",
-            help="Print lots of debugging statements",
-            action="store_const",
-            dest="loglevel",
-            const=DEBUG,
-            default=WARNING,
-        )
-        parser.add_argument(
-            "--verbose",
-            help="Be verbose",
-            action="store_const",
-            dest="loglevel",
-            const=INFO,
-        )
+        _add_common_args(parser)
 
         # now that we're inside a subcommand, ignore the first
         # TWO argvs, ie the command (cirkopt) and the subcommand (explore)
@@ -145,6 +151,144 @@ search      Find an optimal design""",
             graph_pin=args.outpin,
             graph_delay_index=args.outindex,
             out_dir_rel_path=args.outdir,
+        )
+
+    # pylint: disable=no-self-use
+    def search(self):
+        parser = argparse.ArgumentParser(
+            description="Use genetic search to find optimal design",
+        )
+
+        parser.add_argument(
+            "--iterations",
+            help="Number of search iterations to run",
+            type=int,
+            default=100,
+        )
+        
+        parser.add_argument(
+            "--individuals",
+            help="Number of search individuals per population",
+            type=int,
+            default=10,
+        )
+        
+        parser.add_argument(
+            "--elitism",
+            help="If the best candidate should continue to next population",
+            type=bool,
+            default=True,
+        )
+        
+        parser.add_argument(
+            "--npoints",
+            help="Number of crossover points, should be less than number of devices * 3",
+            type=int,
+            default=2,
+        )
+        
+        parser.add_argument(
+            "--alpha",
+            help="Alpha for n point crossover",
+            type=float,
+            default=0.5,
+        )
+        
+        parser.add_argument(
+            "--pmutation",
+            help="Probability of adding gaussian noise mutation to a given device param within a candidate",
+            type=float,
+            default=0.05,
+        )
+        
+        parser.add_argument(
+            "--mutation-std-dev",
+            help="Standard deviation of additive gaussian noise mutation",
+            type=float,
+            default=1.0,
+        )
+        
+        parser.add_argument(
+            "--min-width",
+            help="Minimum width for a device (inclusive)",
+            type=float,
+            default=45e-9,
+        )
+        
+        parser.add_argument(
+            "--max-width",
+            help="Maximum width for a device (inclusive)",
+            type=float,
+            default=300e-9,
+        )
+        
+        parser.add_argument(
+            "--min-length",
+            help="Minimum length for a device (inclusive)",
+            type=float,
+            default=45e-9,
+        )
+
+        parser.add_argument(
+            "--max-length",
+            help="Maximum length for a device (inclusive)",
+            type=float,
+            default=300e-9,
+        )
+        
+        parser.add_argument(
+            "--min-fingers",
+            help="Minimum fingers for a device (inclusive)",
+            type=int,
+            default=1,
+        )
+
+        parser.add_argument(
+            "--max-fingers",
+            help="Maximum fingers for a device (inclusive)",
+            type=int,
+            default=3,
+        )
+        
+        parser.add_argument(
+            "--precision",
+            help="The smallest step size in device width and length to take (i.e 5nm would be 5e-9)",
+            type=float,
+            default=5e-9,
+        )
+
+        _add_common_args(parser)
+
+        # now that we're inside a subcommand, ignore the first
+        # TWO argvs, ie the command (cirkopt) and the subcommand (explore)
+        args = parser.parse_args(sys.argv[2:])
+        logging.basicConfig(
+            format="%(levelname)s (%(asctime)s): %(message)s",
+            datefmt="%I:%M:%S %p",
+            level=args.loglevel,
+        )
+        # Print all the arguments given
+        for key in args.__dict__:
+            debug(f"{key:<10}: {args.__dict__[key]}")
+
+        gsearch(
+            reference_netlist_rel_path=args.netlist,
+            netlist_work_dir_rel_path=args.workdir,
+            out_dir_rel_path=args.outdir,
+            max_iterations=args.iterations,
+            num_individuals=args.individuals,
+            elitism=args.elitism,
+            npoints=args.npoints,
+            alpha=args.alpha,
+            pmutation=args.pmutation,
+            mutation_std_deviation=args.mutation_std_dev,
+            min_width=args.min_width,
+            max_width=args.max_width,
+            min_length=args.min_length,
+            max_length=args.max_length,
+            min_fingers=args.min_fingers,
+            max_fingers=args.max_fingers,
+            precision=args.precision,
         )
 
 

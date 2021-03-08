@@ -76,6 +76,9 @@ class SearchAlgorithm(Generic[Candidate, SimulationResult]):
     def _should_stop(self) -> bool:
         pass
 
+    def _post_simulation(self):
+        pass
+
     def simulate(self, candidates: Sequence[Candidate]) -> SimulationResult:
         assert self._simulate is not None
         return self._simulate(candidates)
