@@ -1,12 +1,15 @@
 import os
+from functools import partial
 from logging import info
+from typing import Tuple
 
 import matplotlib.pyplot as plt  # type: ignore
 
 from src.file_io import File
 from src.netlist import BaseNetlistFile, Netlist
-from src.netlist_cost_functions import noop_cost_function
+from src.netlist_cost_functions import delay_cost_function
 from src.genetic_search import (
+    CostFunction,
     GeneticCandidateGenerator,
     GeneticSearch,
 )
@@ -31,6 +34,7 @@ def main(
     min_fingers: int,
     max_fingers: int,
     precision: float,
+    delay_index: Tuple[int, int]
 ):
     curr_path = os.path.abspath(os.path.dirname(__file__))
     reference_netlist_path = os.path.join(curr_path, reference_netlist_rel_path)
@@ -69,9 +73,11 @@ def main(
         persist_netlist_in_run_dir,
         seed=1234  # Make it reproducible
     )
+
+    cost_function: CostFunction = partial(delay_cost_function, delay_idx=delay_index)
     genetic_search = GeneticSearch(
         candidate_generator,
-        noop_cost_function,  # TODO: use real cost function
+        cost_function,  # TODO: parameterize when there are more cost functions
         max_iterations,
     )
 

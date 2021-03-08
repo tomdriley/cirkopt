@@ -255,6 +255,14 @@ search      Find an optimal design""",
             default=5e-9,
         )
 
+        parser.add_argument(
+            "--delay-index",
+            help="Delay index to be used for delay based cost function",
+            nargs=2,
+            type=int,
+            default=[0, 1],
+        )
+
         _add_common_args(parser)
 
         # now that we're inside a subcommand, ignore the first
@@ -287,6 +295,7 @@ search      Find an optimal design""",
             min_fingers=args.min_fingers,
             max_fingers=args.max_fingers,
             precision=args.precision,
+            delay_index=tuple(args.delay_index)
         )
 
 
