@@ -11,7 +11,7 @@ def main() -> None:
     netlist_file = File(path)
     base_netlist_file = BaseNetlistFile(netlist_file)
 
-    netlist = Netlist(base_netlist_file)
+    netlist = Netlist.create(base_netlist_file)
 
     new_netlist = netlist.mutate(
         cell_name="INVX1_4",

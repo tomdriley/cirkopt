@@ -42,7 +42,7 @@ def main(
         netlist.persist(netlist_file)
 
     candidate_generator = ParamSweepCandidateGenerator(
-        reference_netlist=Netlist(BaseNetlistFile(File(reference_netlist_path))),
+        reference_netlist=Netlist.create(BaseNetlistFile(File(reference_netlist_path))),
         netlist_persister=persist_netlist_in_run_dir,
         param=param,
         values=values,

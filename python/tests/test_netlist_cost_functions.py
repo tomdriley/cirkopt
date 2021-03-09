@@ -32,7 +32,7 @@ class TestDelayCostFunction(unittest.TestCase):
             netlist_mock_file = MockFile()
             netlist_mock_file.write(netlist_file)
             base_netlist_file = BaseNetlistFile(netlist_mock_file)
-            netlists.append(Netlist(base_netlist_file))
+            netlists.append(Netlist.create(base_netlist_file))
 
         # Parse ldb to create LibertyResult
         ldb_file = MockFile()

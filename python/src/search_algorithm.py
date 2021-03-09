@@ -59,6 +59,7 @@ class SearchAlgorithm(Generic[Candidate, SimulationResult]):
             self._cost_map = self.cost_function(
                 self._candidates, self._simulation_result
             )
+            self._post_simulation()
 
             self._iteration += 1
             if self._should_stop():
@@ -74,6 +75,9 @@ class SearchAlgorithm(Generic[Candidate, SimulationResult]):
 
     @abstractmethod
     def _should_stop(self) -> bool:
+        pass
+
+    def _post_simulation(self):
         pass
 
     def simulate(self, candidates: Sequence[Candidate]) -> SimulationResult:
