@@ -29,7 +29,7 @@ class Bounds:
     max_fingers: int
 
 
-def _normalize(netlist: Netlist, precision: float) -> Tuple[int, ...]:
+def _normalize(netlist: Netlist, precision: str) -> Tuple[int, ...]:
     """Returns the netlist's fixed point widths, fixed point lengths and fingers in a 1d tuple"""
     widths = (quantize(w, precision) for w in netlist.device_widths)
     lengths = (quantize(l, precision) for l in netlist.device_lengths)
@@ -39,7 +39,7 @@ def _normalize(netlist: Netlist, precision: float) -> Tuple[int, ...]:
 
 def _denormalize(
         normalized_netlist: np.ndarray,
-        precision: float,
+        precision: str,
         b: Bounds
 ) -> Tuple[Tuple[float, ...], Tuple[float, ...], Tuple[int, ...]]:
     """Returns the normalized netlist's floating point widths, floating point lengths and fingers"""
@@ -65,7 +65,7 @@ class GeneticCandidateGenerator(CandidateGenerator[Netlist]):
 
     # Search space params
     _bounds: Bounds
-    _precision: float
+    _precision: str
 
     # Netlist
     _reference_netlist: Netlist
@@ -90,7 +90,7 @@ class GeneticCandidateGenerator(CandidateGenerator[Netlist]):
             max_length: float,
             min_fingers: int,
             max_fingers: int,
-            precision: float,
+            precision: str,
             reference_netlist: Netlist,
             netlist_persister: Optional[Callable[[Netlist], None]],
             seed: Optional[int] = None
@@ -209,9 +209,7 @@ class GeneticCandidateGenerator(CandidateGenerator[Netlist]):
         for idx, normalized_netlist in enumerate(offspring):
             assert normalized_netlist.any(), f"Offspring[{idx}] contained only zeros"
 
-            widths, lengths, fingers = _denormalize(
-                normalized_netlist, self._precision, self._bounds
-            )
+            widths, lengths, fingers = _denormalize(normalized_netlist, self._precision, self._bounds)
             netlists.append(self._reference_netlist.mutate(self._get_netlist_name(idx), widths, lengths, fingers))
 
         self._persist_netlists(netlists)

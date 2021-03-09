@@ -33,7 +33,7 @@ def main(
     max_length: float,
     min_fingers: int,
     max_fingers: int,
-    precision: float,
+    precision: str,
     delay_index: Tuple[int, int]
 ):
     curr_path = os.path.abspath(os.path.dirname(__file__))

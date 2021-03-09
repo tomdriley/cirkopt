@@ -250,9 +250,10 @@ search      Find an optimal design""",
 
         parser.add_argument(
             "--precision",
-            help="The smallest step size in device width and length to take (i.e 5nm would be 5e-9)",
-            type=float,
-            default=5e-9,
+            help=("The smallest step size in device width and length to take (i.e 5nm would be '5e-9'). " +
+                  "Stored as string to avoid floating point madness."),
+            type=str,
+            default='5e-9',
         )
 
         parser.add_argument(

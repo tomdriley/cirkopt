@@ -29,7 +29,7 @@ class TestGeneticSearch(unittest.TestCase):
             max_length=300e-9,
             min_fingers=1,
             max_fingers=3,
-            precision=5e-9,
+            precision='5e-9',
             reference_netlist=self.ref_netlist,
             netlist_persister=netlist_persister,
             seed=1234
