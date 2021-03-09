@@ -1,6 +1,7 @@
 import os
 from functools import partial
-from logging import info
+import logging
+from logging import info, debug
 from typing import Tuple
 
 import matplotlib.pyplot as plt  # type: ignore
@@ -34,7 +35,7 @@ def main(
     min_fingers: int,
     max_fingers: int,
     precision: str,
-    delay_index: Tuple[int, int]
+    delay_index: Tuple[int, int],
 ):
     curr_path = os.path.abspath(os.path.dirname(__file__))
     reference_netlist_path = os.path.join(curr_path, reference_netlist_rel_path)
@@ -71,7 +72,7 @@ def main(
         precision,
         Netlist.create(BaseNetlistFile(File(reference_netlist_path))),
         persist_netlist_in_run_dir,
-        seed=1234  # Make it reproducible
+        seed=1234,  # Make it reproducible
     )
 
     cost_function: CostFunction = partial(delay_cost_function, delay_idx=delay_index)
@@ -87,11 +88,17 @@ def main(
     info("Search complete")
     info(f"Find netlist is named {best_netlist.cell_name} in {netlist_work_dir_path}")
 
+    mpl_logger = logging.getLogger("matplotlib")
+    if logging.getLogger().getEffectiveLevel() < logging.WARNING:
+        debug("Suppressing matplotlib logs below warning.")
+        mpl_logger.setLevel(logging.WARNING)
+
     # Graph the results of search
     plt.figure()
     plt.title("Minimum cost per iteration")
     plt.plot(genetic_search.min_cost_per_iteration, "b")
     plt.ylabel("Cost")
+    plt.ylim(bottom=0)
     plt.xlabel("Iteration number")
     plt.tight_layout()
     ax = plt.gca()

@@ -15,7 +15,9 @@ LIBERATE_DIRECTORY: str = os.path.abspath(os.path.join(PYTHON_DIRECTORY, "../lib
 sys.path.append(PYTHON_DIRECTORY)
 
 # These imports rely on changed sys.path
-from scripts.genetic_search import main as gsearch  # pylint: disable=wrong-import-position
+from scripts.genetic_search import (  # pylint: disable=wrong-import-position
+    main as gsearch,
+)
 from scripts.single_param_sweep import (  # pylint: disable=wrong-import-position
     main as sweep_param,
 )
@@ -25,20 +27,26 @@ from src.single_param_sweep import Param  # pylint: disable=wrong-import-positio
 def _add_common_args(parser: argparse.ArgumentParser):
     parser.add_argument(
         "--outdir",
-        help=("Directory to place results in, e.g. graphs. "
-              + "Does not include generated netlists or LDB library."),
+        help=(
+            "Directory to place results in, e.g. graphs. "
+            + "Does not include generated netlists or LDB library."
+        ),
         default=os.path.join(PYTHON_DIRECTORY, "out"),
     )
     parser.add_argument(
         "--workdir",
-        help=("Directory to place generated netlists. "
-              + "Must match settings in Liberate configeration files. "),
+        help=(
+            "Directory to place generated netlists. "
+            + "Must match settings in Liberate configeration files. "
+        ),
         default=os.path.join(LIBERATE_DIRECTORY, "netlist_wrk"),
     )
     parser.add_argument(
         "--netlist",
-        help=("Path to reference netlist to modify. "
-              + "Must match settings in Liberate configeration file."),
+        help=(
+            "Path to reference netlist to modify. "
+            + "Must match settings in Liberate configeration file."
+        ),
         default=os.path.join(LIBERATE_DIRECTORY, "netlist_ref/INVX1.sp"),
     )
     parser.add_argument(
@@ -97,8 +105,10 @@ search      Find an optimal design""",
         )
         parser.add_argument(
             "--range",
-            help=("Range of numbers to sweep over, start then end, space separated"
-                  + " e.g.: 200e-9 1e-6"),
+            help=(
+                "Range of numbers to sweep over, start then end, space separated"
+                + " e.g.: 200e-9 1e-6"
+            ),
             nargs=2,
             type=float,
             default=[200e-9, 1e-6],
@@ -210,14 +220,14 @@ search      Find an optimal design""",
             "--min-width",
             help="Minimum width for a device (inclusive)",
             type=float,
-            default=45e-9,
+            default=120e-9,
         )
 
         parser.add_argument(
             "--max-width",
             help="Maximum width for a device (inclusive)",
             type=float,
-            default=300e-9,
+            default=10e-6,
         )
 
         parser.add_argument(
@@ -231,7 +241,7 @@ search      Find an optimal design""",
             "--max-length",
             help="Maximum length for a device (inclusive)",
             type=float,
-            default=300e-9,
+            default=45e-9,
         )
 
         parser.add_argument(
@@ -245,15 +255,17 @@ search      Find an optimal design""",
             "--max-fingers",
             help="Maximum fingers for a device (inclusive)",
             type=int,
-            default=3,
+            default=1,
         )
 
         parser.add_argument(
             "--precision",
-            help=("The smallest step size in device width and length to take (i.e 5nm would be '5e-9'). " +
-                  "Stored as string to avoid floating point madness."),
+            help=(
+                "The smallest step size in device width and length to take (i.e 5nm would be '5e-9'). "
+                + "Stored as string to avoid floating point madness."
+            ),
             type=str,
-            default='5e-9',
+            default="5e-9",
         )
 
         parser.add_argument(
@@ -296,7 +308,7 @@ search      Find an optimal design""",
             min_fingers=args.min_fingers,
             max_fingers=args.max_fingers,
             precision=args.precision,
-            delay_index=tuple(args.delay_index)
+            delay_index=tuple(args.delay_index),
         )
 
 
