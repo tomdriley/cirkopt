@@ -275,5 +275,4 @@ class GeneticSearch(SearchAlgorithm[Netlist, LibertyResult]):
         return self._iteration >= self._max_iterations
 
     def _post_simulation(self):
-        min_cost = min(self._cost_map.values())
-        self.min_cost_per_iteration.append(min_cost)
+        self.min_cost_per_iteration[self._iteration] = min(self._cost_map.values())
