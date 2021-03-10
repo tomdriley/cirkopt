@@ -78,14 +78,18 @@ def run_liberate(
     # TODO: Run setup script before
 
     info("Running liberate.")
-    r: subprocess.Popen = subprocess.Popen(
-        args=[liberate_cmd, char_tcl_path],
-        cwd=run_dir,
-        stderr=subprocess.STDOUT,
-        stdout=subprocess.PIPE,
-        text=True,
-    )
-    _waiting_animation(complete_condition=r.poll)
+    with open(
+        file=os.path.join(LIBERATE_DEFAULT_PROJECT_DIRECTORY, "python.log"),
+        mode="w",
+    ) as log_file:  # TODO: paramaterize log file name and use MockFile interface
+        r: subprocess.Popen = subprocess.Popen(
+            args=[liberate_cmd, char_tcl_path],
+            cwd=run_dir,
+            stderr=subprocess.STDOUT,
+            stdout=log_file,
+            text=True,
+        )
+        _waiting_animation(complete_condition=r.poll)
     # Convert to CompletedProcess so we can check the return code
     results: subprocess.CompletedProcess = subprocess.CompletedProcess(
         args=r.args,
