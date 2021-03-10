@@ -337,7 +337,7 @@ class GeneticCandidateGenerator(CandidateGenerator[Netlist]):
                 return np.floor(v)
             return np.int32(0)
 
-        vectorized_round_based_on_sign = np.vectorize(round_based_on_sign, otypes=[np.int16])
+        vectorized_round_based_on_sign = np.vectorize(round_based_on_sign, otypes=[np.int32])
 
         # get the indices we can modify based on self._search_params
         indices = self._variable_indices
@@ -350,11 +350,11 @@ class GeneticCandidateGenerator(CandidateGenerator[Netlist]):
 
         # Sample mutations from normal distribution, then use a symmetric rounding where mutations below zero are
         # rounded down and mutations above zero are rounded up
-        # This ensures that if a device parameter is chosen to be mutates it is at least changed by +/- 1
+        # This ensures that if a device parameter is chosen to be mutated it is at least changed by +/- 1
         mutations = self._rng.normal(0, self._mutation_std_deviation, len(individual))
         rounded_mutations = vectorized_round_based_on_sign(mutations)
 
-        # Returns device params can't be negative, clip blow zero and cast to uint
+        # Returns device params can't be negative, clip below zero and cast to uint
         return np.max(individual + rounded_mutations * mutation_mask, 0).astype(np.uint16)
 
     def _get_netlist_name(self, idx: int) -> str:
