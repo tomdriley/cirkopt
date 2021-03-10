@@ -64,6 +64,13 @@ def _add_common_args(parser: argparse.ArgumentParser):
         dest="loglevel",
         const=INFO,
     )
+    parser.add_argument(
+        "--outindex",
+        help="Index of value from LDB table to show, space separated, e.g.: 0 1",
+        nargs=2,
+        type=int,
+        default=[0, 0],
+    )
 
 
 # Basically a copy of this blog post [1].
@@ -123,13 +130,6 @@ search      Find an optimal design""",
             "--outpin",
             help="Name of pin to get data from, e.g.: Y",
             default="Y",
-        )
-        parser.add_argument(
-            "--outindex",
-            help="Index of value from LDB table to show, space separated, e.g.: 0 1",
-            nargs=2,
-            type=int,
-            default=[0, 1],
         )
 
         _add_common_args(parser)
@@ -268,14 +268,6 @@ search      Find an optimal design""",
             default="5e-9",
         )
 
-        parser.add_argument(
-            "--delay-index",
-            help="Delay index to be used for delay based cost function",
-            nargs=2,
-            type=int,
-            default=[0, 1],
-        )
-
         _add_common_args(parser)
 
         # now that we're inside a subcommand, ignore the first
@@ -308,7 +300,7 @@ search      Find an optimal design""",
             min_fingers=args.min_fingers,
             max_fingers=args.max_fingers,
             precision=args.precision,
-            delay_index=tuple(args.delay_index),
+            delay_index=tuple(args.outindex),
         )
 
 
