@@ -49,7 +49,7 @@ class TestDelayCostFunction(unittest.TestCase):
         expected_cost_map = {
             "INVX1_00": 0.00958782,
             "INVX1_01": 0.00865761,
-            "INVX1_02": 0.00810281,
+            "INVX1_02": 0.0149183,
             "INVX1_03": 0.00776497,
             "INVX1_04": 0.0074729,
             "INVX1_05": 0.00727783,
