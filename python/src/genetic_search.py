@@ -1,7 +1,8 @@
 from dataclasses import dataclass
+from enum import Enum
 from itertools import chain
 from math import ceil, log10
-from typing import Callable, List, Optional, Sequence, Tuple
+from typing import Callable, List, Optional, Sequence, Set, Tuple
 from logging import debug
 
 from numpy.random import default_rng
@@ -19,6 +20,11 @@ from src.search_algorithm import (
 
 CostFunction = Callable[[Sequence[Netlist], LibertyResult], CostMap]
 
+
+class Param(Enum):
+    WIDTH = 1
+    LENGTH = 2
+    FINGERS = 3
 
 @dataclass(frozen=True)
 class Bounds:
@@ -77,6 +83,8 @@ class GeneticCandidateGenerator(CandidateGenerator[Netlist]):
     # Netlist
     _reference_netlist: Netlist
     _number_of_devices: int  # How many devices the generated netlists have, cached for convenience
+    _search_params: Set[Param]  # Which params the search can very
+    _variable_indices: List[int]  # Which indices in an individual can be varied
     _id_num_digits: int  # How many digits the _id should have, cached for convenience
     _netlist_persister: Optional[Callable[[Netlist], None]]
 
@@ -102,6 +110,28 @@ class GeneticCandidateGenerator(CandidateGenerator[Netlist]):
         netlist_persister: Optional[Callable[[Netlist], None]],
         seed: Optional[int] = None,
     ):
+        # pylint: disable=too-many-locals)
+        search_params = set()
+        if min_width != max_width:
+            search_params.add(Param.WIDTH)
+        if min_length != max_length:
+            search_params.add(Param.LENGTH)
+        if min_fingers != max_fingers:
+            search_params.add(Param.FINGERS)
+
+        number_of_devices = len(reference_netlist.device_widths)
+        indices = [
+            idx
+            for param in search_params
+            for idx in range((param.value - 1) * number_of_devices, param.value * number_of_devices)
+        ]
+
+        if npoints > len(indices):
+            raise ValueError("npoints should be less than or equal to the number of number of devices per "
+                             "netlist * number of params the algorithm can vary. "
+                             "For example if the algorithm can very length and width for an inverter, nppoints <= 4"
+                             "(2 devices * 2 params).")
+
         # pylint: disable=too-many-locals
         return cls(
             _num_individuals=num_individuals,
@@ -128,7 +158,9 @@ class GeneticCandidateGenerator(CandidateGenerator[Netlist]):
             ),
             _precision=precision,
             _reference_netlist=reference_netlist,
-            _number_of_devices=len(reference_netlist.device_widths),
+            _number_of_devices=number_of_devices,
+            _search_params=search_params,
+            _variable_indices=indices,
             _id_num_digits=ceil(log10(num_individuals)),
             _netlist_persister=netlist_persister,
             _rng=(default_rng(seed=seed) if seed is not None else default_rng()),
@@ -143,24 +175,29 @@ class GeneticCandidateGenerator(CandidateGenerator[Netlist]):
         :return: a sequence of randomly generated netlists which have been persisted to disk.
         """
         b = self._bounds
+        n = self._number_of_devices
 
         def rand_netlist(idx: int) -> Netlist:
-            # Generate fixed point widths and lengths
-            widths = self._rng.integers(
-                b.min_width, b.max_width, self._number_of_devices, endpoint=True
-            )
-            lengths = self._rng.integers(
-                b.min_length, b.max_length, self._number_of_devices, endpoint=True
-            )
-            fingers = self._rng.integers(
-                b.min_fingers, b.max_fingers, self._number_of_devices, endpoint=True
-            )
+            # Generate fixed point widths if we can vary them
+            if Param.WIDTH in self._search_params:
+                widths = self._rng.integers(b.min_width, b.max_width, n, endpoint=True, dtype=np.uint16)
+            else:
+                widths = b.min_width * np.ones(n, dtype=np.uint16)
+
+            # Generate fixed point lengths if we can vary them
+            if Param.LENGTH in self._search_params:
+                lengths = self._rng.integers(b.min_length, b.max_length, n, endpoint=True, dtype=np.uint16)
+            else:
+                lengths = b.min_length * np.ones(n, dtype=np.uint16)
+
+            if Param.FINGERS in self._search_params:
+                fingers = self._rng.integers(b.min_fingers, b.max_fingers, n, endpoint=True, dtype=np.uint16)
+            else:
+                fingers = b.min_fingers * np.ones(n, dtype=np.uint16)
 
             return self._reference_netlist.mutate(
                 cell_name=self._get_netlist_name(idx),
-                device_widths=tuple(
-                    scale(w, self._precision) for w in widths
-                ),  # convert from fixed point
+                device_widths=tuple(scale(w, self._precision) for w in widths),
                 device_lengths=tuple(scale(l, self._precision) for l in lengths),
                 device_fingers=tuple(fingers),
             )
@@ -236,6 +273,11 @@ class GeneticCandidateGenerator(CandidateGenerator[Netlist]):
             lowest_cost_parent = fitness.argmax()
             offspring[lowest_cost_parent] = mating_pool[lowest_cost_parent]
 
+            # perform a local search on best individual as well, don't replace the one we just added
+            valid_indices = [idx for idx in range(self._num_individuals) if idx != lowest_cost_parent]
+            rand_child = self._rng.choice(valid_indices, 1)
+            offspring[rand_child] = self._gaussian_mutation(mating_pool[lowest_cost_parent])
+
         netlists = []
         for idx, normalized_netlist in enumerate(offspring):
             assert normalized_netlist.any(), f"Offspring[{idx}] contained only zeros"
@@ -259,8 +301,12 @@ class GeneticCandidateGenerator(CandidateGenerator[Netlist]):
     ) -> Tuple[np.ndarray, np.ndarray]:
         assert len(parent_a) == len(parent_b)
 
-        # Select n random indices to crossover
-        points = self._rng.choice(range(len(parent_a)), self._n_points)
+        indices = self._variable_indices
+        if len(indices) == self._n_points:
+            points = indices
+        else:
+            # Select n random indices to crossover
+            points = self._rng.choice(indices, self._n_points)
 
         mix_mask = np.zeros_like(parent_a, dtype=np.bool8)
         mix_mask[points] |= True
@@ -268,7 +314,7 @@ class GeneticCandidateGenerator(CandidateGenerator[Netlist]):
 
         a = self._alpha
         # Perform crossover
-        # for k in points: child_a[k] = alpha * parent_a[k] + (1-alpha) * parent_b[k]
+        # for k in points: child_a[k] = a * parent_a[k] + (1-a) * parent_b[k]
         child_a = (
             (parent_a * keep_mask)
             + (a * mix_mask * parent_a)
@@ -284,12 +330,32 @@ class GeneticCandidateGenerator(CandidateGenerator[Netlist]):
 
     def _gaussian_mutation(self, individual: np.ndarray) -> np.ndarray:
         """Apply additive gaussian noise to each device parameter with a probability of self._pmutation"""
+        def round_based_on_sign(v: np.float32) -> np.int32:
+            if v > 0:
+                return np.ceil(v)
+            if v < 0:
+                return np.floor(v)
+            return np.int32(0)
+
+        vectorized_round_based_on_sign = np.vectorize(round_based_on_sign, otypes=[np.int16])
+
+        # get the indices we can modify based on self._search_params
+        indices = self._variable_indices
+        n = len(indices)
+
+        # Select which device parameters to be mutated each with a probability of p
         p = self._pmutation
-        mutation_mask = self._rng.choice([0, 1], len(individual), p=[1 - p, p]).astype(
-            np.bool8
-        )
-        mutations = self._rng.normal(0, 1, len(individual))
-        return (individual + mutations * mutation_mask).round().astype(np.uint16)
+        mutation_mask = np.zeros(len(individual), dtype=np.bool8)
+        mutation_mask[indices] = self._rng.choice([0, 1], n, p=[1-p, p]).astype(np.bool8)
+
+        # Sample mutations from normal distribution, then use a symmetric rounding where mutations below zero are
+        # rounded down and mutations above zero are rounded up
+        # This ensures that if a device parameter is chosen to be mutates it is at least changed by +/- 1
+        mutations = self._rng.normal(0, self._mutation_std_deviation, len(individual))
+        rounded_mutations = vectorized_round_based_on_sign(mutations)
+
+        # Returns device params can't be negative, clip blow zero and cast to uint
+        return np.max(individual + rounded_mutations * mutation_mask, 0).astype(np.uint16)
 
     def _get_netlist_name(self, idx: int) -> str:
         return (
