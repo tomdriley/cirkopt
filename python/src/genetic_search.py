@@ -180,20 +180,20 @@ class GeneticCandidateGenerator(CandidateGenerator[Netlist]):
         def rand_netlist(idx: int) -> Netlist:
             # Generate fixed point widths if we can vary them
             if Param.WIDTH in self._search_params:
-                widths = self._rng.integers(b.min_width, b.max_width, n, endpoint=True, dtype=np.uint16)
+                widths = self._rng.integers(b.min_width, b.max_width, n, endpoint=True, dtype=np.uint64)
             else:
-                widths = b.min_width * np.ones(n, dtype=np.uint16)
+                widths = b.min_width * np.ones(n, dtype=np.uint64)
 
             # Generate fixed point lengths if we can vary them
             if Param.LENGTH in self._search_params:
-                lengths = self._rng.integers(b.min_length, b.max_length, n, endpoint=True, dtype=np.uint16)
+                lengths = self._rng.integers(b.min_length, b.max_length, n, endpoint=True, dtype=np.uint64)
             else:
-                lengths = b.min_length * np.ones(n, dtype=np.uint16)
+                lengths = b.min_length * np.ones(n, dtype=np.uint64)
 
             if Param.FINGERS in self._search_params:
-                fingers = self._rng.integers(b.min_fingers, b.max_fingers, n, endpoint=True, dtype=np.uint16)
+                fingers = self._rng.integers(b.min_fingers, b.max_fingers, n, endpoint=True, dtype=np.uint64)
             else:
-                fingers = b.min_fingers * np.ones(n, dtype=np.uint16)
+                fingers = b.min_fingers * np.ones(n, dtype=np.uint64)
 
             return self._reference_netlist.mutate(
                 cell_name=self._get_netlist_name(idx),
@@ -222,10 +222,10 @@ class GeneticCandidateGenerator(CandidateGenerator[Netlist]):
         # Two NxM arrays where N is number of individuals and M is 3 * number of devices per individual
         mating_pool = np.asarray(
             [_normalize(n, self._precision) for n in current_candidates],
-            dtype=np.uint16,
+            dtype=np.uint64,
         )
         offspring = np.zeros(
-            (self._num_individuals, self._number_of_devices * 3), dtype=np.uint16
+            (self._num_individuals, self._number_of_devices * 3), dtype=np.uint64
         )
 
         def maybe_add_child_to_offspring(
@@ -326,18 +326,18 @@ class GeneticCandidateGenerator(CandidateGenerator[Netlist]):
             + (a * mix_mask * parent_b)
         )
 
-        return child_a.round().astype(np.uint16), child_b.round().astype(np.uint16)
+        return child_a.round().astype(np.uint64), child_b.round().astype(np.uint64)
 
     def _gaussian_mutation(self, individual: np.ndarray) -> np.ndarray:
         """Apply additive gaussian noise to each device parameter with a probability of self._pmutation"""
-        def round_based_on_sign(v: np.float32) -> np.int32:
+        def round_based_on_sign(v: np.float32) -> np.int64:
             if v > 0:
                 return np.ceil(v)
             if v < 0:
                 return np.floor(v)
-            return np.int32(0)
+            return np.int64(0)
 
-        vectorized_round_based_on_sign = np.vectorize(round_based_on_sign, otypes=[np.int32])
+        vectorized_round_based_on_sign = np.vectorize(round_based_on_sign, otypes=[np.int64])
 
         # get the indices we can modify based on self._search_params
         indices = self._variable_indices
@@ -355,7 +355,7 @@ class GeneticCandidateGenerator(CandidateGenerator[Netlist]):
         rounded_mutations = vectorized_round_based_on_sign(mutations)
 
         # Returns device params can't be negative, clip below zero and cast to uint
-        return np.maximum(individual + rounded_mutations * mutation_mask, 0).astype(np.uint16)
+        return np.maximum(individual + rounded_mutations * mutation_mask, 0).astype(np.uint64)
 
     def _get_netlist_name(self, idx: int) -> str:
         return (
