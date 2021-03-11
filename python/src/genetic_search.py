@@ -3,7 +3,7 @@ from enum import Enum
 from itertools import chain
 from math import ceil, log10
 from typing import Callable, List, Optional, Sequence, Set, Tuple
-from logging import debug
+from logging import debug, info
 
 from numpy.random import default_rng
 import numpy as np
@@ -131,6 +131,8 @@ class GeneticCandidateGenerator(CandidateGenerator[Netlist]):
             raise ValueError(
                 "The minimum fingers must be less than or equal to the max finger"
             )
+
+        debug(f"Search params: {search_params}")
 
         number_of_devices = len(reference_netlist.device_widths)
         indices = [
@@ -414,5 +416,5 @@ class GeneticSearch(SearchAlgorithm[Netlist, LibertyResult]):
 
     def _post_simulation(self):
         min_cost_per_iteration = min(self._cost_map.values())
-        debug(f"minimum cost of interation {self._iteration}: {min_cost_per_iteration}")
+        info(f"minimum cost of interation {self._iteration}: {min_cost_per_iteration}")
         self.min_cost_per_iteration[self._iteration] = min_cost_per_iteration
