@@ -355,7 +355,7 @@ class GeneticCandidateGenerator(CandidateGenerator[Netlist]):
         rounded_mutations = vectorized_round_based_on_sign(mutations)
 
         # Returns device params can't be negative, clip below zero and cast to uint
-        return np.max(individual + rounded_mutations * mutation_mask, 0).astype(np.uint16)
+        return np.maximum(individual + rounded_mutations * mutation_mask, 0).astype(np.uint16)
 
     def _get_netlist_name(self, idx: int) -> str:
         return (
