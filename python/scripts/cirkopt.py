@@ -5,7 +5,9 @@ import sys
 import os.path
 import argparse
 import logging
+from functools import partial
 from logging import DEBUG, debug, INFO, info, WARNING, error
+from typing import Type, TypeVar
 
 import numpy as np
 
@@ -19,9 +21,24 @@ from scripts.genetic_search import (  # pylint: disable=wrong-import-position
     main as gsearch,
 )
 from scripts.brute_force import (  # pylint: disable=wrong-import-position
-    main as sweep_param,
+    main as sweep_params,
 )
-from src.brute_force_search import Param  # pylint: disable=wrong-import-position
+from src.brute_force_search import Param, Range  # pylint: disable=wrong-import-position
+
+
+RangeType = TypeVar('RangeType', int, float)
+
+
+def _range(param: Param, _type: Type[RangeType], string: str) -> Range[RangeType]:
+    params = string.split(":")
+    if len(params) != 3:
+        raise ValueError("Range should be formatted as low:step_size:high (inclusive")
+    low, step_size, high = tuple(map(_type, params))
+    if param in {Param.WIDTH, Param.LENGTH} and not isinstance(low, float):
+        raise ValueError("Widths should be specified as floats")
+    if param == Param.FINGERS and not isinstance(low, int):
+        raise ValueError("Fingers should be specified as ints")
+    return Range(param, low, high, step_size)
 
 
 def _add_common_args(parser: argparse.ArgumentParser):
@@ -95,29 +112,39 @@ search      Find an optimal design""",
         parser = argparse.ArgumentParser(
             description="Generate plots showing search space",
         )
-        # prefixing the argument with -- means it's optional
+
+        def width(string: str) -> Range[float]:
+            return _range(Param.WIDTH, float, string)
+
+        def length(string: str) -> Range[float]:
+            return _range(Param.LENGTH, float, string)
+
+        def fingers(string: str) -> Range[float]:
+            return _range(Param.FINGERS, int, string)
+
         parser.add_argument(
-            "--param",
-            help="Paramater to sweep, e.g.: width",
-            type=lambda input: Param[input.upper()],
-            choices=tuple(Param),
-            default=Param.WIDTH,
+            "--width",
+            help="Defines the range of widths a device may have, eg.: low:step_size:high (inclusive)",
+            type=width,
+            default="120e-9:5e-9:1e-6",
         )
         parser.add_argument(
-            "--range",
-            help=(
-                "Range of numbers to sweep over, start then end, space separated"
-                + " e.g.: 200e-9 1e-6"
-            ),
-            nargs=2,
-            type=float,
-            default=[200e-9, 1e-6],
+            "--length",
+            help="Defines the range of lengths a device may have, eg.: low:step_size:high (inclusive)",
+            type=length,
+            default="45e-9:1e-9:45e-9",
         )
         parser.add_argument(
-            "--numsteps",
-            help="Number of values to simulate within range, e.g. 9",
+            "--fingers",
+            help="Defines the range of fingers a device may have, eg.: low:step_size:high (inclusive)",
+            type=fingers,
+            default="1:1:1",
+        )
+        parser.add_argument(
+            "--simulations-per-iterations",
+            help="Defines how many netlists to  simulate to run per iteration.",
             type=int,
-            default=9,
+            default=10,
         )
         parser.add_argument(
             "--outpin",
@@ -146,16 +173,14 @@ search      Find an optimal design""",
         for key in args.__dict__:
             debug(f"{key:<10}: {args.__dict__[key]}")
 
-        # Additional parsing
-        values = np.linspace(start=args.range[0], stop=args.range[1], num=args.numsteps)
-        debug(f"values: {values}")
-
         info("Exploring search space.")
-        sweep_param(
+        sweep_params(
             reference_netlist_rel_path=args.netlist,
             netlist_work_dir_rel_path=args.workdir,
-            param=args.param,
-            values=values,
+            width=args.width,
+            length=args.length,
+            fingers=args.fingers,
+            simulations_per_iterations=args.simulations_per_iterations,
             graph_pin=args.outpin,
             graph_delay_index=args.outindex,
             out_dir_rel_path=args.outdir,

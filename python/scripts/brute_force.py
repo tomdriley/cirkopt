@@ -1,12 +1,11 @@
 import os
-from typing import Union, Sequence, Tuple
+from typing import Tuple
 from logging import info
 
 from src.file_io import File
-from src.liberate_grapher import graph_cell_delay
 from src.netlist import BaseNetlistFile, Netlist
 from src.brute_force_search import (
-    Param,
+    Range,
     BruteForceCandidateGenerator,
     BruteForceSearch,
 )
@@ -16,8 +15,10 @@ from src.brute_force_search import (
 def main(
     reference_netlist_rel_path: str,
     netlist_work_dir_rel_path: str,
-    param: Param,
-    values: Sequence[Union[float, int]],
+    width: Range[float],
+    length: Range[float],
+    fingers: Range[int],
+    simulations_per_iterations: int,
     graph_pin: str,
     graph_delay_index: Tuple[int, int],
     out_dir_rel_path: str,
@@ -41,11 +42,14 @@ def main(
         netlist_file = File(f"{netlist_work_dir_path}/{netlist.cell_name}.sp")
         netlist.persist(netlist_file)
 
-    candidate_generator = BruteForceCandidateGenerator(
-        reference_netlist=Netlist.create(BaseNetlistFile(File(reference_netlist_path))),
+    reference_netlist_file = BaseNetlistFile(File(reference_netlist_path))
+    candidate_generator = BruteForceCandidateGenerator.create(
+        reference_netlist=Netlist.create(reference_netlist_file),
         netlist_persister=persist_netlist_in_run_dir,
-        param=param,
-        values=values,
+        width_range=width,
+        length_range=length,
+        fingers_range=fingers,
+        simulations_per_iterations=simulations_per_iterations
     )
     single_param_sweep = BruteForceSearch(candidate_generator)
 
@@ -54,25 +58,4 @@ def main(
     single_param_sweep.search()
 
     # Graph the results of simulation
-    param_str = str(param)
-    graph_cell_delay(
-        ldb=single_param_sweep.get_ldb(),
-        pin=graph_pin,
-        delay_index=graph_delay_index,
-        x_axis=values,
-        x_axis_title=param_str,
-        out_path=f"{out_dir_path}/sweep-{param_str.lower()}.png",
-    )
-
-
-if __name__ == "__main__":
-    # TODO: use command line args instead of hard coding
-    main(
-        reference_netlist_rel_path="../../liberate/netlist_ref/INVX1.sp",
-        netlist_work_dir_rel_path="../../liberate/netlist_wrk",
-        param=Param.WIDTH,
-        values=[i * 100e-9 for i in range(2, 11)],
-        graph_pin="Y",
-        graph_delay_index=(0, 1),
-        out_dir_rel_path="../out",
-    )
+    # Todo graph
