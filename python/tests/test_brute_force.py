@@ -1,6 +1,6 @@
 import unittest
 
-from src.brute_force_search import Range, Param
+from src.circuit_search_common import Range, Param
 
 
 class TestBruteForceSearch(unittest.TestCase):

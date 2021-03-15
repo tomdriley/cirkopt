@@ -1,7 +1,8 @@
 import unittest
 
 from src.netlist import Netlist, BaseNetlistFile
-from src.brute_force_search import BruteForceCandidateGenerator, Range, Param
+from src.brute_force_search import BruteForceCandidateGenerator
+from src.circuit_search_common import Range, Param
 from tests.mock_file import MockFile
 from tests.test_netlist import TEST_NETLIST
 
@@ -26,7 +27,7 @@ class TestBruteForceSearch(unittest.TestCase):
                 width_range=Range(Param.WIDTH, 120e-9, 120e-9, 5e-9),
                 length_range=Range(Param.LENGTH, 45e-9, 45e-9, 5e-9),
                 fingers_range=Range(Param.FINGERS, 1, 1, 1),
-                simulations_per_iterations=simulations_per_iterations
+                simulations_per_iteration=simulations_per_iterations
             )
 
             initial_population = candidate_generator.get_initial_population()
@@ -44,7 +45,7 @@ class TestBruteForceSearch(unittest.TestCase):
             width_range=Range(Param.WIDTH, 120e-9, 125e-9, 5e-9),
             length_range=Range(Param.LENGTH, 45e-9, 45e-9, 5e-9),
             fingers_range=Range(Param.FINGERS, 1, 1, 1),
-            simulations_per_iterations=2
+            simulations_per_iteration=2
         )
 
         initial_population = candidate_generator.get_initial_population()
@@ -78,7 +79,7 @@ class TestBruteForceSearch(unittest.TestCase):
             width_range=Range(Param.WIDTH, 120e-9, 120e-9, 5e-9),
             length_range=Range(Param.LENGTH, 45e-9, 50e-9, 5e-9),
             fingers_range=Range(Param.FINGERS, 1, 1, 1),
-            simulations_per_iterations=2
+            simulations_per_iteration=2
         )
 
         initial_population = candidate_generator.get_initial_population()
@@ -112,7 +113,7 @@ class TestBruteForceSearch(unittest.TestCase):
             width_range=Range(Param.WIDTH, 120e-9, 120e-9, 5e-9),
             length_range=Range(Param.LENGTH, 45e-9, 45e-9, 5e-9),
             fingers_range=Range(Param.FINGERS, 1, 2, 1),
-            simulations_per_iterations=2
+            simulations_per_iteration=2
         )
 
         initial_population = candidate_generator.get_initial_population()
@@ -146,7 +147,7 @@ class TestBruteForceSearch(unittest.TestCase):
             width_range=Range(Param.WIDTH, 120e-9, 125e-9, 5e-9),
             length_range=Range(Param.LENGTH, 45e-9, 50e-9, 5e-9),
             fingers_range=Range(Param.FINGERS, 1, 2, 1),
-            simulations_per_iterations=2
+            simulations_per_iteration=2
         )
 
         initial_population = candidate_generator.get_initial_population()

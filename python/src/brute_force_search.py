@@ -1,8 +1,8 @@
 from dataclasses import dataclass
-from enum import Enum
 from math import ceil, log10
-from typing import Callable, Generic, Iterator, List, Sequence, TypeVar
+from typing import Callable, Iterator, List, Sequence
 
+from src.circuit_search_common import Range
 from src.liberate import liberate_simulator
 from src.liberty_parser import LibertyResult
 from src.netlist import Netlist
@@ -13,40 +13,6 @@ from src.search_algorithm import (
 )
 from src.netlist_cost_functions import noop_cost_function
 from src.utils import chunked
-
-
-class Param(Enum):
-    WIDTH = 1
-    LENGTH = 2
-    FINGERS = 3
-
-    def __str__(self):
-        return self.name.capitalize()  # pylint: disable=no-member # bug in pylint
-
-
-T = TypeVar('T', float, int)
-
-
-@dataclass(frozen=True)
-class Range(Generic[T]):
-    param: Param
-    low: T  # inclusive
-    high: T  # inclusive
-    step_size: T
-
-    def __post_init__(self):
-        if self.low > self.high:
-            raise ValueError("Range low must be less than or equal to high")
-
-        if len({type(self.low), type(self.high), type(self.step_size)}) != 1:
-            raise ValueError("Range low, high, and step size must be the same type")
-
-    def __iter__(self) -> Iterator[T]:
-        current = self.low
-
-        while current <= self.high:
-            yield current
-            current += self.step_size
 
 
 @dataclass(frozen=True)
@@ -71,7 +37,7 @@ class BruteForceCandidateGenerator(CandidateGenerator[Netlist]):
         width_range: Range[float],
         length_range: Range[float],
         fingers_range: Range[int],
-        simulations_per_iterations: int,
+        simulations_per_iteration: int,
     ) -> 'BruteForceCandidateGenerator':
         widths = tuple(width_range)
         lengths = tuple(length_range)
@@ -84,9 +50,9 @@ class BruteForceCandidateGenerator(CandidateGenerator[Netlist]):
             fingers=fingers,
             reference_netlist=reference_netlist,
             netlist_persister=netlist_persister,
-            ndigits=ceil(log10(simulations_per_iterations)),
+            ndigits=ceil(log10(simulations_per_iteration)),
             ndevices=ndevices,
-            generator=chunked(generator, simulations_per_iterations)
+            generator=chunked(generator, simulations_per_iteration)
         )
 
     @staticmethod

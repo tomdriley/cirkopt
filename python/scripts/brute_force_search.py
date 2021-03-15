@@ -1,14 +1,13 @@
 import os
-from typing import Tuple
 from logging import info
 
 from src.file_io import File
 from src.netlist import BaseNetlistFile, Netlist
 from src.brute_force_search import (
-    Range,
     BruteForceCandidateGenerator,
     BruteForceSearch,
 )
+from src.circuit_search_common import Range
 
 
 # pylint: disable=too-many-locals
@@ -18,25 +17,17 @@ def main(
     width: Range[float],
     length: Range[float],
     fingers: Range[int],
-    simulations_per_iterations: int,
-    graph_pin: str,  # pylint: disable=unused-argument
-    graph_delay_index: Tuple[int, int],  # pylint: disable=unused-argument
-    out_dir_rel_path: str,
+    simulations_per_iteration: int,
 ):
     curr_path = os.path.abspath(os.path.dirname(__file__))
     reference_netlist_path = os.path.join(curr_path, reference_netlist_rel_path)
     netlist_work_dir_path = os.path.join(curr_path, netlist_work_dir_rel_path)
-    out_dir_path = os.path.join(curr_path, out_dir_rel_path)
 
     if not os.path.isfile(reference_netlist_path):
         raise FileNotFoundError(reference_netlist_path)
 
     if not os.path.isdir(netlist_work_dir_path):
         raise NotADirectoryError(netlist_work_dir_path)
-
-    if not os.path.isdir(out_dir_path):
-        info(f"Creating output directory {out_dir_path}")
-        os.mkdir(out_dir_path)
 
     def persist_netlist_in_run_dir(netlist: Netlist):
         netlist_file = File(f"{netlist_work_dir_path}/{netlist.cell_name}.sp")
@@ -49,13 +40,12 @@ def main(
         width_range=width,
         length_range=length,
         fingers_range=fingers,
-        simulations_per_iterations=simulations_per_iterations
+        simulations_per_iteration=simulations_per_iteration
     )
-    single_param_sweep = BruteForceSearch(candidate_generator)
+    brute_force = BruteForceSearch(candidate_generator)
 
     # Do the sweep
     info("Starting brute force search.")
-    single_param_sweep.search()
-
-    # Graph the results of simulation
-    # Todo graph
+    best_netlist = brute_force.search()
+    info("Search complete")
+    info(f"Best Netlist: {best_netlist.cell_name} in {netlist_work_dir_path}")

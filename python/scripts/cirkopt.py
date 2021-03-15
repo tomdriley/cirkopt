@@ -7,6 +7,9 @@ import argparse
 import logging
 from logging import DEBUG, debug, INFO, info, WARNING, error
 from typing import Type, TypeVar
+from textwrap import dedent
+
+import numpy as np
 
 PYTHON_SCRIPTS_DIRECTORY: str = os.path.dirname(os.path.abspath(__file__))
 PYTHON_DIRECTORY: str = os.path.abspath(os.path.join(PYTHON_SCRIPTS_DIRECTORY, ".."))
@@ -15,13 +18,15 @@ sys.path.append(PYTHON_DIRECTORY)
 
 # These imports rely on changed sys.path
 from scripts.genetic_search import (  # pylint: disable=wrong-import-position
-    main as gsearch,
+    main as genetic,
 )
-from scripts.brute_force import (  # pylint: disable=wrong-import-position
-    main as sweep_params,
+from scripts.single_param_sweep import (  # pylint: disable=wrong-import-position
+    main as sweep_param,
 )
-from src.brute_force_search import Param, Range  # pylint: disable=wrong-import-position
-
+from scripts.brute_force_search import (  # pylint: disable=wrong-import-position
+    main as brute_force,
+)
+from src.circuit_search_common import Range, Param  # pylint: disable=wrong-import-position
 
 RangeType = TypeVar('RangeType', int, float)
 
@@ -84,14 +89,16 @@ def _add_common_args(parser: argparse.ArgumentParser):
 # [1] https://chase-seibert.github.io/blog/2014/03/21/python-multilevel-argparse.html
 class Cirkopt:
     def __init__(self):
+        usage = """
+                cirkopt <command> [<args>]
+                
+                The most commonly used commands are:
+                explore       Generate plots showing search space
+                search        Find an optimal design using genetic algorithm
+                brute-force   Find optimal design using exhaustive search"""
         parser = argparse.ArgumentParser(
             description="SPICE circuit optimizer",
-            usage="""
-cirkopt <command> [<args>]
-
-The most commonly used commands are:
-explore     Generate plots showing search space
-search      Find an optimal design""",
+            usage=dedent(usage),
         )
         parser.add_argument("command", help="Sub command to run")
         # parse_args defaults to [1:] for args, but you need to
@@ -106,6 +113,77 @@ search      Find an optimal design""",
 
     # pylint: disable=no-self-use
     def explore(self):
+        parser = argparse.ArgumentParser(
+            description="Generate plots showing search space",
+        )
+        # prefixing the argument with -- means it's optional
+        parser.add_argument(
+            "--param",
+            help="Paramater to sweep, e.g.: width",
+            type=lambda input: Param[input.upper()],
+            choices=tuple(Param),
+            default=Param.WIDTH,
+        )
+        parser.add_argument(
+            "--range",
+            help=(
+                "Range of numbers to sweep over, start then end, space separated"
+                + " e.g.: 200e-9 1e-6"
+            ),
+            nargs=2,
+            type=float,
+            default=[200e-9, 1e-6],
+        )
+        parser.add_argument(
+            "--numsteps",
+            help="Number of values to simulate within range, e.g. 9",
+            type=int,
+            default=9,
+        )
+        parser.add_argument(
+            "--outpin",
+            help="Name of pin to get data from, e.g.: Y",
+            default="Y",
+        )
+        parser.add_argument(
+            "--outindex",
+            help="Index of value from LDB table to show, space separated, e.g.: 0 1",
+            nargs=2,
+            type=int,
+            default=[0, 1],
+        )
+
+        _add_common_args(parser)
+
+        # now that we're inside a subcommand, ignore the first
+        # TWO argvs, ie the command (cirkopt) and the subcommand (explore)
+        args = parser.parse_args(sys.argv[2:])
+        logging.basicConfig(
+            format="%(levelname)s (%(asctime)s): %(message)s",
+            datefmt="%I:%M:%S %p",
+            level=args.loglevel,
+        )
+        # Print all the arguments given
+        for key in args.__dict__:
+            debug(f"{key:<10}: {args.__dict__[key]}")
+
+        # Additional parsing
+        values = np.linspace(start=args.range[0], stop=args.range[1], num=args.numsteps)
+        debug(f"values: {values}")
+
+        info("Exploring search space.")
+        sweep_param(
+            reference_netlist_rel_path=args.netlist,
+            netlist_work_dir_rel_path=args.workdir,
+            param=args.param,
+            values=values,
+            graph_pin=args.outpin,
+            graph_delay_index=args.outindex,
+            out_dir_rel_path=args.outdir,
+        )
+
+    # pylint: disable=no-self-use
+    def brute_force(self):
         parser = argparse.ArgumentParser(
             description="Generate plots showing search space",
         )
@@ -138,22 +216,10 @@ search      Find an optimal design""",
             default="1:1:1",
         )
         parser.add_argument(
-            "--simulations-per-iterations",
+            "--simulations-per-iteration",
             help="Defines how many netlists to  simulate to run per iteration.",
             type=int,
             default=10,
-        )
-        parser.add_argument(
-            "--outpin",
-            help="Name of pin to get data from, e.g.: Y",
-            default="Y",
-        )
-        parser.add_argument(
-            "--outindex",
-            help="Index of value from LDB table to show, space separated, e.g.: 0 1",
-            nargs=2,
-            type=int,
-            default=[0, 1],
         )
 
         _add_common_args(parser)
@@ -171,16 +237,13 @@ search      Find an optimal design""",
             debug(f"{key:<10}: {args.__dict__[key]}")
 
         info("Exploring search space.")
-        sweep_params(
+        brute_force(
             reference_netlist_rel_path=args.netlist,
             netlist_work_dir_rel_path=args.workdir,
             width=args.width,
             length=args.length,
             fingers=args.fingers,
-            simulations_per_iterations=args.simulations_per_iterations,
-            graph_pin=args.outpin,
-            graph_delay_index=args.outindex,
-            out_dir_rel_path=args.outdir,
+            simulations_per_iteration=args.simulations_per_iteration,
         )
 
     # pylint: disable=no-self-use
@@ -312,7 +375,7 @@ search      Find an optimal design""",
         for key in args.__dict__:
             debug(f"{key:<10}: {args.__dict__[key]}")
 
-        gsearch(
+        genetic(
             reference_netlist_rel_path=args.netlist,
             netlist_work_dir_rel_path=args.workdir,
             out_dir_rel_path=args.outdir,
