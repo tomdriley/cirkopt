@@ -56,6 +56,19 @@ def main(
         netlist_file = File(f"{netlist_work_dir_path}/{netlist.cell_name}.sp")
         netlist.persist(netlist_file)
 
+    if num_individuals < 2:
+        raise ValueError("Number of individuals must be at least 2")
+
+    if not 0 < alpha < 1:
+        raise ValueError("alpha should be strictly between 0 and 1")
+
+    if not 0 < pmutation < 1:
+        raise ValueError("pmutation should be strictly between 0 and 1")
+
+    if mutation_std_deviation <= 0:
+        raise ValueError("mutation_std_deviation should be greater than 0")
+
+    # Validates npoints
     candidate_generator = GeneticCandidateGenerator.create(
         num_individuals,
         elitism,
