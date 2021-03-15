@@ -36,10 +36,6 @@ def _range(param: Param, _type: Type[RangeType], string: str) -> Range[RangeType
     if len(params) != 3:
         raise ValueError("Range should be formatted as low:step_size:high (inclusive")
     low, step_size, high = tuple(map(_type, params))
-    if param in {Param.WIDTH, Param.LENGTH} and not isinstance(low, float):
-        raise ValueError("Widths should be specified as floats")
-    if param == Param.FINGERS and not isinstance(low, int):
-        raise ValueError("Fingers should be specified as ints")
     return Range(param, low, high, step_size)
 
 

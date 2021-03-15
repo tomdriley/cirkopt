@@ -29,6 +29,12 @@ class Range(Generic[T]):
         if len({type(self.low), type(self.high), type(self.step_size)}) != 1:
             raise ValueError("Range low, high, and step size must be the same type")
 
+        if self.param in {Param.WIDTH, Param.LENGTH} and not isinstance(self.low, float):
+            raise ValueError("Widths should be specified as floats")
+
+        if self.param == Param.FINGERS and not isinstance(self.low, int):
+            raise ValueError("Fingers should be specified as ints")
+
     def __iter__(self) -> Iterator[T]:
         current = self.low
 
