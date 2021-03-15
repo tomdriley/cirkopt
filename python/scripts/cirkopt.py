@@ -258,6 +258,7 @@ search      Find an optimal design""",
             "--seed",
             help="Removes randomization on the initial seed to make the results more reproducable",
             type=int,
+            default=randint(0, 2 ** 32),
         )
 
         _add_common_args(parser)
@@ -270,9 +271,6 @@ search      Find an optimal design""",
             datefmt="%I:%M:%S %p",
             level=args.loglevel,
         )
-
-        if args.seed is None:
-            args.seed = randint(0, 2 ** 32)  # default to random seed, but print it
 
         # Print all the arguments given
         for key in args.__dict__:
