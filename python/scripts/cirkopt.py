@@ -133,6 +133,10 @@ search      Find an optimal design""",
             format="%(levelname)s (%(asctime)s): %(message)s",
             datefmt="%I:%M:%S %p",
             level=args.loglevel,
+            handlers=[
+                logging.FileHandler(os.path.join(args.outdir, "cirkopt.log")),
+                logging.StreamHandler(sys.stdout),
+            ],
         )
         # Print all the arguments given
         for key in args.__dict__:
@@ -265,6 +269,10 @@ search      Find an optimal design""",
             format="%(levelname)s (%(asctime)s): %(message)s",
             datefmt="%I:%M:%S %p",
             level=args.loglevel,
+            handlers=[
+                logging.FileHandler(os.path.join(args.outdir, "cirkopt.log")),
+                logging.StreamHandler(sys.stdout),
+            ],
         )
 
         # Print all the arguments given
