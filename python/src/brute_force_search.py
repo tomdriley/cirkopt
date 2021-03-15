@@ -1,5 +1,6 @@
+from dataclasses import dataclass
 from enum import Enum
-from typing import Callable, Sequence, Union
+from typing import Callable, Generic, Iterator, Sequence, TypeVar, Union
 
 from src.liberate import liberate_simulator
 from src.liberty_parser import LibertyResult
@@ -19,6 +20,31 @@ class Param(Enum):
 
     def __str__(self):
         return self.name.capitalize()  # pylint: disable=no-member # bug in pylint
+
+
+T = TypeVar('T', float, int)
+
+
+@dataclass(frozen=True)
+class Range(Generic[T]):
+    param: Param
+    low: T  # inclusive
+    high: T  # inclusive
+    step_size: T
+
+    def __post_init__(self):
+        if self.low > self.high:
+            raise ValueError("Range low must be less than or equal to high")
+
+        if len({type(self.low), type(self.high), type(self.step_size)}) != 1:
+            raise ValueError("Range low, high, and step size must be the same type")
+
+    def __iter__(self) -> Iterator[T]:
+        current = self.low
+
+        while current <= self.high:
+            yield current
+            current += self.step_size
 
 
 class BruteForceCandidateGenerator(CandidateGenerator[Netlist]):

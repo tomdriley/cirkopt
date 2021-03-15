@@ -21,7 +21,7 @@ from scripts.genetic_search import (  # pylint: disable=wrong-import-position
 from scripts.brute_force import (  # pylint: disable=wrong-import-position
     main as sweep_param,
 )
-from src.brute_force import Param  # pylint: disable=wrong-import-position
+from src.brute_force_search import Param  # pylint: disable=wrong-import-position
 
 
 def _add_common_args(parser: argparse.ArgumentParser):

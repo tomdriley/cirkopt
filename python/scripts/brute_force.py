@@ -5,7 +5,7 @@ from logging import info
 from src.file_io import File
 from src.liberate_grapher import graph_cell_delay
 from src.netlist import BaseNetlistFile, Netlist
-from src.brute_force import (
+from src.brute_force_search import (
     Param,
     BruteForceCandidateGenerator,
     BruteForceSearch,
