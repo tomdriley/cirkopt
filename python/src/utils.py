@@ -1,5 +1,5 @@
 from itertools import islice
-from typing import Callable, Iterable, Iterator, Sequence, TypeVar, Tuple
+from typing import Callable, Iterable, Iterator, Sequence, TypeVar
 
 T = TypeVar('T')
 
@@ -14,11 +14,9 @@ def single(predicate: Callable[[T], bool], seq: Sequence[T]) -> T:
 
 
 def chunked(iterable: Iterable[T], n: int) -> Iterator[Sequence[T]]:
-    sentinel: Tuple[T] = tuple()
-    if not isinstance(iterable, Iterator):
-        iterable = iter(iterable)
+    iterable = iter(iterable)
 
     def next_slice():
         return tuple(islice(iterable, n))
 
-    return iter(next_slice, sentinel)
+    return iter(next_slice, tuple())

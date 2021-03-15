@@ -19,8 +19,8 @@ def main(
     length: Range[float],
     fingers: Range[int],
     simulations_per_iterations: int,
-    graph_pin: str,
-    graph_delay_index: Tuple[int, int],
+    graph_pin: str,  # pylint: disable=unused-argument
+    graph_delay_index: Tuple[int, int],  # pylint: disable=unused-argument
     out_dir_rel_path: str,
 ):
     curr_path = os.path.abspath(os.path.dirname(__file__))

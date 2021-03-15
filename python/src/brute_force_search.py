@@ -2,7 +2,6 @@ from dataclasses import dataclass
 from enum import Enum
 from math import ceil, log10
 from typing import Callable, Generic, Iterator, List, Sequence, TypeVar
-from utils import chunked
 
 from src.liberate import liberate_simulator
 from src.liberty_parser import LibertyResult
@@ -13,6 +12,7 @@ from src.search_algorithm import (
     SearchAlgorithm,
 )
 from src.netlist_cost_functions import noop_cost_function
+from src.utils import chunked
 
 
 class Param(Enum):
@@ -51,12 +51,7 @@ class Range(Generic[T]):
 
 @dataclass(frozen=True)
 class BruteForceCandidateGenerator(CandidateGenerator[Netlist]):
-    """
-    Given N values for a Param, generate N netlists where each device in each
-    netlist is given one value for the param.
-    For example, given Param.WIDTH and values (260e-9, 310e-9) two netlists
-    would be generated, one with all device widths set to 260e-9 and the other 310e-9
-    """
+    # pylint: disable=too-many-instance-attributes
     widths: Sequence[float]
     lengths: Sequence[float]
     fingers: Sequence[int]
