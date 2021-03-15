@@ -18,10 +18,10 @@ sys.path.append(PYTHON_DIRECTORY)
 from scripts.genetic_search import (  # pylint: disable=wrong-import-position
     main as gsearch,
 )
-from scripts.single_param_sweep import (  # pylint: disable=wrong-import-position
+from scripts.brute_force import (  # pylint: disable=wrong-import-position
     main as sweep_param,
 )
-from src.single_param_sweep import Param  # pylint: disable=wrong-import-position
+from src.brute_force import Param  # pylint: disable=wrong-import-position
 
 
 def _add_common_args(parser: argparse.ArgumentParser):

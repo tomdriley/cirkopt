@@ -21,7 +21,7 @@ class Param(Enum):
         return self.name.capitalize()  # pylint: disable=no-member # bug in pylint
 
 
-class ParamSweepCandidateGenerator(CandidateGenerator[Netlist]):
+class BruteForceCandidateGenerator(CandidateGenerator[Netlist]):
     """
     Given N values for a Param, generate N netlists where each device in each
     netlist is given one value for the param.
@@ -70,12 +70,12 @@ class ParamSweepCandidateGenerator(CandidateGenerator[Netlist]):
         return self.candidates
 
 
-class SingleParamSweep(SearchAlgorithm[Netlist, LibertyResult]):
+class BruteForceSearch(SearchAlgorithm[Netlist, LibertyResult]):
     """Does 1 simulation that simulates all candidates provided by candidate_generator."""
 
     def __init__(
         self,
-        candidate_generator: ParamSweepCandidateGenerator,
+        candidate_generator: BruteForceCandidateGenerator,
         cost_function=noop_cost_function,
         simulator=liberate_simulator,
     ):

@@ -5,10 +5,10 @@ from logging import info
 from src.file_io import File
 from src.liberate_grapher import graph_cell_delay
 from src.netlist import BaseNetlistFile, Netlist
-from src.single_param_sweep import (
+from src.brute_force import (
     Param,
-    ParamSweepCandidateGenerator,
-    SingleParamSweep,
+    BruteForceCandidateGenerator,
+    BruteForceSearch,
 )
 
 
@@ -41,16 +41,16 @@ def main(
         netlist_file = File(f"{netlist_work_dir_path}/{netlist.cell_name}.sp")
         netlist.persist(netlist_file)
 
-    candidate_generator = ParamSweepCandidateGenerator(
+    candidate_generator = BruteForceCandidateGenerator(
         reference_netlist=Netlist.create(BaseNetlistFile(File(reference_netlist_path))),
         netlist_persister=persist_netlist_in_run_dir,
         param=param,
         values=values,
     )
-    single_param_sweep = SingleParamSweep(candidate_generator)
+    single_param_sweep = BruteForceSearch(candidate_generator)
 
     # Do the sweep
-    info("Starting single parameter linear sweep.")
+    info("Starting brute force search.")
     single_param_sweep.search()
 
     # Graph the results of simulation
