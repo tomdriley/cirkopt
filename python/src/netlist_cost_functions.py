@@ -18,22 +18,22 @@ def longest_delay(cell: Group, delay_idx: Tuple[int, int]) -> float:
     assert hasattr(cell, "pin")
     # Get list of output pins, e.g. usually just <Y>
     pins = cell.pin  # type: ignore
-    output_pins = (pin for pin in pins if pin.direction == "output")
+    output_pins = tuple(pin for pin in pins if pin.direction == "output")
     # Get all possible timing arcs, e.g. <A -> Y>, <B -> Y> for NAND or NOR
     # python magic to unroll 2D array
-    timing_arcs = (timing for pin in output_pins for timing in pin.timing)
+    timing_arcs = tuple(timing for pin in output_pins for timing in pin.timing)
     # Corresponding rising delay for each arch
-    rise_delays = (
+    rise_delays = tuple(
         timing_arc.cell_rise[0].values[delay_idx[0]][delay_idx[1]]
         for timing_arc in timing_arcs
     )
     # Corresponding falling delay for each arch
-    fall_delays = (
+    fall_delays = tuple(
         timing_arc.cell_fall[0].values[delay_idx[0]][delay_idx[1]]
         for timing_arc in timing_arcs
     )
     # Concenate lists to get list of all possible delays
-    delays = chain(rise_delays, fall_delays)
+    delays = tuple(chain(rise_delays, fall_delays))
     # Return worst case timing arch
     return max(delays)
 

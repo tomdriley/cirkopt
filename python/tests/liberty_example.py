@@ -1422,7 +1422,7 @@ library (example_tt_1.0_70) {
   }
   cell (INVX1_02) {
     area : 0;
-    cell_leakage_power : 0.0527119;
+    cell_leakage_power : 0.061734;
     pg_pin (VDD) {
       pg_type : primary_power;
       voltage_name : "VDD";
@@ -1432,17 +1432,17 @@ library (example_tt_1.0_70) {
       voltage_name : "VSS";
     }
     leakage_power () {
-      value : 0.0302401;
+      value : 0.0482412;
       when : "A";
       related_pg_pin : VDD;
     }
     leakage_power () {
-      value : 0.0751838;
+      value : 0.0752268;
       when : "!A";
       related_pg_pin : VDD;
     }
     leakage_power () {
-      value : 0.0527119;
+      value : 0.061734;
       related_pg_pin : VDD;
     }
     pin (Y) {
@@ -1461,32 +1461,32 @@ library (example_tt_1.0_70) {
           index_1 ("0.006, 0.3");
           index_2 ("0.0001, 0.07");
           values ( \
-            "0.00810281, 0.477693", \
-            "0.0696473, 0.625731" \
+            "0.00566542, 0.173027", \
+            "0.0421499, 0.32172" \
           );
         }
         rise_transition (delay_template) {
           index_1 ("0.006, 0.3");
           index_2 ("0.0001, 0.07");
           values ( \
-            "0.00499558, 0.663908", \
-            "0.0447997, 0.663895" \
+            "0.00255989, 0.237422", \
+            "0.0435143, 0.241203" \
           );
         }
         cell_fall (delay_template) {
           index_1 ("0.006, 0.3");
           index_2 ("0.0001, 0.07");
           values ( \
-            "0.00591146, 0.266565", \
-            "0.0398355, 0.410741" \
+            "0.0149183, 0.747261", \
+            "0.090038, 0.887413" \
           );
         }
         fall_transition (delay_template) {
           index_1 ("0.006, 0.3");
           index_2 ("0.0001, 0.07");
           values ( \
-            "0.00280058, 0.368266", \
-            "0.0438666, 0.368282" \
+            "0.00963738, 1.03381", \
+            "0.0528215, 1.03379" \
           );
         }
       }
@@ -1497,16 +1497,16 @@ library (example_tt_1.0_70) {
           index_1 ("0.006, 0.3");
           index_2 ("0.0001, 0.07");
           values ( \
-            "0.000579469, 0.000599387", \
-            "0.000601249, 0.000538514" \
+            "0.00105264, 0.00101919", \
+            "0.00105517, 0.000908843" \
           );
         }
         fall_power (power_template) {
           index_1 ("0.006, 0.3");
           index_2 ("0.0001, 0.07");
           values ( \
-            "-1.95914e-05, 2.29847e-05", \
-            "4.37976e-06, 6.97292e-06" \
+            "-0.000261067, -0.000135766", \
+            "-0.000302493, -0.000221728" \
           );
         }
       }
@@ -1516,11 +1516,11 @@ library (example_tt_1.0_70) {
       related_ground_pin : VSS;
       related_power_pin : VDD;
       max_transition : 0.3;
-      capacitance : 0.000648006;
-      rise_capacitance : 0.000648006;
-      rise_capacitance_range (0.000500963, 0.000648006);
-      fall_capacitance : 0.000647718;
-      fall_capacitance_range (0.000490971, 0.000647718);
+      capacitance : 0.00105686;
+      rise_capacitance : 0.00105686;
+      rise_capacitance_range (0.000794455, 0.00105686);
+      fall_capacitance : 0.00105382;
+      fall_capacitance_range (0.000764658, 0.00105382);
     }
   }
   cell (INVX1_03) {

@@ -2,7 +2,7 @@ import os
 from functools import partial
 import logging
 from logging import info, debug
-from typing import Tuple
+from typing import Tuple, Optional
 
 import matplotlib.pyplot as plt  # type: ignore
 
@@ -36,6 +36,7 @@ def main(
     max_fingers: int,
     precision: str,
     delay_index: Tuple[int, int],
+    seed: Optional[int],
 ):
     curr_path = os.path.abspath(os.path.dirname(__file__))
     reference_netlist_path = os.path.join(curr_path, reference_netlist_rel_path)
@@ -85,7 +86,7 @@ def main(
         precision,
         Netlist.create(BaseNetlistFile(File(reference_netlist_path))),
         persist_netlist_in_run_dir,
-        seed=1234,  # Make it reproducible
+        seed=seed,
     )
 
     cost_function: CostFunction = partial(delay_cost_function, delay_idx=delay_index)

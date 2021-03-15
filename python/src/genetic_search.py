@@ -3,7 +3,7 @@ from enum import Enum
 from itertools import chain
 from math import ceil, log10
 from typing import Callable, List, Optional, Sequence, Set, Tuple
-from logging import debug
+from logging import debug, info
 
 from numpy.random import default_rng
 import numpy as np
@@ -25,6 +25,7 @@ class Param(Enum):
     WIDTH = 1
     LENGTH = 2
     FINGERS = 3
+
 
 @dataclass(frozen=True)
 class Bounds:
@@ -83,7 +84,7 @@ class GeneticCandidateGenerator(CandidateGenerator[Netlist]):
     # Netlist
     _reference_netlist: Netlist
     _number_of_devices: int  # How many devices the generated netlists have, cached for convenience
-    _search_params: Set[Param]  # Which params the search can very
+    _search_params: Set[Param]  # Which params the search can vary
     _variable_indices: List[int]  # Which indices in an individual can be varied
     _id_num_digits: int  # How many digits the _id should have, cached for convenience
     _netlist_persister: Optional[Callable[[Netlist], None]]
@@ -112,25 +113,43 @@ class GeneticCandidateGenerator(CandidateGenerator[Netlist]):
     ):
         # pylint: disable=too-many-locals)
         search_params = set()
-        if min_width != max_width:
+        if min_width < max_width:
             search_params.add(Param.WIDTH)
-        if min_length != max_length:
+        elif min_width > max_width:
+            raise ValueError(
+                "The minimum width must be less than or equal to the max width"
+            )
+        if min_length < max_length:
             search_params.add(Param.LENGTH)
-        if min_fingers != max_fingers:
+        elif min_length > max_length:
+            raise ValueError(
+                "The minimum length must be less than or equal to the max length"
+            )
+        if min_fingers < max_fingers:
             search_params.add(Param.FINGERS)
+        elif min_fingers > max_fingers:
+            raise ValueError(
+                "The minimum fingers must be less than or equal to the max finger"
+            )
+
+        debug(f"Search params: {search_params}")
 
         number_of_devices = len(reference_netlist.device_widths)
         indices = [
             idx
             for param in search_params
-            for idx in range((param.value - 1) * number_of_devices, param.value * number_of_devices)
+            for idx in range(
+                (param.value - 1) * number_of_devices, param.value * number_of_devices
+            )
         ]
 
         if npoints > len(indices):
-            raise ValueError("npoints should be less than or equal to the number of number of devices per "
-                             "netlist * number of params the algorithm can vary. "
-                             "For example if the algorithm can very length and width for an inverter, nppoints <= 4"
-                             "(2 devices * 2 params).")
+            raise ValueError(
+                "npoints should be less than or equal to the number of number of devices per "
+                "netlist * number of params the algorithm can vary. "
+                "For example if the algorithm can very length and width for an inverter, nppoints <= 4"
+                "(2 devices * 2 params)."
+            )
 
         # pylint: disable=too-many-locals
         return cls(
@@ -274,9 +293,13 @@ class GeneticCandidateGenerator(CandidateGenerator[Netlist]):
             offspring[lowest_cost_parent] = mating_pool[lowest_cost_parent]
 
             # perform a local search on best individual as well, don't replace the one we just added
-            valid_indices = [idx for idx in range(self._num_individuals) if idx != lowest_cost_parent]
+            valid_indices = [
+                idx for idx in range(self._num_individuals) if idx != lowest_cost_parent
+            ]
             rand_child = self._rng.choice(valid_indices, 1)
-            offspring[rand_child] = self._gaussian_mutation(mating_pool[lowest_cost_parent])
+            offspring[rand_child] = self._gaussian_mutation(
+                mating_pool[lowest_cost_parent]
+            )
 
         netlists = []
         for idx, normalized_netlist in enumerate(offspring):
@@ -346,7 +369,9 @@ class GeneticCandidateGenerator(CandidateGenerator[Netlist]):
         # Select which device parameters to be mutated each with a probability of p
         p = self._pmutation
         mutation_mask = np.zeros(len(individual), dtype=np.bool8)
-        mutation_mask[indices] = self._rng.choice([0, 1], n, p=[1-p, p]).astype(np.bool8)
+        mutation_mask[indices] = self._rng.choice([0, 1], n, p=[1 - p, p]).astype(
+            np.bool8
+        )
 
         # Sample mutations from normal distribution, then use a symmetric rounding where mutations below zero are
         # rounded down and mutations above zero are rounded up
@@ -391,5 +416,5 @@ class GeneticSearch(SearchAlgorithm[Netlist, LibertyResult]):
 
     def _post_simulation(self):
         min_cost_per_iteration = min(self._cost_map.values())
-        debug(f"minimum cost of interation {self._iteration}: {min_cost_per_iteration}")
+        info(f"minimum cost of interation {self._iteration}: {min_cost_per_iteration}")
         self.min_cost_per_iteration[self._iteration] = min_cost_per_iteration

@@ -2,3 +2,4 @@ ldb
 userdata
 decks
 netlist_wrk
+.nfs*

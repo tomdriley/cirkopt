@@ -6,6 +6,7 @@ import os.path
 import argparse
 import logging
 from logging import DEBUG, debug, INFO, info, WARNING, error
+from random import randint
 
 import numpy as np
 
@@ -63,6 +64,13 @@ def _add_common_args(parser: argparse.ArgumentParser):
         action="store_const",
         dest="loglevel",
         const=INFO,
+    )
+    parser.add_argument(
+        "--outindex",
+        help="Index of value from LDB table to show, space separated, e.g.: 0 1",
+        nargs=2,
+        type=int,
+        default=[0, 0],
     )
 
 
@@ -124,13 +132,6 @@ search      Find an optimal design""",
             help="Name of pin to get data from, e.g.: Y",
             default="Y",
         )
-        parser.add_argument(
-            "--outindex",
-            help="Index of value from LDB table to show, space separated, e.g.: 0 1",
-            nargs=2,
-            type=int,
-            default=[0, 1],
-        )
 
         _add_common_args(parser)
 
@@ -166,98 +167,84 @@ search      Find an optimal design""",
         parser = argparse.ArgumentParser(
             description="Use genetic search to find optimal design",
         )
-
         parser.add_argument(
             "--iterations",
             help="Number of search iterations to run",
             type=int,
             default=100,
         )
-
         parser.add_argument(
             "--individuals",
             help="Number of search individuals per population",
             type=int,
             default=10,
         )
-
         parser.add_argument(
             "--elitism",
             help="If the best candidate should continue to next population",
             type=bool,
             default=True,
         )
-
         parser.add_argument(
             "--npoints",
             help="Number of crossover points, should be less than number of devices * 3",
             type=int,
             default=2,
         )
-
         parser.add_argument(
             "--alpha",
             help="Alpha for n point crossover",
             type=float,
             default=0.5,
         )
-
         parser.add_argument(
             "--pmutation",
             help="Probability of adding gaussian noise mutation to a given device param within a candidate",
             type=float,
             default=0.05,
         )
-
         parser.add_argument(
             "--mutation-std-dev",
             help="Standard deviation of additive gaussian noise mutation",
             type=float,
-            default=1.0,
+            default=5.0,
         )
-
         parser.add_argument(
             "--min-width",
             help="Minimum width for a device (inclusive)",
             type=float,
             default=120e-9,
         )
-
         parser.add_argument(
             "--max-width",
             help="Maximum width for a device (inclusive)",
             type=float,
             default=10e-6,
         )
-
         parser.add_argument(
             "--min-length",
             help="Minimum length for a device (inclusive)",
             type=float,
             default=45e-9,
         )
-
         parser.add_argument(
             "--max-length",
             help="Maximum length for a device (inclusive)",
             type=float,
             default=45e-9,
         )
-
         parser.add_argument(
             "--min-fingers",
             help="Minimum fingers for a device (inclusive)",
             type=int,
             default=1,
         )
-
         parser.add_argument(
             "--max-fingers",
             help="Maximum fingers for a device (inclusive)",
             type=int,
             default=1,
         )
-
         parser.add_argument(
             "--precision",
             help=(
@@ -267,13 +254,11 @@ search      Find an optimal design""",
             type=str,
             default="5e-9",
         )
-
         parser.add_argument(
-            "--delay-index",
-            help="Delay index to be used for delay based cost function",
-            nargs=2,
+            "--seed",
+            help="Removes randomization on the initial seed to make the results more reproducable",
             type=int,
-            default=[0, 1],
+            default=randint(0, 2 ** 32),
         )
 
         _add_common_args(parser)
@@ -286,6 +271,7 @@ search      Find an optimal design""",
             datefmt="%I:%M:%S %p",
             level=args.loglevel,
         )
+
         # Print all the arguments given
         for key in args.__dict__:
             debug(f"{key:<10}: {args.__dict__[key]}")
@@ -308,7 +294,8 @@ search      Find an optimal design""",
             min_fingers=args.min_fingers,
             max_fingers=args.max_fingers,
             precision=args.precision,
-            delay_index=tuple(args.delay_index),
+            delay_index=tuple(args.outindex),
+            seed=args.seed,
         )
 
 

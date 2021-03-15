@@ -45,7 +45,7 @@ set MODEL_INCLUDE_FILE   ${SRC_DIR}/models/spectre/include_${PROCESS}
 #####     CLIENTS - number of Distributed Resource Management (DRM) jobs; 0=disable DRM
 #####----------------------------------------
 ### run using debug mode ###
-set THREAD    8 ; # 0=unlimited (sometimes slower), otherwise sets max threads
+set THREAD    16 ; # 0=unlimited (sometimes slower), otherwise sets max threads
 set CLIENTS   0
 ### run using local mode ###
 # set THREAD    2
