@@ -35,8 +35,7 @@ set cells {
     XOR2X1
 }
 # Overrides with working cells. Must update if new cells are added
-set cells {
-}
+set cells [split $::env(CELL_NAMES) {,}]
 
 
 ### Define templates - slew (0-100%) min,max=10ps,500ps

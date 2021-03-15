@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 import subprocess
-import os.path
+import os
 import sys
 import shutil
 import time
@@ -9,24 +9,9 @@ import logging
 from logging import info, error
 from typing import NamedTuple, List, Sequence
 from src.file_io import File
-from src.liberate_template_utils import update_liberate_template_cell_names
 from src.liberty_parser import LibertyParser, LibertyResult
 from src.netlist import Netlist
 
-# Liberate project folder is defined relative to the location of this script
-PYTHON_SRC_DIRECTORY: str = os.path.dirname(os.path.abspath(__file__))
-LIBERATE_DEFAULT_PROJECT_DIRECTORY: str = os.path.abspath(
-    os.path.join(PYTHON_SRC_DIRECTORY, "../../liberate")
-)
-CHAR_TCL_DEFAULT_PATH: str = os.path.join(
-    LIBERATE_DEFAULT_PROJECT_DIRECTORY, "tcl/char.tcl"
-)
-TEMPLATE_TCL_DEFAULT_PATH: str = os.path.join(
-    LIBERATE_DEFAULT_PROJECT_DIRECTORY, "template/template.tcl"
-)
-LDB_DEFAULT_PATH: str = os.path.join(
-    LIBERATE_DEFAULT_PROJECT_DIRECTORY, "lib/example_tt_1.0_70_nldm.lib"
-)
 LIBERATE_DEFAULT_CMD: str = "liberate"
 
 LiberateCompletedProcess = NamedTuple(
@@ -56,38 +41,59 @@ def _waiting_animation(complete_condition, refresh_rate_Hz: int = 10) -> None:
     info("Liberate completed.")
 
 
-def run_liberate(
+def _run_liberate(
+    candidates: Sequence[Netlist],
+    tcl_script: str,
+    liberate_dir: str,
+    netlist_dir: str,
+    liberate_log: str,
+    out_dir: str,
+    ldb_name: str,
     liberate_cmd: str = LIBERATE_DEFAULT_CMD,
-    char_tcl_path: str = CHAR_TCL_DEFAULT_PATH,
-    run_dir: str = LIBERATE_DEFAULT_PROJECT_DIRECTORY,
 ) -> LiberateCompletedProcess:
     """Run Cadence Liberate
 
     characterizes SPICE (.sp) files and generate Liberty library (.lib or .ldb)
     """
 
-    if not os.path.isfile(char_tcl_path):
-        raise TypeError(f"No file found at path {char_tcl_path}")
+    # TODO: Run setup script before
+
+    if not os.path.isfile(tcl_script):
+        raise FileNotFoundError(tcl_script)
+    if not os.path.isdir(liberate_dir):
+        raise NotADirectoryError(liberate_dir)
     if shutil.which(liberate_cmd) is None:
         error(
             f"'{liberate_cmd}' does not appear to be an executable, "
             + "did you forget to source the setup script?"
         )
         sys.exit()
-
-    # TODO: Run setup script before
+    if not os.path.isdir(netlist_dir):
+        raise NotADirectoryError(netlist_dir)
+    cell_names = tuple(netlist.cell_name for netlist in candidates)
+    for cell_name in cell_names:
+        netlist_file = os.path.join(netlist_dir, cell_name + ".sp")
+        if not os.path.isfile(netlist_file):
+            raise FileNotFoundError(netlist_file)
 
     info("Running liberate.")
     with open(
-        file=os.path.join(LIBERATE_DEFAULT_PROJECT_DIRECTORY, "python.log"),
+        file=liberate_log,
         mode="w",
-    ) as log_file:  # TODO: paramaterize log file name and use MockFile interface
+    ) as log_file:  # TODO: use MockFile interface
         r: subprocess.Popen = subprocess.Popen(
-            args=[liberate_cmd, char_tcl_path],
-            cwd=run_dir,
+            args=[liberate_cmd, tcl_script],
             stderr=subprocess.STDOUT,
             stdout=log_file,
             text=True,
+            env={
+                **os.environ,
+                "NETLIST_DIR": netlist_dir,
+                "OUT_DIR": out_dir,
+                "CELL_NAMES": ",".join(cell_names),
+                "LDB_NAME": ldb_name,
+                "LIBERATE_DIR": liberate_dir,
+            },
         )
         _waiting_animation(complete_condition=r.poll)
     # Convert to CompletedProcess so we can check the return code
@@ -104,16 +110,28 @@ def run_liberate(
     )
 
 
-def liberate_simulator(candidates: Sequence[Netlist]) -> LibertyResult:
-    # Setup inputs
-    cell_names = tuple(netlist.cell_name for netlist in candidates)
-    template_tcl_file = File(TEMPLATE_TCL_DEFAULT_PATH)
-    update_liberate_template_cell_names(template_tcl_file, cell_names)
-
+def liberate_simulator(
+    candidates: Sequence[Netlist],
+    tcl_script: str,
+    liberate_dir: str,
+    netlist_dir: str,
+    liberate_log: str,
+    out_dir: str,
+    ldb_name: str,
+) -> LibertyResult:
     # Run simulations
-    run_liberate()  # TODO: paramaterize other args
+    _run_liberate(
+        candidates=candidates,
+        tcl_script=tcl_script,
+        liberate_dir=liberate_dir,
+        netlist_dir=netlist_dir,
+        liberate_log=liberate_log,
+        out_dir=out_dir,
+        ldb_name=ldb_name,
+    )
 
     # Parse results
-    ldb_file = File(LDB_DEFAULT_PATH)
+    ldb_path = os.path.join(out_dir, "lib", ldb_name + ".lib")
+    ldb_file = File(ldb_path)
     parser = LibertyParser()
     return parser.parse(ldb_file)

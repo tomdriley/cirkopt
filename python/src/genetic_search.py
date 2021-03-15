@@ -9,13 +9,13 @@ from numpy.random import default_rng
 import numpy as np
 
 from src.quantize import quantize, scale, Rounding
-from src.liberate import liberate_simulator
 from src.liberty_parser import LibertyResult
 from src.netlist import Netlist
 from src.search_algorithm import (
     CandidateGenerator,
     CostMap,
     SearchAlgorithm,
+    Simulator,
 )
 
 CostFunction = Callable[[Sequence[Netlist], LibertyResult], CostMap]
@@ -199,18 +199,24 @@ class GeneticCandidateGenerator(CandidateGenerator[Netlist]):
         def rand_netlist(idx: int) -> Netlist:
             # Generate fixed point widths if we can vary them
             if Param.WIDTH in self._search_params:
-                widths = self._rng.integers(b.min_width, b.max_width, n, endpoint=True, dtype=np.uint64)
+                widths = self._rng.integers(
+                    b.min_width, b.max_width, n, endpoint=True, dtype=np.uint64
+                )
             else:
                 widths = b.min_width * np.ones(n, dtype=np.uint64)
 
             # Generate fixed point lengths if we can vary them
             if Param.LENGTH in self._search_params:
-                lengths = self._rng.integers(b.min_length, b.max_length, n, endpoint=True, dtype=np.uint64)
+                lengths = self._rng.integers(
+                    b.min_length, b.max_length, n, endpoint=True, dtype=np.uint64
+                )
             else:
                 lengths = b.min_length * np.ones(n, dtype=np.uint64)
 
             if Param.FINGERS in self._search_params:
-                fingers = self._rng.integers(b.min_fingers, b.max_fingers, n, endpoint=True, dtype=np.uint64)
+                fingers = self._rng.integers(
+                    b.min_fingers, b.max_fingers, n, endpoint=True, dtype=np.uint64
+                )
             else:
                 fingers = b.min_fingers * np.ones(n, dtype=np.uint64)
 
@@ -353,6 +359,7 @@ class GeneticCandidateGenerator(CandidateGenerator[Netlist]):
 
     def _gaussian_mutation(self, individual: np.ndarray) -> np.ndarray:
         """Apply additive gaussian noise to each device parameter with a probability of self._pmutation"""
+
         def round_based_on_sign(v: np.float32) -> np.int64:
             if v > 0:
                 return np.ceil(v)
@@ -360,7 +367,9 @@ class GeneticCandidateGenerator(CandidateGenerator[Netlist]):
                 return np.floor(v)
             return np.int64(0)
 
-        vectorized_round_based_on_sign = np.vectorize(round_based_on_sign, otypes=[np.int64])
+        vectorized_round_based_on_sign = np.vectorize(
+            round_based_on_sign, otypes=[np.int64]
+        )
 
         # get the indices we can modify based on self._search_params
         indices = self._variable_indices
@@ -380,7 +389,9 @@ class GeneticCandidateGenerator(CandidateGenerator[Netlist]):
         rounded_mutations = vectorized_round_based_on_sign(mutations)
 
         # Returns device params can't be negative, clip below zero and cast to uint
-        return np.maximum(individual + rounded_mutations * mutation_mask, 0).astype(np.uint64)
+        return np.maximum(individual + rounded_mutations * mutation_mask, 0).astype(
+            np.uint64
+        )
 
     def _get_netlist_name(self, idx: int) -> str:
         return (
@@ -401,13 +412,14 @@ class GeneticSearch(SearchAlgorithm[Netlist, LibertyResult]):
 
     def __init__(
         self,
+        simulator: Simulator,
         candidate_generator: GeneticCandidateGenerator,
         cost_function: CostFunction,
         max_iterations: int,
     ):
         self._candidate_generator = candidate_generator
         self._cost_function = cost_function
-        self._simulate = liberate_simulator
+        self._simulate = simulator
         self._max_iterations = max_iterations
         self.min_cost_per_iteration = [0] * max_iterations
 

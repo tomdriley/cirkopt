@@ -1,13 +1,13 @@
 from enum import Enum
 from typing import Callable, Sequence, Union
 
-from src.liberate import liberate_simulator
 from src.liberty_parser import LibertyResult
 from src.netlist import Netlist
 from src.search_algorithm import (
     CandidateGenerator,
     CostMap,
     SearchAlgorithm,
+    Simulator,
 )
 from src.netlist_cost_functions import noop_cost_function
 
@@ -75,9 +75,9 @@ class SingleParamSweep(SearchAlgorithm[Netlist, LibertyResult]):
 
     def __init__(
         self,
+        simulator: Simulator,
         candidate_generator: ParamSweepCandidateGenerator,
         cost_function=noop_cost_function,
-        simulator=liberate_simulator,
     ):
         self._candidate_generator = candidate_generator
         self._cost_function = cost_function
