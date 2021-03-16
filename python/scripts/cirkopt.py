@@ -9,6 +9,7 @@ from logging import DEBUG, debug, INFO, info, WARNING, error
 from random import randint
 from typing import Type, TypeVar
 from textwrap import dedent
+from decimal import Decimal
 
 import numpy as np
 
@@ -326,10 +327,10 @@ class Cirkopt:
         )
 
         def width(string: str) -> Range[float]:
-            return _range(Param.WIDTH, float, string)
+            return _range(Param.WIDTH, Decimal, string)
 
         def length(string: str) -> Range[float]:
-            return _range(Param.LENGTH, float, string)
+            return _range(Param.LENGTH, Decimal, string)
 
         def fingers(string: str) -> Range[float]:
             return _range(Param.FINGERS, int, string)

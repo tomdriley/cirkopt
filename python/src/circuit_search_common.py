@@ -1,9 +1,10 @@
 from enum import Enum
+from decimal import Decimal
 from typing import Generic, Iterator, TypeVar
 
 from dataclasses import dataclass
 
-T = TypeVar('T', float, int)
+T = TypeVar('T', Decimal, int)
 
 
 class Param(Enum):
@@ -29,8 +30,8 @@ class Range(Generic[T]):
         if len({type(self.low), type(self.high), type(self.step_size)}) != 1:
             raise ValueError("Range low, high, and step size must be the same type")
 
-        if self.param in {Param.WIDTH, Param.LENGTH} and not isinstance(self.low, float):
-            raise ValueError("Widths should be specified as floats")
+        if self.param in {Param.WIDTH, Param.LENGTH} and not isinstance(self.low, Decimal):
+            raise ValueError("Widths should be specified as decimals")
 
         if self.param == Param.FINGERS and not isinstance(self.low, int):
             raise ValueError("Fingers should be specified as ints")

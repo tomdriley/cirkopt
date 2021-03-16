@@ -1,3 +1,4 @@
+from decimal import Decimal
 import unittest
 
 from src.netlist import Netlist, BaseNetlistFile
@@ -17,8 +18,8 @@ class TestBruteForceSearch(unittest.TestCase):
         for simulations_per_iterations in [1, 10]:
             candidate_generator = BruteForceCandidateGenerator.create(
                 reference_netlist=self.ref_netlist,
-                width_range=Range(Param.WIDTH, 120e-9, 120e-9, 5e-9),
-                length_range=Range(Param.LENGTH, 45e-9, 45e-9, 5e-9),
+                width_range=Range(Param.WIDTH, Decimal('120e-9'), Decimal('120e-9'), Decimal('5e-9')),
+                length_range=Range(Param.LENGTH, Decimal('45e-9'), Decimal('45e-9'), Decimal('5e-9')),
                 fingers_range=Range(Param.FINGERS, 1, 1, 1),
                 simulations_per_iteration=simulations_per_iterations,
             )
@@ -34,8 +35,8 @@ class TestBruteForceSearch(unittest.TestCase):
     def test_width_only(self):
         candidate_generator = BruteForceCandidateGenerator.create(
             reference_netlist=self.ref_netlist,
-            width_range=Range(Param.WIDTH, 120e-9, 125e-9, 5e-9),
-            length_range=Range(Param.LENGTH, 45e-9, 45e-9, 5e-9),
+            width_range=Range(Param.WIDTH, Decimal('120e-9'), Decimal('125e-9'), Decimal('5e-9')),
+            length_range=Range(Param.LENGTH, Decimal('45e-9'), Decimal('45e-9'), Decimal('5e-9')),
             fingers_range=Range(Param.FINGERS, 1, 1, 1),
             simulations_per_iteration=2,
         )
@@ -67,8 +68,8 @@ class TestBruteForceSearch(unittest.TestCase):
     def test_length_only(self):
         candidate_generator = BruteForceCandidateGenerator.create(
             reference_netlist=self.ref_netlist,
-            width_range=Range(Param.WIDTH, 120e-9, 120e-9, 5e-9),
-            length_range=Range(Param.LENGTH, 45e-9, 50e-9, 5e-9),
+            width_range=Range(Param.WIDTH, Decimal('120e-9'), Decimal('120e-9'), Decimal('5e-9')),
+            length_range=Range(Param.LENGTH, Decimal('45e-9'), Decimal('50e-9'), Decimal('5e-9')),
             fingers_range=Range(Param.FINGERS, 1, 1, 1),
             simulations_per_iteration=2,
         )
@@ -100,8 +101,8 @@ class TestBruteForceSearch(unittest.TestCase):
     def test_fingers_only(self):
         candidate_generator = BruteForceCandidateGenerator.create(
             reference_netlist=self.ref_netlist,
-            width_range=Range(Param.WIDTH, 120e-9, 120e-9, 5e-9),
-            length_range=Range(Param.LENGTH, 45e-9, 45e-9, 5e-9),
+            width_range=Range(Param.WIDTH, Decimal('120e-9'), Decimal('120e-9'), Decimal('5e-9')),
+            length_range=Range(Param.LENGTH, Decimal('45e-9'), Decimal('45e-9'), Decimal('5e-9')),
             fingers_range=Range(Param.FINGERS, 1, 2, 1),
             simulations_per_iteration=2,
         )
@@ -133,8 +134,8 @@ class TestBruteForceSearch(unittest.TestCase):
     def test_all_params(self):
         candidate_generator = BruteForceCandidateGenerator.create(
             reference_netlist=self.ref_netlist,
-            width_range=Range(Param.WIDTH, 120e-9, 125e-9, 5e-9),
-            length_range=Range(Param.LENGTH, 45e-9, 50e-9, 5e-9),
+            width_range=Range(Param.WIDTH, Decimal('120e-9'), Decimal('125e-9'), Decimal('5e-9')),
+            length_range=Range(Param.LENGTH, Decimal('45e-9'), Decimal('50e-9'), Decimal('5e-9')),
             fingers_range=Range(Param.FINGERS, 1, 2, 1),
             simulations_per_iteration=2,
         )

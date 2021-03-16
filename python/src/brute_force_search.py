@@ -37,8 +37,8 @@ class BruteForceCandidateGenerator(CandidateGenerator[Netlist]):
         fingers_range: Range[int],
         simulations_per_iteration: int,
     ) -> "BruteForceCandidateGenerator":
-        widths = tuple(width_range)
-        lengths = tuple(length_range)
+        widths = tuple(map(float, width_range))
+        lengths = tuple(map(float, length_range))
         fingers = tuple(fingers_range)
         ndevices = len(reference_netlist.device_widths)
         generator = cls._get_generator(widths, lengths, fingers, ndevices)
