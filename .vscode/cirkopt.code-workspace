@@ -27,6 +27,10 @@
 			"--rcfile=python/.pylintrc"
 		],
 		"python.formatting.provider": "black",
+		"python.formatting.blackArgs": [
+			"--line-length",
+			"100"
+		],
 		// Python Environment settings. 
 		// Update to result of "python3 -m pipenv --venv | sed 's/$/\/bin\/python/'" locally
 		// This requires that you have already installed pipenv
