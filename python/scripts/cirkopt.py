@@ -25,7 +25,7 @@ from scripts.single_param_sweep import single_param_sweep  # pylint: disable=wro
 from src.circuit_search_common import Param, Range  # pylint: disable=wrong-import-position
 
 
-RangeType = TypeVar("RangeType", int, float)
+RangeType = TypeVar("RangeType", int, Decimal)
 
 
 def _range(param: Param, _type: Type[RangeType], string: str) -> Range[RangeType]:
@@ -326,13 +326,13 @@ class Cirkopt:
             description="Perform exhaustive search to optimize netlist",
         )
 
-        def width(string: str) -> Range[float]:
+        def width(string: str) -> Range[Decimal]:
             return _range(Param.WIDTH, Decimal, string)
 
-        def length(string: str) -> Range[float]:
+        def length(string: str) -> Range[Decimal]:
             return _range(Param.LENGTH, Decimal, string)
 
-        def fingers(string: str) -> Range[float]:
+        def fingers(string: str) -> Range[int]:
             return _range(Param.FINGERS, int, string)
 
         parser.add_argument(

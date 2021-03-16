@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from math import ceil, log10
 from typing import Iterator, List, Sequence
+from decimal import Decimal
 
 from src.circuit_search_common import Range
 from src.liberty_parser import LibertyResult
@@ -32,8 +33,8 @@ class BruteForceCandidateGenerator(CandidateGenerator[Netlist]):
     def create(
         cls,
         reference_netlist: Netlist,
-        width_range: Range[float],
-        length_range: Range[float],
+        width_range: Range[Decimal],
+        length_range: Range[Decimal],
         fingers_range: Range[int],
         simulations_per_iteration: int,
     ) -> "BruteForceCandidateGenerator":

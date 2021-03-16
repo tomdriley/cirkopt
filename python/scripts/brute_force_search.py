@@ -1,8 +1,9 @@
 import os
 from functools import partial
 from logging import info, debug
-from typing import Tuple, Generic, TypeVar
+from typing import Tuple, TypeVar
 from math import floor, ceil
+from decimal import Decimal
 
 from src.file_io import File
 from src.netlist import BaseNetlistFile, Netlist
@@ -24,8 +25,8 @@ def brute_force_search(
     liberate_dir: str,
     out_dir: str,
     delay_index: Tuple[int, int],
-    width: Range[float],
-    length: Range[float],
+    width: Range[Decimal],
+    length: Range[Decimal],
     fingers: Range[int],
     simulations_per_iteration: int,
 ):
@@ -45,10 +46,10 @@ def brute_force_search(
 
     reference_netlist = Netlist.create(BaseNetlistFile(File(reference_netlist_path)))
 
-    T = TypeVar("T", float, int)
+    T = TypeVar("T", Decimal, int)
 
-    def num_steps(range: Range[T]) -> int:
-        return floor((range.high - range.low) / range.step_size) + 1
+    def num_steps(_range: Range[T]) -> int:
+        return floor((_range.high - _range.low) / _range.step_size) + 1
 
     num_width = num_steps(width)
     debug(f"Running with {num_width} values for width")
