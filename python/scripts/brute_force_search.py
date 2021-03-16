@@ -12,7 +12,7 @@ from src.brute_force_search import (
     BruteForceCandidateGenerator,
     BruteForceSearch,
     CostFunction,
-    Simulator
+    Simulator,
 )
 from src.circuit_search_common import Range
 
@@ -49,7 +49,7 @@ def brute_force_search(
         width_range=width,
         length_range=length,
         fingers_range=fingers,
-        simulations_per_iteration=simulations_per_iteration
+        simulations_per_iteration=simulations_per_iteration,
     )
     cost_function: CostFunction = partial(
         delay_cost_function,
@@ -65,7 +65,7 @@ def brute_force_search(
     info("Starting brute force search...")
     best_netlist = brute_force.search()
     info("Search complete")
-    best_netlist.mutate(
+    best_netlist.clone(
         cell_name=reference_netlist.cell_name,
         device_widths=best_netlist.device_widths,
         device_lengths=best_netlist.device_lengths,

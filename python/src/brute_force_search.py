@@ -10,7 +10,7 @@ from src.search_algorithm import (
     CostMap,
     SearchAlgorithm,
     Simulator,
-    CostFunction
+    CostFunction,
 )
 from src.utils import chunked
 
@@ -36,7 +36,7 @@ class BruteForceCandidateGenerator(CandidateGenerator[Netlist]):
         length_range: Range[float],
         fingers_range: Range[int],
         simulations_per_iteration: int,
-    ) -> 'BruteForceCandidateGenerator':
+    ) -> "BruteForceCandidateGenerator":
         widths = tuple(width_range)
         lengths = tuple(length_range)
         fingers = tuple(fingers_range)
@@ -49,21 +49,20 @@ class BruteForceCandidateGenerator(CandidateGenerator[Netlist]):
             reference_netlist=reference_netlist,
             ndigits=ceil(log10(simulations_per_iteration)),
             ndevices=ndevices,
-            generator=chunked(generator, simulations_per_iteration)
+            generator=chunked(generator, simulations_per_iteration),
         )
 
     @staticmethod
     def _get_generator(
-            widths: Sequence[float],
-            lengths: Sequence[float],
-            fingers: Sequence[int],
-            ndevices: int
+        widths: Sequence[float], lengths: Sequence[float], fingers: Sequence[int], ndevices: int
     ) -> Iterator[Sequence[int]]:
         normalized_netlist = [0] * (3 * ndevices)
         terminal_vals = [
-            len(widths) - 1 if 0 <= idx < ndevices else
-            len(lengths) - 1 if ndevices <= idx < 2 * ndevices else
-            len(fingers) - 1
+            len(widths) - 1
+            if 0 <= idx < ndevices
+            else len(lengths) - 1
+            if ndevices <= idx < 2 * ndevices
+            else len(fingers) - 1
             for idx in range(len(normalized_netlist))
         ]
 
@@ -84,7 +83,9 @@ class BruteForceCandidateGenerator(CandidateGenerator[Netlist]):
             return copy
 
         yield normalized_netlist
-        while not all(normalized_netlist[idx] == terminal_vals[idx] for idx in range(len(normalized_netlist))):
+        while not all(
+            normalized_netlist[idx] == terminal_vals[idx] for idx in range(len(normalized_netlist))
+        ):
             normalized_netlist = increment_netlist(normalized_netlist)
             yield normalized_netlist
 
@@ -92,7 +93,7 @@ class BruteForceCandidateGenerator(CandidateGenerator[Netlist]):
         base_name = self.reference_netlist.cell_name
         name = base_name + "_" + str(_id).zfill(self.ndigits)
         ndevices = self.ndevices
-        return self.reference_netlist.mutate(
+        return self.reference_netlist.clone(
             cell_name=name,
             device_widths=tuple(
                 self.widths[width_idx] for width_idx in normalized_netlist[:ndevices]
@@ -113,7 +114,9 @@ class BruteForceCandidateGenerator(CandidateGenerator[Netlist]):
         self, current_candidates: Sequence[Netlist], cost_map: CostMap
     ) -> Sequence[Netlist]:
         try:
-            return tuple(self._denomalize(netlist, _id) for _id, netlist in enumerate(next(self.generator)))
+            return tuple(
+                self._denomalize(netlist, _id) for _id, netlist in enumerate(next(self.generator))
+            )
         except StopIteration:
             return tuple()
 

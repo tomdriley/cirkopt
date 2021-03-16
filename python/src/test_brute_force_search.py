@@ -8,7 +8,6 @@ from tests.test_netlist import TEST_NETLIST
 
 
 class TestBruteForceSearch(unittest.TestCase):
-
     def setUp(self):
         self.ref_netlist_file = MockFile()
         self.ref_netlist_file.write(TEST_NETLIST)
@@ -21,14 +20,14 @@ class TestBruteForceSearch(unittest.TestCase):
                 width_range=Range(Param.WIDTH, 120e-9, 120e-9, 5e-9),
                 length_range=Range(Param.LENGTH, 45e-9, 45e-9, 5e-9),
                 fingers_range=Range(Param.FINGERS, 1, 1, 1),
-                simulations_per_iteration=simulations_per_iterations
+                simulations_per_iteration=simulations_per_iterations,
             )
 
             initial_population = candidate_generator.get_initial_population()
             self.assertEqual(len(initial_population), 1)
             self.assertEqual(
                 initial_population[0],
-                self.ref_netlist.mutate("INVX1_3_0", (120e-9, 120e-9), (45e-9, 45e-9), (1, 1))
+                self.ref_netlist.clone("INVX1_3_0", (120e-9, 120e-9), (45e-9, 45e-9), (1, 1)),
             )
             self.assertEqual(len(candidate_generator.get_next_population(tuple(), dict())), 0)
 
@@ -38,7 +37,7 @@ class TestBruteForceSearch(unittest.TestCase):
             width_range=Range(Param.WIDTH, 120e-9, 125e-9, 5e-9),
             length_range=Range(Param.LENGTH, 45e-9, 45e-9, 5e-9),
             fingers_range=Range(Param.FINGERS, 1, 1, 1),
-            simulations_per_iteration=2
+            simulations_per_iteration=2,
         )
 
         initial_population = candidate_generator.get_initial_population()
@@ -58,10 +57,10 @@ class TestBruteForceSearch(unittest.TestCase):
             all_candidates.extend(next_population)
 
         expected_candidates = [
-            self.ref_netlist.mutate("INVX1_3_0", (120e-9, 120e-9), (45e-9, 45e-9), (1, 1)),
-            self.ref_netlist.mutate("INVX1_3_1", (125e-9, 120e-9), (45e-9, 45e-9), (1, 1)),
-            self.ref_netlist.mutate("INVX1_3_0", (120e-9, 125e-9), (45e-9, 45e-9), (1, 1)),
-            self.ref_netlist.mutate("INVX1_3_1", (125e-9, 125e-9), (45e-9, 45e-9), (1, 1)),
+            self.ref_netlist.clone("INVX1_3_0", (120e-9, 120e-9), (45e-9, 45e-9), (1, 1)),
+            self.ref_netlist.clone("INVX1_3_1", (125e-9, 120e-9), (45e-9, 45e-9), (1, 1)),
+            self.ref_netlist.clone("INVX1_3_0", (120e-9, 125e-9), (45e-9, 45e-9), (1, 1)),
+            self.ref_netlist.clone("INVX1_3_1", (125e-9, 125e-9), (45e-9, 45e-9), (1, 1)),
         ]
         self.assertListEqual(all_candidates, expected_candidates)
 
@@ -71,7 +70,7 @@ class TestBruteForceSearch(unittest.TestCase):
             width_range=Range(Param.WIDTH, 120e-9, 120e-9, 5e-9),
             length_range=Range(Param.LENGTH, 45e-9, 50e-9, 5e-9),
             fingers_range=Range(Param.FINGERS, 1, 1, 1),
-            simulations_per_iteration=2
+            simulations_per_iteration=2,
         )
 
         initial_population = candidate_generator.get_initial_population()
@@ -91,10 +90,10 @@ class TestBruteForceSearch(unittest.TestCase):
             all_candidates.extend(next_population)
 
         expected_candidates = [
-            self.ref_netlist.mutate("INVX1_3_0", (120e-9, 120e-9), (45e-9, 45e-9), (1, 1)),
-            self.ref_netlist.mutate("INVX1_3_1", (120e-9, 120e-9), (50e-9, 45e-9), (1, 1)),
-            self.ref_netlist.mutate("INVX1_3_0", (120e-9, 120e-9), (45e-9, 50e-9), (1, 1)),
-            self.ref_netlist.mutate("INVX1_3_1", (120e-9, 120e-9), (50e-9, 50e-9), (1, 1)),
+            self.ref_netlist.clone("INVX1_3_0", (120e-9, 120e-9), (45e-9, 45e-9), (1, 1)),
+            self.ref_netlist.clone("INVX1_3_1", (120e-9, 120e-9), (50e-9, 45e-9), (1, 1)),
+            self.ref_netlist.clone("INVX1_3_0", (120e-9, 120e-9), (45e-9, 50e-9), (1, 1)),
+            self.ref_netlist.clone("INVX1_3_1", (120e-9, 120e-9), (50e-9, 50e-9), (1, 1)),
         ]
         self.assertListEqual(all_candidates, expected_candidates)
 
@@ -104,7 +103,7 @@ class TestBruteForceSearch(unittest.TestCase):
             width_range=Range(Param.WIDTH, 120e-9, 120e-9, 5e-9),
             length_range=Range(Param.LENGTH, 45e-9, 45e-9, 5e-9),
             fingers_range=Range(Param.FINGERS, 1, 2, 1),
-            simulations_per_iteration=2
+            simulations_per_iteration=2,
         )
 
         initial_population = candidate_generator.get_initial_population()
@@ -124,10 +123,10 @@ class TestBruteForceSearch(unittest.TestCase):
             all_candidates.extend(next_population)
 
         expected_candidates = [
-            self.ref_netlist.mutate("INVX1_3_0", (120e-9, 120e-9), (45e-9, 45e-9), (1, 1)),
-            self.ref_netlist.mutate("INVX1_3_1", (120e-9, 120e-9), (45e-9, 45e-9), (2, 1)),
-            self.ref_netlist.mutate("INVX1_3_0", (120e-9, 120e-9), (45e-9, 45e-9), (1, 2)),
-            self.ref_netlist.mutate("INVX1_3_1", (120e-9, 120e-9), (45e-9, 45e-9), (2, 2)),
+            self.ref_netlist.clone("INVX1_3_0", (120e-9, 120e-9), (45e-9, 45e-9), (1, 1)),
+            self.ref_netlist.clone("INVX1_3_1", (120e-9, 120e-9), (45e-9, 45e-9), (2, 1)),
+            self.ref_netlist.clone("INVX1_3_0", (120e-9, 120e-9), (45e-9, 45e-9), (1, 2)),
+            self.ref_netlist.clone("INVX1_3_1", (120e-9, 120e-9), (45e-9, 45e-9), (2, 2)),
         ]
         self.assertListEqual(all_candidates, expected_candidates)
 
@@ -137,7 +136,7 @@ class TestBruteForceSearch(unittest.TestCase):
             width_range=Range(Param.WIDTH, 120e-9, 125e-9, 5e-9),
             length_range=Range(Param.LENGTH, 45e-9, 50e-9, 5e-9),
             fingers_range=Range(Param.FINGERS, 1, 2, 1),
-            simulations_per_iteration=2
+            simulations_per_iteration=2,
         )
 
         initial_population = candidate_generator.get_initial_population()
@@ -159,15 +158,15 @@ class TestBruteForceSearch(unittest.TestCase):
         # Too many combinations to test, so check a few key indices and make sure there are no duplicates
         self.assertEqual(
             all_candidates[0],
-            self.ref_netlist.mutate("INVX1_3_0", (120e-9, 120e-9), (45e-9, 45e-9), (1, 1))
+            self.ref_netlist.clone("INVX1_3_0", (120e-9, 120e-9), (45e-9, 45e-9), (1, 1)),
         )
         self.assertEqual(
             all_candidates[31],
-            self.ref_netlist.mutate("INVX1_3_1", (125e-9, 125e-9), (50e-9, 50e-9), (2, 1))
+            self.ref_netlist.clone("INVX1_3_1", (125e-9, 125e-9), (50e-9, 50e-9), (2, 1)),
         )
         self.assertEqual(
             all_candidates[-1],
-            self.ref_netlist.mutate("INVX1_3_1", (125e-9, 125e-9), (50e-9, 50e-9), (2, 2))
+            self.ref_netlist.clone("INVX1_3_1", (125e-9, 125e-9), (50e-9, 50e-9), (2, 2)),
         )
         self.assertEqual(len(all_candidates), 64)
         self.assertEqual(len(set(all_candidates)), 64)
