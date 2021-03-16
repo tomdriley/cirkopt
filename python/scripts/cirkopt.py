@@ -288,7 +288,7 @@ search      Find an optimal design""",
             debug(f"{key:<10}: {args.__dict__[key]}")
 
         genetic_search(
-            reference_netlist=args.netlist,
+            reference_netlist_path=args.netlist,
             max_iterations=args.iterations,
             num_individuals=args.individuals,
             elitism=args.elitism,

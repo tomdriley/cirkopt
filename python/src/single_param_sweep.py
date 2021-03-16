@@ -51,7 +51,7 @@ class ParamSweepCandidateGenerator(CandidateGenerator[Netlist]):
                 lengths = tuple(float(val) for _ in range(len(lengths)))
             else:
                 fingers = tuple(int(val) for _ in range(len(fingers)))
-            return reference_netlist.mutate(cell_name, widths, lengths, fingers)
+            return reference_netlist.clone(cell_name, widths, lengths, fingers)
 
         self.candidates = tuple(new_netlist(idx, value) for idx, value in enumerate(values))
 

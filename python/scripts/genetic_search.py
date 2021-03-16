@@ -20,7 +20,7 @@ from src.genetic_search import (
 
 # pylint: disable=too-many-locals
 def genetic_search(
-    reference_netlist: str,
+    reference_netlist_path: str,
     max_iterations: int,
     num_individuals: int,
     elitism: bool,
@@ -41,8 +41,8 @@ def genetic_search(
     liberate_dir: str,
     out_dir: str,
 ):
-    if not os.path.isfile(reference_netlist):
-        raise FileNotFoundError(reference_netlist)
+    if not os.path.isfile(reference_netlist_path):
+        raise FileNotFoundError(reference_netlist_path)
 
     if not os.path.isdir(out_dir):
         info(f"Creating output directory {out_dir}")
@@ -67,6 +67,9 @@ def genetic_search(
         out_dir=out_dir,
     )
 
+    reference_netlist: Netlist = Netlist.create(BaseNetlistFile(File(reference_netlist_path)))
+    debug(f"Reference netlist name: {reference_netlist.cell_name}")
+
     # Validates npoints
     candidate_generator = GeneticCandidateGenerator.create(
         num_individuals,
@@ -82,7 +85,7 @@ def genetic_search(
         min_fingers,
         max_fingers,
         precision,
-        Netlist.create(BaseNetlistFile(File(reference_netlist))),
+        reference_netlist,
         seed=seed,
     )
 
@@ -102,12 +105,8 @@ def genetic_search(
     info("Starting genetic search.")
     best_netlist = search_algorithm.search()
     info("Search complete")
-    best_netlist.mutate(
-        cell_name=best_netlist.base_netlist_cell_name,
-        device_widths=best_netlist.device_widths,
-        device_lengths=best_netlist.device_lengths,
-        device_fingers=best_netlist.device_fingers,
-    )
+    debug(f"Reference netlist name: {reference_netlist.cell_name}")
+    best_netlist = best_netlist.clone(cell_name=reference_netlist.cell_name)
     best_netlist_path = os.path.join(out_dir, best_netlist.cell_name + ".sp")
     best_netlist.persist(File(best_netlist_path))
     info(f"Find netlist is named {best_netlist.cell_name} in {best_netlist_path}")
