@@ -1,6 +1,6 @@
-from enum import Enum
 from typing import Sequence, Union
 
+from src.circuit_search_common import Param
 from src.liberty_parser import LibertyResult
 from src.netlist import Netlist
 from src.search_algorithm import (
@@ -10,15 +10,6 @@ from src.search_algorithm import (
     Simulator,
 )
 from src.netlist_cost_functions import noop_cost_function
-
-
-class Param(Enum):
-    WIDTH = 1
-    LENGTH = 2
-    FINGERS = 3
-
-    def __str__(self):
-        return self.name.capitalize()  # pylint: disable=no-member # bug in pylint
 
 
 class ParamSweepCandidateGenerator(CandidateGenerator[Netlist]):

@@ -3,12 +3,12 @@ from typing import Union, Sequence, Tuple
 from logging import info
 from functools import partial
 
+from src.circuit_search_common import Param
 from src.file_io import File
 from src.liberate_grapher import graph_cell_delay
 from src.netlist import BaseNetlistFile, Netlist
 from src.liberate import liberate_simulator
 from src.single_param_sweep import (
-    Param,
     ParamSweepCandidateGenerator,
     SingleParamSweep,
     Simulator,

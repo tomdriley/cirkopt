@@ -7,6 +7,8 @@ import argparse
 import logging
 from logging import DEBUG, debug, INFO, info, WARNING, error
 from random import randint
+from typing import Type, TypeVar
+from textwrap import dedent
 
 import numpy as np
 
@@ -16,29 +18,37 @@ LIBERATE_DIRECTORY: str = os.path.abspath(os.path.join(PYTHON_DIRECTORY, "../lib
 sys.path.append(PYTHON_DIRECTORY)
 
 # These imports rely on changed sys.path
-from scripts.genetic_search import (  # pylint: disable=wrong-import-position
-    genetic_search,
-)
-from scripts.single_param_sweep import (  # pylint: disable=wrong-import-position
-    single_param_sweep,
-)
-from src.single_param_sweep import Param  # pylint: disable=wrong-import-position
+from scripts.brute_force_search import brute_force_search  # pylint: disable=wrong-import-position
+from scripts.genetic_search import genetic_search  # pylint: disable=wrong-import-position
+from scripts.single_param_sweep import single_param_sweep  # pylint: disable=wrong-import-position
+from src.circuit_search_common import Param, Range  # pylint: disable=wrong-import-position
+
+
+RangeType = TypeVar('RangeType', int, float)
+
+
+def _range(param: Param, _type: Type[RangeType], string: str) -> Range[RangeType]:
+    params = string.split(":")
+    if len(params) != 3:
+        raise ValueError("Range should be formatted as low:step_size:high (inclusive")
+    low, step_size, high = tuple(map(_type, params))
+    return Range(param, low, high, step_size)
 
 
 def _add_common_args(parser: argparse.ArgumentParser):
     parser.add_argument(
         "--outdir",
-        help=("Directory to place results in, e.g. graphs, netlists, ldb."),
+        help="Directory to place results in, e.g. graphs, netlists, ldb.",
         default=os.path.join(PYTHON_DIRECTORY, "out"),
     )
     parser.add_argument(
         "--netlist",
-        help=("Path to reference netlist to modify. "),
+        help="Path to reference netlist to modify. ",
         default=os.path.join(LIBERATE_DIRECTORY, "netlist/INVX1.sp"),
     )
     parser.add_argument(
         "--tclscript",
-        help=("Characterization tcl script with liberate settings and templates"),
+        help="Characterization tcl script with liberate settings and templates",
         default=os.path.join(LIBERATE_DIRECTORY, "tcl/char.tcl"),
     )
     parser.add_argument(
@@ -69,14 +79,16 @@ def _add_common_args(parser: argparse.ArgumentParser):
 # [1] https://chase-seibert.github.io/blog/2014/03/21/python-multilevel-argparse.html
 class Cirkopt:
     def __init__(self):
+        usage = """
+                cirkopt <command> [<args>]
+
+                The most commonly used commands are:
+                explore       Generate plots showing search space
+                search        Find an optimal design using genetic algorithm
+                brute-force   Find optimal design using exhaustive search"""
         parser = argparse.ArgumentParser(
             description="SPICE circuit optimizer",
-            usage="""
-cirkopt <command> [<args>]
-
-The most commonly used commands are:
-explore     Generate plots showing search space
-search      Find an optimal design""",
+            usage=dedent(usage)
         )
         parser.add_argument("command", help="Sub command to run")
         # parse_args defaults to [1:] for args, but you need to
@@ -308,6 +320,73 @@ search      Find an optimal design""",
             tcl_script=args.tclscript,
             liberate_dir=LIBERATE_DIRECTORY,
             out_dir=args.outdir,
+        )
+
+    # pylint: disable=no-self-use
+    def brute_force(self):
+        parser = argparse.ArgumentParser(
+            description="Perform exhaustive search to optimize netlist",
+        )
+
+        def width(string: str) -> Range[float]:
+            return _range(Param.WIDTH, float, string)
+
+        def length(string: str) -> Range[float]:
+            return _range(Param.LENGTH, float, string)
+
+        def fingers(string: str) -> Range[float]:
+            return _range(Param.FINGERS, int, string)
+
+        parser.add_argument(
+            "--width",
+            help="Defines the range of widths a device may have, eg.: low:step_size:high (inclusive)",
+            type=width,
+            default="120e-9:5e-9:1e-6",
+        )
+        parser.add_argument(
+            "--length",
+            help="Defines the range of lengths a device may have, eg.: low:step_size:high (inclusive)",
+            type=length,
+            default="45e-9:1e-9:45e-9",
+        )
+        parser.add_argument(
+            "--fingers",
+            help="Defines the range of fingers a device may have, eg.: low:step_size:high (inclusive)",
+            type=fingers,
+            default="1:1:1",
+        )
+        parser.add_argument(
+            "--simulations-per-iteration",
+            help="Defines how many netlists to simulate to run per iteration.",
+            type=int,
+            default=10,
+        )
+
+        _add_common_args(parser)
+
+        # now that we're inside a subcommand, ignore the first
+        # TWO argvs, ie the command (cirkopt) and the subcommand (explore)
+        args = parser.parse_args(sys.argv[2:])
+        logging.basicConfig(
+            format="%(levelname)s (%(asctime)s): %(message)s",
+            datefmt="%I:%M:%S %p",
+            level=args.loglevel,
+        )
+        # Print all the arguments given
+        for key in args.__dict__:
+            debug(f"{key:<10}: {args.__dict__[key]}")
+
+        info("Exploring search space.")
+        brute_force_search(
+            reference_netlist_path=args.netlist,
+            tcl_script=args.tclscript,
+            liberate_dir=LIBERATE_DIRECTORY,
+            out_dir=args.outdir,
+            delay_index=tuple(args.outindex),
+            width=args.width,
+            length=args.length,
+            fingers=args.fingers,
+            simulations_per_iteration=args.simulations_per_iteration,
         )
 
 

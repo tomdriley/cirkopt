@@ -8,6 +8,7 @@ from logging import debug, info
 from numpy.random import default_rng
 import numpy as np
 
+from src.circuit_search_common import Param
 from src.quantize import quantize, scale, Rounding
 from src.liberty_parser import LibertyResult
 from src.netlist import Netlist
@@ -16,15 +17,8 @@ from src.search_algorithm import (
     CostMap,
     SearchAlgorithm,
     Simulator,
+    CostFunction,
 )
-
-CostFunction = Callable[[Sequence[Netlist], LibertyResult], CostMap]
-
-
-class Param(Enum):
-    WIDTH = 1
-    LENGTH = 2
-    FINGERS = 3
 
 
 @dataclass(frozen=True)
