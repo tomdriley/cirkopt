@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from itertools import chain
 from math import ceil, log10
 from typing import List, Optional, Sequence, Set, Tuple
-from logging import debug, info
+from logging import debug
 
 from numpy.random import default_rng
 import numpy as np
@@ -378,6 +378,4 @@ class GeneticSearch(SearchAlgorithm[Netlist, LibertyResult]):
         return self._iteration >= self._max_iterations
 
     def _post_simulation(self):
-        min_cost_per_iteration = min(self._cost_map.values())
-        info(f"minimum cost of interation {self._iteration}: {min_cost_per_iteration}")
-        self.min_cost_per_iteration[self._iteration] = min_cost_per_iteration
+        self.min_cost_per_iteration[self._iteration] = min(self._cost_map.values())

@@ -1,5 +1,5 @@
 from abc import ABCMeta, abstractmethod
-from typing import Dict, Generic, Sequence, TypeVar, Callable, Optional
+from typing import Dict, Generic, Sequence, TypeVar, Callable, Optional, Tuple
 from logging import info
 
 from src.utils import single
@@ -46,6 +46,7 @@ class SearchAlgorithm(Generic[Candidate, SimulationResult]):
     _iteration: int
     _simulation_result: SimulationResult
     _cost_map: CostMap
+    _best_candidate: Optional[Tuple[Candidate, float]] = None
 
     def search(self) -> Candidate:
         info("Generating initial population.")
@@ -59,6 +60,14 @@ class SearchAlgorithm(Generic[Candidate, SimulationResult]):
             self._cost_map = self.cost_function(self._candidates, self._simulation_result)
             self._post_simulation()
 
+            # Update current best
+            _, current_best_cost = self._best_candidate or (None, float("inf"))
+            iteration_best_key, iteration_best_cost = min(self._cost_map.items(), key=lambda item: item[1])
+            if iteration_best_cost < current_best_cost:
+                info(f"New best cost found! Updating from cost of {current_best_cost} to {iteration_best_cost}")
+                iteration_best_candidate = single(lambda c: c.key() == iteration_best_key, self._candidates)
+                self._best_candidate = (iteration_best_candidate, iteration_best_cost)
+
             self._iteration += 1
             if self._should_stop():
                 break
@@ -68,8 +77,8 @@ class SearchAlgorithm(Generic[Candidate, SimulationResult]):
             )
 
         info("Selecting best candidate.")
-        best_candidate_name, _ = min(self._cost_map.items(), key=lambda item: item[1])
-        return single(lambda c: c.key() == best_candidate_name, self._candidates)
+        assert self._best_candidate is not None
+        return self._best_candidate[0]
 
     @abstractmethod
     def _should_stop(self) -> bool:
