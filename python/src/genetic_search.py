@@ -1,8 +1,7 @@
 from dataclasses import dataclass
-from enum import Enum
 from itertools import chain
 from math import ceil, log10
-from typing import Callable, List, Optional, Sequence, Set, Tuple
+from typing import List, Optional, Sequence, Set, Tuple
 from logging import debug, info
 
 from numpy.random import default_rng
