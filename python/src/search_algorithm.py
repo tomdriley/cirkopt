@@ -65,13 +65,15 @@ class SearchAlgorithm(Generic[Candidate, SimulationResult]):
             if self._should_stop():
                 break
 
+            best_candidate_key, best_candidate_key = min(self._cost_map.items(), key=lambda item: item[1])
+
             self._candidates = self._candidate_generator.get_next_population(
                 self._candidates, self._cost_map
             )
 
         info("Selecting best candidate.")
-        best_candidate_name, _ = min(self._cost_map.items(), key=lambda item: item[1])
-        return single(lambda c: c.key() == best_candidate_name, self._candidates)
+
+        return single(lambda c: c.key() == best_candidate_key, self._candidates)
 
     @abstractmethod
     def _should_stop(self) -> bool:

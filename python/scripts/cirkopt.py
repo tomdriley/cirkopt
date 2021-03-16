@@ -213,7 +213,7 @@ class Cirkopt:
         )
         parser.add_argument(
             "--simulations-per-iteration",
-            help="Defines how many netlists to  simulate to run per iteration.",
+            help="Defines how many netlists to simulate to run per iteration.",
             type=int,
             default=10,
         )

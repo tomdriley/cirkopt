@@ -6,12 +6,12 @@ from src.circuit_search_common import Range
 from src.liberate import liberate_simulator
 from src.liberty_parser import LibertyResult
 from src.netlist import Netlist
+from src.netlist_cost_functions import delay_cost_function
 from src.search_algorithm import (
     CandidateGenerator,
     CostMap,
     SearchAlgorithm,
 )
-from src.netlist_cost_functions import noop_cost_function
 from src.utils import chunked
 
 
@@ -122,12 +122,12 @@ class BruteForceCandidateGenerator(CandidateGenerator[Netlist]):
 
 
 class BruteForceSearch(SearchAlgorithm[Netlist, LibertyResult]):
-    """Does 1 simulation that simulates all candidates provided by candidate_generator."""
+    """Simulates until BruteForceCandidateGenerator runs out of candidates."""
 
     def __init__(
         self,
         candidate_generator: BruteForceCandidateGenerator,
-        cost_function=noop_cost_function,
+        cost_function=delay_cost_function,
         simulator=liberate_simulator,
     ):
         self._candidate_generator = candidate_generator
@@ -135,7 +135,4 @@ class BruteForceSearch(SearchAlgorithm[Netlist, LibertyResult]):
         self._simulate = simulator
 
     def _should_stop(self) -> bool:
-        return self._iteration == 1
-
-    def get_ldb(self) -> LibertyResult:
-        return self._simulation_result
+        return False  # go until run out of candidates
