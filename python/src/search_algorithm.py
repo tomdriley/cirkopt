@@ -53,7 +53,7 @@ class SearchAlgorithm(Generic[Candidate, SimulationResult]):
         self._candidates = self._candidate_generator.get_initial_population()
 
         self._iteration = 0
-        while True:
+        while len(self._candidates) > 0:
             info(f"Starting iteration {self._iteration}")
 
             self._simulation_result = self.simulate(self._candidates, self._iteration)
