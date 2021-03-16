@@ -87,7 +87,6 @@ class GeneticCandidateGenerator(CandidateGenerator[Netlist]):
     _search_params: Set[Param]  # Which params the search can vary
     _variable_indices: List[int]  # Which indices in an individual can be varied
     _id_num_digits: int  # How many digits the _id should have, cached for convenience
-    _netlist_persister: Optional[Callable[[Netlist], None]]
 
     _rng: np.random.Generator
 
@@ -108,7 +107,6 @@ class GeneticCandidateGenerator(CandidateGenerator[Netlist]):
         max_fingers: int,
         precision: str,
         reference_netlist: Netlist,
-        netlist_persister: Optional[Callable[[Netlist], None]],
         seed: Optional[int] = None,
     ):
         # pylint: disable=too-many-locals)
@@ -181,7 +179,6 @@ class GeneticCandidateGenerator(CandidateGenerator[Netlist]):
             _search_params=search_params,
             _variable_indices=indices,
             _id_num_digits=ceil(log10(num_individuals)),
-            _netlist_persister=netlist_persister,
             _rng=(default_rng(seed=seed) if seed is not None else default_rng()),
         )
 
@@ -191,7 +188,7 @@ class GeneticCandidateGenerator(CandidateGenerator[Netlist]):
         The randomized widths, lengths and fingers follow a normal distribution and satisfy the constraints given in
         class initializer.
 
-        :return: a sequence of randomly generated netlists which have been persisted to disk.
+        :return: a sequence of randomly generated netlists
         """
         b = self._bounds
         n = self._number_of_devices
@@ -228,7 +225,6 @@ class GeneticCandidateGenerator(CandidateGenerator[Netlist]):
             )
 
         netlists = [rand_netlist(idx) for idx in range(self._num_individuals)]
-        self._persist_netlists(netlists)
         return netlists
 
     def get_next_population(
@@ -320,7 +316,6 @@ class GeneticCandidateGenerator(CandidateGenerator[Netlist]):
                 )
             )
 
-        self._persist_netlists(netlists)
         return netlists
 
     def _n_point_arithmetic_crossover(
@@ -399,11 +394,6 @@ class GeneticCandidateGenerator(CandidateGenerator[Netlist]):
             + "_"
             + str(idx).zfill(self._id_num_digits)
         )
-
-    def _persist_netlists(self, netlists: Sequence[Netlist]):
-        assert self._netlist_persister is not None
-        for netlist in netlists:
-            self._netlist_persister(netlist)
 
 
 class GeneticSearch(SearchAlgorithm[Netlist, LibertyResult]):

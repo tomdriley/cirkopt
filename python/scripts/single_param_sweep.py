@@ -40,10 +40,6 @@ def single_param_sweep(
         info(f"Creating netlist working directory {netlist_dir}")
         os.mkdir(netlist_dir)
 
-    def persist_netlist_in_run_dir(netlist: Netlist):
-        netlist_file = File(os.path.join(netlist_dir, netlist.cell_name + ".sp"))
-        netlist.persist(netlist_file)
-
     simulator: Simulator = partial(
         liberate_simulator,
         tcl_script=tcl_script,
@@ -56,7 +52,6 @@ def single_param_sweep(
 
     candidate_generator = ParamSweepCandidateGenerator(
         reference_netlist=Netlist.create(BaseNetlistFile(File(reference_netlist))),
-        netlist_persister=persist_netlist_in_run_dir,
         param=param,
         values=values,
     )

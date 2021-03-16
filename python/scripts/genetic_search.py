@@ -55,10 +55,6 @@ def genetic_search(
         info(f"Creating netlist working directory {netlist_dir}")
         os.mkdir(netlist_dir)
 
-    def persist_netlist_in_run_dir(netlist: Netlist):
-        netlist_file = File(os.path.join(netlist_dir, netlist.cell_name + ".sp"))
-        netlist.persist(netlist_file)
-
     if num_individuals < 2:
         raise ValueError("Number of individuals must be at least 2")
 
@@ -97,7 +93,6 @@ def genetic_search(
         max_fingers,
         precision,
         Netlist.create(BaseNetlistFile(File(reference_netlist))),
-        persist_netlist_in_run_dir,
         seed=seed,
     )
 

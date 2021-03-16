@@ -70,11 +70,12 @@ def _run_liberate(
         sys.exit()
     if not os.path.isdir(netlist_dir):
         raise NotADirectoryError(netlist_dir)
-    cell_names = tuple(netlist.cell_name for netlist in candidates)
-    for cell_name in cell_names:
-        netlist_file = os.path.join(netlist_dir, cell_name + ".sp")
-        if not os.path.isfile(netlist_file):
-            raise FileNotFoundError(netlist_file)
+
+    for netlist in candidates:
+        netlist_file = File(os.path.join(netlist_dir, netlist.cell_name + ".sp"))
+        netlist.persist(netlist_file)
+
+    cell_names = ",".join(tuple(netlist.cell_name for netlist in candidates))
 
     info("Running liberate.")
     with open(
@@ -90,7 +91,7 @@ def _run_liberate(
                 **os.environ,
                 "NETLIST_DIR": netlist_dir,
                 "OUT_DIR": out_dir,
-                "CELL_NAMES": ",".join(cell_names),
+                "CELL_NAMES": cell_names,
                 "LDB_NAME": ldb_name,
                 "LIBERATE_DIR": liberate_dir,
             },

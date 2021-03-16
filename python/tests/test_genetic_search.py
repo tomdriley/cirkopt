@@ -12,9 +12,6 @@ class TestGeneticSearch(unittest.TestCase):
         self.ref_netlist_file.write(TEST_NETLIST)
         self.ref_netlist = Netlist.create(BaseNetlistFile(self.ref_netlist_file))
 
-        def netlist_persister(netlist: Netlist):
-            netlist.persist(MockFile())
-
         self.candidate_generator = GeneticCandidateGenerator.create(
             num_individuals=100,
             elitism=True,
@@ -30,7 +27,6 @@ class TestGeneticSearch(unittest.TestCase):
             max_fingers=2,
             precision="5e-9",
             reference_netlist=self.ref_netlist,
-            netlist_persister=netlist_persister,
             seed=1234,
         )
 
@@ -71,12 +67,8 @@ class TestGeneticSearch(unittest.TestCase):
             )
         )
 
-        cost_map = {
-            candidate.key(): idx + 1 for idx, candidate in enumerate(initial_population)
-        }
-        next_population = self.candidate_generator.get_next_population(
-            initial_population, cost_map
-        )
+        cost_map = {candidate.key(): idx + 1 for idx, candidate in enumerate(initial_population)}
+        next_population = self.candidate_generator.get_next_population(initial_population, cost_map)
         self.assertEqual(len(next_population), 100)
         self.assertEqual(len(set(next_population)), 100)  # no duplicates
 

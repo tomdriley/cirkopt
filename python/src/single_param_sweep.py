@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import Callable, Sequence, Union
+from typing import Sequence, Union
 
 from src.liberty_parser import LibertyResult
 from src.netlist import Netlist
@@ -34,7 +34,6 @@ class ParamSweepCandidateGenerator(CandidateGenerator[Netlist]):
     def __init__(
         self,
         reference_netlist: Netlist,
-        netlist_persister: Callable[[Netlist], None],
         param: Param,
         values: Sequence[Union[float, int]],
     ):
@@ -54,11 +53,7 @@ class ParamSweepCandidateGenerator(CandidateGenerator[Netlist]):
                 fingers = tuple(int(val) for _ in range(len(fingers)))
             return reference_netlist.mutate(cell_name, widths, lengths, fingers)
 
-        self.candidates = tuple(
-            new_netlist(idx, value) for idx, value in enumerate(values)
-        )
-        for candidate in self.candidates:
-            netlist_persister(candidate)
+        self.candidates = tuple(new_netlist(idx, value) for idx, value in enumerate(values))
 
     # pylint: disable=no-self-use
     def get_initial_population(self) -> Sequence[Netlist]:
