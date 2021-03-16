@@ -9,13 +9,13 @@ from numpy.random import default_rng
 import numpy as np
 
 from src.quantize import quantize, scale, Rounding
-from src.liberate import liberate_simulator
 from src.liberty_parser import LibertyResult
 from src.netlist import Netlist
 from src.search_algorithm import (
     CandidateGenerator,
     CostMap,
     SearchAlgorithm,
+    Simulator,
 )
 
 CostFunction = Callable[[Sequence[Netlist], LibertyResult], CostMap]
@@ -57,9 +57,7 @@ def _denormalize(
         ),
         tuple(
             scale(l, precision)
-            for l in normalized_netlist[ndevices:-ndevices].clip(
-                b.min_length, b.max_length
-            )
+            for l in normalized_netlist[ndevices:-ndevices].clip(b.min_length, b.max_length)
         ),
         tuple(normalized_netlist[-ndevices:].clip(b.min_fingers, b.max_fingers)),
     )
@@ -87,7 +85,6 @@ class GeneticCandidateGenerator(CandidateGenerator[Netlist]):
     _search_params: Set[Param]  # Which params the search can vary
     _variable_indices: List[int]  # Which indices in an individual can be varied
     _id_num_digits: int  # How many digits the _id should have, cached for convenience
-    _netlist_persister: Optional[Callable[[Netlist], None]]
 
     _rng: np.random.Generator
 
@@ -108,7 +105,6 @@ class GeneticCandidateGenerator(CandidateGenerator[Netlist]):
         max_fingers: int,
         precision: str,
         reference_netlist: Netlist,
-        netlist_persister: Optional[Callable[[Netlist], None]],
         seed: Optional[int] = None,
     ):
         # pylint: disable=too-many-locals)
@@ -116,21 +112,15 @@ class GeneticCandidateGenerator(CandidateGenerator[Netlist]):
         if min_width < max_width:
             search_params.add(Param.WIDTH)
         elif min_width > max_width:
-            raise ValueError(
-                "The minimum width must be less than or equal to the max width"
-            )
+            raise ValueError("The minimum width must be less than or equal to the max width")
         if min_length < max_length:
             search_params.add(Param.LENGTH)
         elif min_length > max_length:
-            raise ValueError(
-                "The minimum length must be less than or equal to the max length"
-            )
+            raise ValueError("The minimum length must be less than or equal to the max length")
         if min_fingers < max_fingers:
             search_params.add(Param.FINGERS)
         elif min_fingers > max_fingers:
-            raise ValueError(
-                "The minimum fingers must be less than or equal to the max finger"
-            )
+            raise ValueError("The minimum fingers must be less than or equal to the max finger")
 
         debug(f"Search params: {search_params}")
 
@@ -138,9 +128,7 @@ class GeneticCandidateGenerator(CandidateGenerator[Netlist]):
         indices = [
             idx
             for param in search_params
-            for idx in range(
-                (param.value - 1) * number_of_devices, param.value * number_of_devices
-            )
+            for idx in range((param.value - 1) * number_of_devices, param.value * number_of_devices)
         ]
 
         if npoints > len(indices):
@@ -181,7 +169,6 @@ class GeneticCandidateGenerator(CandidateGenerator[Netlist]):
             _search_params=search_params,
             _variable_indices=indices,
             _id_num_digits=ceil(log10(num_individuals)),
-            _netlist_persister=netlist_persister,
             _rng=(default_rng(seed=seed) if seed is not None else default_rng()),
         )
 
@@ -191,7 +178,7 @@ class GeneticCandidateGenerator(CandidateGenerator[Netlist]):
         The randomized widths, lengths and fingers follow a normal distribution and satisfy the constraints given in
         class initializer.
 
-        :return: a sequence of randomly generated netlists which have been persisted to disk.
+        :return: a sequence of randomly generated netlists
         """
         b = self._bounds
         n = self._number_of_devices
@@ -199,22 +186,28 @@ class GeneticCandidateGenerator(CandidateGenerator[Netlist]):
         def rand_netlist(idx: int) -> Netlist:
             # Generate fixed point widths if we can vary them
             if Param.WIDTH in self._search_params:
-                widths = self._rng.integers(b.min_width, b.max_width, n, endpoint=True, dtype=np.uint64)
+                widths = self._rng.integers(
+                    b.min_width, b.max_width, n, endpoint=True, dtype=np.uint64
+                )
             else:
                 widths = b.min_width * np.ones(n, dtype=np.uint64)
 
             # Generate fixed point lengths if we can vary them
             if Param.LENGTH in self._search_params:
-                lengths = self._rng.integers(b.min_length, b.max_length, n, endpoint=True, dtype=np.uint64)
+                lengths = self._rng.integers(
+                    b.min_length, b.max_length, n, endpoint=True, dtype=np.uint64
+                )
             else:
                 lengths = b.min_length * np.ones(n, dtype=np.uint64)
 
             if Param.FINGERS in self._search_params:
-                fingers = self._rng.integers(b.min_fingers, b.max_fingers, n, endpoint=True, dtype=np.uint64)
+                fingers = self._rng.integers(
+                    b.min_fingers, b.max_fingers, n, endpoint=True, dtype=np.uint64
+                )
             else:
                 fingers = b.min_fingers * np.ones(n, dtype=np.uint64)
 
-            return self._reference_netlist.mutate(
+            return self._reference_netlist.clone(
                 cell_name=self._get_netlist_name(idx),
                 device_widths=tuple(scale(w, self._precision) for w in widths),
                 device_lengths=tuple(scale(l, self._precision) for l in lengths),
@@ -222,7 +215,6 @@ class GeneticCandidateGenerator(CandidateGenerator[Netlist]):
             )
 
         netlists = [rand_netlist(idx) for idx in range(self._num_individuals)]
-        self._persist_netlists(netlists)
         return netlists
 
     def get_next_population(
@@ -243,13 +235,9 @@ class GeneticCandidateGenerator(CandidateGenerator[Netlist]):
             [_normalize(n, self._precision) for n in current_candidates],
             dtype=np.uint64,
         )
-        offspring = np.zeros(
-            (self._num_individuals, self._number_of_devices * 3), dtype=np.uint64
-        )
+        offspring = np.zeros((self._num_individuals, self._number_of_devices * 3), dtype=np.uint64)
 
-        def maybe_add_child_to_offspring(
-            child_to_add: np.ndarray, child_idx: int
-        ) -> bool:
+        def maybe_add_child_to_offspring(child_to_add: np.ndarray, child_idx: int) -> bool:
             """Adds child if it doesn't already exist by some fluke. Also checks bounds. Returns if child was added"""
             # Don't add if it would be out of bounds
             if child_idx >= offspring.shape[0]:
@@ -297,9 +285,7 @@ class GeneticCandidateGenerator(CandidateGenerator[Netlist]):
                 idx for idx in range(self._num_individuals) if idx != lowest_cost_parent
             ]
             rand_child = self._rng.choice(valid_indices, 1)
-            offspring[rand_child] = self._gaussian_mutation(
-                mating_pool[lowest_cost_parent]
-            )
+            offspring[rand_child] = self._gaussian_mutation(mating_pool[lowest_cost_parent])
 
         netlists = []
         for idx, normalized_netlist in enumerate(offspring):
@@ -309,12 +295,9 @@ class GeneticCandidateGenerator(CandidateGenerator[Netlist]):
                 normalized_netlist, self._precision, self._bounds
             )
             netlists.append(
-                self._reference_netlist.mutate(
-                    self._get_netlist_name(idx), widths, lengths, fingers
-                )
+                self._reference_netlist.clone(self._get_netlist_name(idx), widths, lengths, fingers)
             )
 
-        self._persist_netlists(netlists)
         return netlists
 
     def _n_point_arithmetic_crossover(
@@ -339,20 +322,17 @@ class GeneticCandidateGenerator(CandidateGenerator[Netlist]):
         # Perform crossover
         # for k in points: child_a[k] = a * parent_a[k] + (1-a) * parent_b[k]
         child_a = (
-            (parent_a * keep_mask)
-            + (a * mix_mask * parent_a)
-            + ((1 - a) * mix_mask * parent_b)
+            (parent_a * keep_mask) + (a * mix_mask * parent_a) + ((1 - a) * mix_mask * parent_b)
         )
         child_b = (
-            (parent_b * keep_mask)
-            + ((1 - a) * mix_mask * parent_a)
-            + (a * mix_mask * parent_b)
+            (parent_b * keep_mask) + ((1 - a) * mix_mask * parent_a) + (a * mix_mask * parent_b)
         )
 
         return child_a.round().astype(np.uint64), child_b.round().astype(np.uint64)
 
     def _gaussian_mutation(self, individual: np.ndarray) -> np.ndarray:
         """Apply additive gaussian noise to each device parameter with a probability of self._pmutation"""
+
         def round_based_on_sign(v: np.float32) -> np.int64:
             if v > 0:
                 return np.ceil(v)
@@ -369,9 +349,7 @@ class GeneticCandidateGenerator(CandidateGenerator[Netlist]):
         # Select which device parameters to be mutated each with a probability of p
         p = self._pmutation
         mutation_mask = np.zeros(len(individual), dtype=np.bool8)
-        mutation_mask[indices] = self._rng.choice([0, 1], n, p=[1 - p, p]).astype(
-            np.bool8
-        )
+        mutation_mask[indices] = self._rng.choice([0, 1], n, p=[1 - p, p]).astype(np.bool8)
 
         # Sample mutations from normal distribution, then use a symmetric rounding where mutations below zero are
         # rounded down and mutations above zero are rounded up
@@ -383,16 +361,7 @@ class GeneticCandidateGenerator(CandidateGenerator[Netlist]):
         return np.maximum(individual + rounded_mutations * mutation_mask, 0).astype(np.uint64)
 
     def _get_netlist_name(self, idx: int) -> str:
-        return (
-            self._reference_netlist.cell_name
-            + "_"
-            + str(idx).zfill(self._id_num_digits)
-        )
-
-    def _persist_netlists(self, netlists: Sequence[Netlist]):
-        assert self._netlist_persister is not None
-        for netlist in netlists:
-            self._netlist_persister(netlist)
+        return self._reference_netlist.cell_name + "_" + str(idx).zfill(self._id_num_digits)
 
 
 class GeneticSearch(SearchAlgorithm[Netlist, LibertyResult]):
@@ -401,13 +370,14 @@ class GeneticSearch(SearchAlgorithm[Netlist, LibertyResult]):
 
     def __init__(
         self,
+        simulator: Simulator,
         candidate_generator: GeneticCandidateGenerator,
         cost_function: CostFunction,
         max_iterations: int,
     ):
         self._candidate_generator = candidate_generator
         self._cost_function = cost_function
-        self._simulate = liberate_simulator
+        self._simulate = simulator
         self._max_iterations = max_iterations
         self.min_cost_per_iteration = [0] * max_iterations
 

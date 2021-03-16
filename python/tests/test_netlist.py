@@ -33,7 +33,7 @@ class TestNetlist(unittest.TestCase):
         netflist_file = BaseNetlistFile(mock_file)
         netlist = Netlist.create(netflist_file)
 
-        new_netlist = netlist.mutate(
+        new_netlist = netlist.clone(
             cell_name="INVX1_4",
             device_widths=(260e-9, 310e-9),
             device_lengths=(50e-9, 60e-9),

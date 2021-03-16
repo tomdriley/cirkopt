@@ -12,7 +12,7 @@ WIDTH_REGEX = r"W=(.*?)\s"
 LENGTH_REGEX = r"L=(.*?)\s"
 FINGERS_REGEX = r"M=(.*?)\s"
 
-ReturnType = TypeVar('ReturnType')
+ReturnType = TypeVar("ReturnType")
 
 
 def _extract(text: str, regex: str, return_type: Type[ReturnType]) -> ReturnType:
@@ -65,13 +65,13 @@ class Netlist(CandidateClass):
 
     @classmethod
     def create(
-        cls,
+        cls: Type["Netlist"],
         base_netlist_file: BaseNetlistFile,
         cell_name: Optional[str] = None,
         device_widths: Optional[Tuple[float, ...]] = None,
         device_lengths: Optional[Tuple[float, ...]] = None,
         device_fingers: Optional[Tuple[int, ...]] = None,
-    ):
+    ) -> "Netlist":
         netlist_str = base_netlist_file.contents()
 
         if cell_name is None:
@@ -93,13 +93,22 @@ class Netlist(CandidateClass):
     def key(self) -> str:
         return self.cell_name
 
-    def mutate(
+    def clone(
         self,
-        cell_name: str,
-        device_widths: Tuple[float, ...],
-        device_lengths: Tuple[float, ...],
-        device_fingers: Tuple[int, ...],
+        cell_name: Optional[str] = None,
+        device_widths: Optional[Tuple[float, ...]] = None,
+        device_lengths: Optional[Tuple[float, ...]] = None,
+        device_fingers: Optional[Tuple[int, ...]] = None,
     ) -> "Netlist":
+        if cell_name is None:
+            cell_name = self.cell_name
+        if device_widths is None:
+            device_widths = self.device_widths
+        if device_lengths is None:
+            device_lengths = self.device_lengths
+        if device_fingers is None:
+            device_fingers = self.device_fingers
+
         return Netlist.create(
             base_netlist_file=self.base_netlist_file,
             cell_name=cell_name,
@@ -126,19 +135,17 @@ class Netlist(CandidateClass):
                 continue
 
             device_line = _replace(
-                regex=WIDTH_REGEX,
-                new=f"W={self.device_widths[current_device]} ",
-                text=device_line
+                regex=WIDTH_REGEX, new=f"W={self.device_widths[current_device]} ", text=device_line
             )
             device_line = _replace(
                 regex=LENGTH_REGEX,
                 new=f"L={self.device_lengths[current_device]} ",
-                text=device_line
+                text=device_line,
             )
             device_line = _replace(
                 regex=FINGERS_REGEX,
                 new=f"M={self.device_fingers[current_device]} ",
-                text=device_line
+                text=device_line,
             )
 
             lines[i] = device_line.rstrip()

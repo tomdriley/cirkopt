@@ -2,15 +2,15 @@
 #####----------------------------------------
 ##### Set and print user define variables
 #####----------------------------------------
-set SRC_DIR              [pwd]    ;# directory where all source data (netlist, models, etc...) are stored
-set RUN_DIR              [pwd]    ;# directory where all generated data (ldb, liberty, etc...) are saved
+set SRC_DIR              $::env(LIBERATE_DIR)   ;# directory where all source data (netlist, models, etc...) are stored
+set RUN_DIR              $::env(OUT_DIR)        ;# directory where all generated data (ldb, liberty, etc...) are saved
 set LIB                  example
 set PROCESS              tt    ;# [ff|tt|ss]
 set VDD                  1.0
 set TEMP                 70
 set SETTINGS_FILE        ${SRC_DIR}/tcl/settings.tcl
 set TEMPLATE_FILE        ${SRC_DIR}/template/template.tcl
-set NETLIST_DIR          ${SRC_DIR}/netlist_wrk
+set NETLIST_DIR          $::env(NETLIST_DIR)
 set USERDATA             ${SRC_DIR}/userdata/userdata.lib
 
 #####----------------------------------------
@@ -31,7 +31,7 @@ foreach arg $argv {
 ##### Set dependent variables
 #####----------------------------------------
 set PVT                  ${PROCESS}_${VDD}_${TEMP}
-set LIBNAME              ${LIB}_${PVT}
+set LIBNAME              $::env(LDB_NAME)
 set MODEL_INCLUDE_FILE   ${SRC_DIR}/models/spectre/include_${PROCESS}
 
 #####----------------------------------------
@@ -193,7 +193,7 @@ write_ldb -overwrite ${RUN_DIR}/ldb/${LIBNAME}.ldb
 puts "INFO: Write Liberty"
 if {![file exists ${RUN_DIR}/lib]} { file mkdir ${RUN_DIR}/lib }
 file mkdir ${RUN_DIR}/lib 
-write_library -driver_waveform -unique_pin_data -bus_syntax {[]} -user_data ${USERDATA} -overwrite -filename ${RUN_DIR}/lib/${LIBNAME}_nldm.lib ${LIBNAME}
+write_library -driver_waveform -unique_pin_data -bus_syntax {[]} -user_data ${USERDATA} -overwrite -filename ${RUN_DIR}/lib/${LIBNAME}.lib ${LIBNAME}
 #write_library -driver_waveform -unique_pin_data -bus_syntax {[]} -user_data ${USERDATA} -ecsm -ecsmn -overwrite -filename ${RUN_DIR}/lib/${LIBNAME}_ecsm.lib ${LIBNAME}
 #write_library -driver_waveform -unique_pin_data -bus_syntax {[]} -user_data ${USERDATA} -ccs -ccsn -ccsp -overwrite -filename ${RUN_DIR}/lib/${LIBNAME}_ccs.lib ${LIBNAME}
 

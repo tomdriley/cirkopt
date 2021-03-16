@@ -1,78 +1,66 @@
 import os
 from typing import Union, Sequence, Tuple
 from logging import info
+from functools import partial
 
 from src.file_io import File
 from src.liberate_grapher import graph_cell_delay
 from src.netlist import BaseNetlistFile, Netlist
+from src.liberate import liberate_simulator
 from src.single_param_sweep import (
     Param,
     ParamSweepCandidateGenerator,
     SingleParamSweep,
+    Simulator,
 )
 
 
 # pylint: disable=too-many-locals
-def main(
-    reference_netlist_rel_path: str,
-    netlist_work_dir_rel_path: str,
+def single_param_sweep(
+    reference_netlist: str,
     param: Param,
     values: Sequence[Union[float, int]],
     graph_pin: str,
     graph_delay_index: Tuple[int, int],
-    out_dir_rel_path: str,
+    tcl_script: str,
+    liberate_dir: str,
+    out_dir: str,
 ):
-    curr_path = os.path.abspath(os.path.dirname(__file__))
-    reference_netlist_path = os.path.join(curr_path, reference_netlist_rel_path)
-    netlist_work_dir_path = os.path.join(curr_path, netlist_work_dir_rel_path)
-    out_dir_path = os.path.join(curr_path, out_dir_rel_path)
+    if not os.path.isfile(reference_netlist):
+        raise FileNotFoundError(reference_netlist)
 
-    if not os.path.isfile(reference_netlist_path):
-        raise FileNotFoundError(reference_netlist_path)
+    if not os.path.isdir(out_dir):
+        info(f"Creating output directory {out_dir}")
+        os.mkdir(out_dir)
 
-    if not os.path.isdir(netlist_work_dir_path):
-        raise NotADirectoryError(netlist_work_dir_path)
-
-    if not os.path.isdir(out_dir_path):
-        info(f"Creating output directory {out_dir_path}")
-        os.mkdir(out_dir_path)
-
-    def persist_netlist_in_run_dir(netlist: Netlist):
-        netlist_file = File(f"{netlist_work_dir_path}/{netlist.cell_name}.sp")
-        netlist.persist(netlist_file)
+    simulator: Simulator = partial(
+        liberate_simulator,
+        tcl_script=tcl_script,
+        liberate_dir=liberate_dir,
+        out_dir=out_dir,
+    )
 
     candidate_generator = ParamSweepCandidateGenerator(
-        reference_netlist=Netlist.create(BaseNetlistFile(File(reference_netlist_path))),
-        netlist_persister=persist_netlist_in_run_dir,
+        reference_netlist=Netlist.create(BaseNetlistFile(File(reference_netlist))),
         param=param,
         values=values,
     )
-    single_param_sweep = SingleParamSweep(candidate_generator)
+    search_algorithm = SingleParamSweep(
+        simulator=simulator,
+        candidate_generator=candidate_generator,
+    )
 
     # Do the sweep
     info("Starting single parameter linear sweep.")
-    single_param_sweep.search()
+    search_algorithm.search()
 
     # Graph the results of simulation
     param_str = str(param)
     graph_cell_delay(
-        ldb=single_param_sweep.get_ldb(),
+        ldb=search_algorithm.get_ldb(),
         pin=graph_pin,
         delay_index=graph_delay_index,
         x_axis=values,
         x_axis_title=param_str,
-        out_path=f"{out_dir_path}/sweep-{param_str.lower()}.png",
-    )
-
-
-if __name__ == "__main__":
-    # TODO: use command line args instead of hard coding
-    main(
-        reference_netlist_rel_path="../../liberate/netlist_ref/INVX1.sp",
-        netlist_work_dir_rel_path="../../liberate/netlist_wrk",
-        param=Param.WIDTH,
-        values=[i * 100e-9 for i in range(2, 11)],
-        graph_pin="Y",
-        graph_delay_index=(0, 1),
-        out_dir_rel_path="../out",
+        out_path=f"{out_dir}/sweep-{param_str.lower()}.png",
     )

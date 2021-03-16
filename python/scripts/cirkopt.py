@@ -17,10 +17,10 @@ sys.path.append(PYTHON_DIRECTORY)
 
 # These imports rely on changed sys.path
 from scripts.genetic_search import (  # pylint: disable=wrong-import-position
-    main as gsearch,
+    genetic_search,
 )
 from scripts.single_param_sweep import (  # pylint: disable=wrong-import-position
-    main as sweep_param,
+    single_param_sweep,
 )
 from src.single_param_sweep import Param  # pylint: disable=wrong-import-position
 
@@ -28,27 +28,18 @@ from src.single_param_sweep import Param  # pylint: disable=wrong-import-positio
 def _add_common_args(parser: argparse.ArgumentParser):
     parser.add_argument(
         "--outdir",
-        help=(
-            "Directory to place results in, e.g. graphs. "
-            + "Does not include generated netlists or LDB library."
-        ),
+        help=("Directory to place results in, e.g. graphs, netlists, ldb."),
         default=os.path.join(PYTHON_DIRECTORY, "out"),
     )
     parser.add_argument(
-        "--workdir",
-        help=(
-            "Directory to place generated netlists. "
-            + "Must match settings in Liberate configeration files. "
-        ),
-        default=os.path.join(LIBERATE_DIRECTORY, "netlist_wrk"),
+        "--netlist",
+        help=("Path to reference netlist to modify. "),
+        default=os.path.join(LIBERATE_DIRECTORY, "netlist/INVX1.sp"),
     )
     parser.add_argument(
-        "--netlist",
-        help=(
-            "Path to reference netlist to modify. "
-            + "Must match settings in Liberate configeration file."
-        ),
-        default=os.path.join(LIBERATE_DIRECTORY, "netlist_ref/INVX1.sp"),
+        "--tclscript",
+        help=("Characterization tcl script with liberate settings and templates"),
+        default=os.path.join(LIBERATE_DIRECTORY, "tcl/char.tcl"),
     )
     parser.add_argument(
         "--debug",
@@ -138,11 +129,21 @@ search      Find an optimal design""",
         # now that we're inside a subcommand, ignore the first
         # TWO argvs, ie the command (cirkopt) and the subcommand (explore)
         args = parser.parse_args(sys.argv[2:])
+
+        if not os.path.isdir(args.outdir):
+            info(f"Creating output directory {args.outdir}")
+            os.mkdir(args.outdir)
+
         logging.basicConfig(
             format="%(levelname)s (%(asctime)s): %(message)s",
             datefmt="%I:%M:%S %p",
             level=args.loglevel,
+            handlers=[
+                logging.FileHandler(os.path.join(args.outdir, "cirkopt.log")),
+                logging.StreamHandler(sys.stdout),
+            ],
         )
+
         # Print all the arguments given
         for key in args.__dict__:
             debug(f"{key:<10}: {args.__dict__[key]}")
@@ -152,14 +153,15 @@ search      Find an optimal design""",
         debug(f"values: {values}")
 
         info("Exploring search space.")
-        sweep_param(
-            reference_netlist_rel_path=args.netlist,
-            netlist_work_dir_rel_path=args.workdir,
+        single_param_sweep(
+            reference_netlist=args.netlist,
             param=args.param,
             values=values,
             graph_pin=args.outpin,
             graph_delay_index=args.outindex,
-            out_dir_rel_path=args.outdir,
+            tcl_script=args.tclscript,
+            liberate_dir=LIBERATE_DIRECTORY,
+            out_dir=args.outdir,
         )
 
     # pylint: disable=no-self-use
@@ -266,20 +268,27 @@ search      Find an optimal design""",
         # now that we're inside a subcommand, ignore the first
         # TWO argvs, ie the command (cirkopt) and the subcommand (explore)
         args = parser.parse_args(sys.argv[2:])
+
+        if not os.path.isdir(args.outdir):
+            info(f"Creating output directory {args.outdir}")
+            os.mkdir(args.outdir)
+
         logging.basicConfig(
             format="%(levelname)s (%(asctime)s): %(message)s",
             datefmt="%I:%M:%S %p",
             level=args.loglevel,
+            handlers=[
+                logging.FileHandler(os.path.join(args.outdir, "cirkopt.log")),
+                logging.StreamHandler(sys.stdout),
+            ],
         )
 
         # Print all the arguments given
         for key in args.__dict__:
             debug(f"{key:<10}: {args.__dict__[key]}")
 
-        gsearch(
-            reference_netlist_rel_path=args.netlist,
-            netlist_work_dir_rel_path=args.workdir,
-            out_dir_rel_path=args.outdir,
+        genetic_search(
+            reference_netlist_path=args.netlist,
             max_iterations=args.iterations,
             num_individuals=args.individuals,
             elitism=args.elitism,
@@ -296,6 +305,9 @@ search      Find an optimal design""",
             precision=args.precision,
             delay_index=tuple(args.outindex),
             seed=args.seed,
+            tcl_script=args.tclscript,
+            liberate_dir=LIBERATE_DIRECTORY,
+            out_dir=args.outdir,
         )
 
 

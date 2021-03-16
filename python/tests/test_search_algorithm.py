@@ -25,17 +25,14 @@ class TestCandidateGenerator(CandidateGenerator[TestCandidate]):
 
     def get_initial_population(self) -> Sequence[TestCandidate]:
         return tuple(
-            TestCandidate(f"cand_{i}", val)
-            for i, val in enumerate(self._initial_population_values)
+            TestCandidate(f"cand_{i}", val) for i, val in enumerate(self._initial_population_values)
         )
 
     def get_next_population(
         self, current_candidates: Sequence[TestCandidate], cost_map: CostMap
     ) -> Sequence[TestCandidate]:
         return tuple(
-            candidate
-            for candidate in current_candidates
-            if cost_map[candidate.key()] == 0.0
+            candidate for candidate in current_candidates if cost_map[candidate.key()] == 0.0
         )
 
 
@@ -43,12 +40,11 @@ def test_cost_function(
     candidates: Sequence[TestCandidate],
     simulation_result: Mapping[str, float],
 ) -> CostMap:
-    return {
-        candidate.key(): simulation_result[candidate.key()] for candidate in candidates
-    }
+    return {candidate.key(): simulation_result[candidate.key()] for candidate in candidates}
 
 
-def test_simulator(candidates: Sequence[TestCandidate]) -> Dict[str, float]:
+def test_simulator(candidates: Sequence[TestCandidate], iteration: int) -> Dict[str, float]:
+    # pylint: disable=unused-argument
     result = {candidate.key(): 0.0 for candidate in candidates}
     if candidates[0].value < candidates[1].value:
         result[candidates[0].key()] = 1.0
@@ -102,9 +98,5 @@ class TestSearchAlgorithms(TestCase):
             search_algorithm.get_candidates(),
             (TestCandidate("cand_1", 7.6), TestCandidate("cand_3", 1.1)),
         )
-        self.assertEqual(
-            search_algorithm.get_simulation_result(), {"cand_1": 0.0, "cand_3": 1.0}
-        )
-        self.assertEqual(
-            search_algorithm.get_cost_map(), search_algorithm.get_simulation_result()
-        )
+        self.assertEqual(search_algorithm.get_simulation_result(), {"cand_1": 0.0, "cand_3": 1.0})
+        self.assertEqual(search_algorithm.get_cost_map(), search_algorithm.get_simulation_result())

@@ -9,18 +9,18 @@ import matplotlib.pyplot as plt  # type: ignore
 from src.file_io import File
 from src.netlist import BaseNetlistFile, Netlist
 from src.netlist_cost_functions import delay_cost_function
+from src.liberate import liberate_simulator
 from src.genetic_search import (
     CostFunction,
     GeneticCandidateGenerator,
     GeneticSearch,
+    Simulator,
 )
 
 
 # pylint: disable=too-many-locals
-def main(
-    reference_netlist_rel_path: str,
-    netlist_work_dir_rel_path: str,
-    out_dir_rel_path: str,
+def genetic_search(
+    reference_netlist_path: str,
     max_iterations: int,
     num_individuals: int,
     elitism: bool,
@@ -37,25 +37,16 @@ def main(
     precision: str,
     delay_index: Tuple[int, int],
     seed: Optional[int],
+    tcl_script: str,
+    liberate_dir: str,
+    out_dir: str,
 ):
-    curr_path = os.path.abspath(os.path.dirname(__file__))
-    reference_netlist_path = os.path.join(curr_path, reference_netlist_rel_path)
-    netlist_work_dir_path = os.path.join(curr_path, netlist_work_dir_rel_path)
-    out_dir_path = os.path.join(curr_path, out_dir_rel_path)
-
     if not os.path.isfile(reference_netlist_path):
         raise FileNotFoundError(reference_netlist_path)
 
-    if not os.path.isdir(netlist_work_dir_path):
-        raise NotADirectoryError(netlist_work_dir_path)
-
-    if not os.path.isdir(out_dir_path):
-        info(f"Creating output directory {out_dir_path}")
-        os.mkdir(out_dir_path)
-
-    def persist_netlist_in_run_dir(netlist: Netlist):
-        netlist_file = File(f"{netlist_work_dir_path}/{netlist.cell_name}.sp")
-        netlist.persist(netlist_file)
+    if not os.path.isdir(out_dir):
+        info(f"Creating output directory {out_dir}")
+        os.mkdir(out_dir)
 
     if num_individuals < 2:
         raise ValueError("Number of individuals must be at least 2")
@@ -68,6 +59,16 @@ def main(
 
     if mutation_std_deviation <= 0:
         raise ValueError("mutation_std_deviation should be greater than 0")
+
+    simulator: Simulator = partial(
+        liberate_simulator,
+        tcl_script=tcl_script,
+        liberate_dir=liberate_dir,
+        out_dir=out_dir,
+    )
+
+    reference_netlist: Netlist = Netlist.create(BaseNetlistFile(File(reference_netlist_path)))
+    debug(f"Reference netlist name: {reference_netlist.cell_name}")
 
     # Validates npoints
     candidate_generator = GeneticCandidateGenerator.create(
@@ -84,23 +85,31 @@ def main(
         min_fingers,
         max_fingers,
         precision,
-        Netlist.create(BaseNetlistFile(File(reference_netlist_path))),
-        persist_netlist_in_run_dir,
+        reference_netlist,
         seed=seed,
     )
 
-    cost_function: CostFunction = partial(delay_cost_function, delay_idx=delay_index)
-    genetic_search = GeneticSearch(
-        candidate_generator,
-        cost_function,  # TODO: parameterize when there are more cost functions
-        max_iterations,
+    cost_function: CostFunction = partial(
+        delay_cost_function,
+        delay_idx=delay_index,
+    )
+
+    search_algorithm = GeneticSearch(
+        simulator=simulator,
+        candidate_generator=candidate_generator,
+        cost_function=cost_function,  # TODO: parameterize when there are more cost functions
+        max_iterations=max_iterations,
     )
 
     # Do the sweep
     info("Starting genetic search.")
-    best_netlist = genetic_search.search()
+    best_netlist = search_algorithm.search()
     info("Search complete")
-    info(f"Find netlist is named {best_netlist.cell_name} in {netlist_work_dir_path}")
+    debug(f"Reference netlist name: {reference_netlist.cell_name}")
+    best_netlist = best_netlist.clone(cell_name=reference_netlist.cell_name)
+    best_netlist_path = os.path.join(out_dir, best_netlist.cell_name + ".sp")
+    best_netlist.persist(File(best_netlist_path))
+    info(f"Find netlist is named {best_netlist.cell_name} in {best_netlist_path}")
 
     mpl_logger = logging.getLogger("matplotlib")
     if logging.getLogger().getEffectiveLevel() < logging.WARNING:
@@ -110,7 +119,7 @@ def main(
     # Graph the results of search
     plt.figure()
     plt.title("Minimum cost per iteration")
-    plt.plot(genetic_search.min_cost_per_iteration, "b")
+    plt.plot(search_algorithm.min_cost_per_iteration, "b")
     plt.ylabel("Cost")
     plt.ylim(bottom=0)
     plt.xlabel("Iteration number")
@@ -120,4 +129,4 @@ def main(
     ax.minorticks_on()
     ax.grid(which="major", linestyle="-", linewidth="0.5", color="red")
     ax.grid(which="minor", linestyle=":", linewidth="0.5", color="black")
-    plt.savefig(f"{out_dir_path}/genetic-cost-per-iteration.png")
+    plt.savefig(f"{out_dir}/genetic-cost-per-iteration.png")

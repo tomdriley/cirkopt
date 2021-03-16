@@ -1,13 +1,13 @@
 from enum import Enum
-from typing import Callable, Sequence, Union
+from typing import Sequence, Union
 
-from src.liberate import liberate_simulator
 from src.liberty_parser import LibertyResult
 from src.netlist import Netlist
 from src.search_algorithm import (
     CandidateGenerator,
     CostMap,
     SearchAlgorithm,
+    Simulator,
 )
 from src.netlist_cost_functions import noop_cost_function
 
@@ -34,7 +34,6 @@ class ParamSweepCandidateGenerator(CandidateGenerator[Netlist]):
     def __init__(
         self,
         reference_netlist: Netlist,
-        netlist_persister: Callable[[Netlist], None],
         param: Param,
         values: Sequence[Union[float, int]],
     ):
@@ -52,13 +51,9 @@ class ParamSweepCandidateGenerator(CandidateGenerator[Netlist]):
                 lengths = tuple(float(val) for _ in range(len(lengths)))
             else:
                 fingers = tuple(int(val) for _ in range(len(fingers)))
-            return reference_netlist.mutate(cell_name, widths, lengths, fingers)
+            return reference_netlist.clone(cell_name, widths, lengths, fingers)
 
-        self.candidates = tuple(
-            new_netlist(idx, value) for idx, value in enumerate(values)
-        )
-        for candidate in self.candidates:
-            netlist_persister(candidate)
+        self.candidates = tuple(new_netlist(idx, value) for idx, value in enumerate(values))
 
     # pylint: disable=no-self-use
     def get_initial_population(self) -> Sequence[Netlist]:
@@ -75,9 +70,9 @@ class SingleParamSweep(SearchAlgorithm[Netlist, LibertyResult]):
 
     def __init__(
         self,
+        simulator: Simulator,
         candidate_generator: ParamSweepCandidateGenerator,
         cost_function=noop_cost_function,
-        simulator=liberate_simulator,
     ):
         self._candidate_generator = candidate_generator
         self._cost_function = cost_function
