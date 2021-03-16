@@ -24,7 +24,7 @@ from scripts.single_param_sweep import single_param_sweep  # pylint: disable=wro
 from src.circuit_search_common import Param, Range  # pylint: disable=wrong-import-position
 
 
-RangeType = TypeVar('RangeType', int, float)
+RangeType = TypeVar("RangeType", int, float)
 
 
 def _range(param: Param, _type: Type[RangeType], string: str) -> Range[RangeType]:
@@ -85,11 +85,8 @@ class Cirkopt:
                 The most commonly used commands are:
                 explore       Generate plots showing search space
                 search        Find an optimal design using genetic algorithm
-                brute-force   Find optimal design using exhaustive search"""
-        parser = argparse.ArgumentParser(
-            description="SPICE circuit optimizer",
-            usage=dedent(usage)
-        )
+                brute_force   Find optimal design using exhaustive search"""
+        parser = argparse.ArgumentParser(description="SPICE circuit optimizer", usage=dedent(usage))
         parser.add_argument("command", help="Sub command to run")
         # parse_args defaults to [1:] for args, but you need to
         # exclude the rest of the args too, or validation will fail

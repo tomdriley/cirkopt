@@ -1,8 +1,8 @@
 import os
 from functools import partial
-from logging import info
-from typing import Tuple
-
+from logging import info, debug
+from typing import Tuple, Generic, TypeVar
+from math import floor, ceil
 
 from src.file_io import File
 from src.netlist import BaseNetlistFile, Netlist
@@ -44,6 +44,26 @@ def brute_force_search(
     )
 
     reference_netlist = Netlist.create(BaseNetlistFile(File(reference_netlist_path)))
+
+    T = TypeVar("T", float, int)
+
+    def num_steps(range: Range[T]) -> int:
+        return floor((range.high - range.low) / range.step_size) + 1
+
+    num_width = num_steps(width)
+    debug(f"Running with {num_width} values for width")
+    num_length = num_steps(length)
+    debug(f"Running with {num_length} values for length")
+    num_fingers = num_steps(fingers)
+    debug(f"Running with {num_fingers} values for fingers")
+    num_devices = len(reference_netlist.device_widths)
+    debug(f"Varying those across {num_devices} devices")
+    num_iterations = ceil(
+        ((num_width * num_length * num_fingers) ** num_devices) / simulations_per_iteration
+    )
+    info(f"Running {num_iterations} iterations")
+    info(f"with {simulations_per_iteration} simulations per iteration")
+
     candidate_generator = BruteForceCandidateGenerator.create(
         reference_netlist=reference_netlist,
         width_range=width,
@@ -65,12 +85,7 @@ def brute_force_search(
     info("Starting brute force search...")
     best_netlist = brute_force.search()
     info("Search complete")
-    best_netlist.clone(
-        cell_name=reference_netlist.cell_name,
-        device_widths=best_netlist.device_widths,
-        device_lengths=best_netlist.device_lengths,
-        device_fingers=best_netlist.device_fingers,
-    )
+    best_netlist.clone(cell_name=reference_netlist.cell_name)
     best_netlist_path = os.path.join(out_dir, best_netlist.cell_name + ".sp")
     best_netlist.persist(File(best_netlist_path))
     info(f"Find optimized netlist at {reference_netlist}")
