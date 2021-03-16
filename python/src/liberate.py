@@ -68,8 +68,14 @@ def _run_liberate(
             + "did you forget to source the setup script?"
         )
         sys.exit()
+
+    if not os.path.isdir(out_dir):
+        info(f"Creating output directory {out_dir}")
+        os.mkdir(out_dir)
+
     if not os.path.isdir(netlist_dir):
-        raise NotADirectoryError(netlist_dir)
+        info(f"Creating netlist working directory {netlist_dir}")
+        os.mkdir(netlist_dir)
 
     for netlist in candidates:
         netlist_file = File(os.path.join(netlist_dir, netlist.cell_name + ".sp"))
@@ -113,13 +119,16 @@ def _run_liberate(
 
 def liberate_simulator(
     candidates: Sequence[Netlist],
+    iteration: int,
     tcl_script: str,
     liberate_dir: str,
-    netlist_dir: str,
-    liberate_log: str,
     out_dir: str,
-    ldb_name: str,
 ) -> LibertyResult:
+    run_folder = os.path.join(out_dir, "iteration-" + str(iteration))
+    netlist_dir = os.path.join(run_folder, "netlist")
+    liberate_log = os.path.join(run_folder, "liberate.log")
+    ldb_name = "CIRKOPT"
+
     # Run simulations
     _run_liberate(
         candidates=candidates,
@@ -127,12 +136,12 @@ def liberate_simulator(
         liberate_dir=liberate_dir,
         netlist_dir=netlist_dir,
         liberate_log=liberate_log,
-        out_dir=out_dir,
+        out_dir=run_folder,
         ldb_name=ldb_name,
     )
 
     # Parse results
-    ldb_path = os.path.join(out_dir, "lib", ldb_name + ".lib")
+    ldb_path = os.path.join(run_folder, "lib", ldb_name + ".lib")
     ldb_file = File(ldb_path)
     parser = LibertyParser()
     return parser.parse(ldb_file)

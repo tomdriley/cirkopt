@@ -24,10 +24,7 @@ def single_param_sweep(
     graph_delay_index: Tuple[int, int],
     tcl_script: str,
     liberate_dir: str,
-    netlist_dir: str,
-    liberate_log: str,
     out_dir: str,
-    ldb_name: str,
 ):
     if not os.path.isfile(reference_netlist):
         raise FileNotFoundError(reference_netlist)
@@ -36,18 +33,11 @@ def single_param_sweep(
         info(f"Creating output directory {out_dir}")
         os.mkdir(out_dir)
 
-    if not os.path.isdir(netlist_dir):
-        info(f"Creating netlist working directory {netlist_dir}")
-        os.mkdir(netlist_dir)
-
     simulator: Simulator = partial(
         liberate_simulator,
         tcl_script=tcl_script,
         liberate_dir=liberate_dir,
-        netlist_dir=netlist_dir,
-        liberate_log=liberate_log,
         out_dir=out_dir,
-        ldb_name=ldb_name,
     )
 
     candidate_generator = ParamSweepCandidateGenerator(

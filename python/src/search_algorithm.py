@@ -19,7 +19,7 @@ class CandidateClass:
 Candidate = TypeVar("Candidate", bound=CandidateClass)
 
 CostFunction = Callable[[Sequence[Candidate], SimulationResult], CostMap]
-Simulator = Callable[[Sequence[Candidate]], SimulationResult]
+Simulator = Callable[[Sequence[Candidate], int], SimulationResult]
 
 
 class CandidateGenerator(Generic[Candidate]):
@@ -55,10 +55,8 @@ class SearchAlgorithm(Generic[Candidate, SimulationResult]):
         while True:
             info(f"Starting iteration {self._iteration}")
 
-            self._simulation_result = self.simulate(self._candidates)
-            self._cost_map = self.cost_function(
-                self._candidates, self._simulation_result
-            )
+            self._simulation_result = self.simulate(self._candidates, self._iteration)
+            self._cost_map = self.cost_function(self._candidates, self._simulation_result)
             self._post_simulation()
 
             self._iteration += 1
@@ -80,12 +78,10 @@ class SearchAlgorithm(Generic[Candidate, SimulationResult]):
     def _post_simulation(self):
         pass
 
-    def simulate(self, candidates: Sequence[Candidate]) -> SimulationResult:
+    def simulate(self, candidates: Sequence[Candidate], iteration: int) -> SimulationResult:
         assert self._simulate is not None
-        return self._simulate(candidates)
+        return self._simulate(candidates, iteration)
 
-    def cost_function(
-        self, candidates: Sequence[Candidate], results: SimulationResult
-    ) -> CostMap:
+    def cost_function(self, candidates: Sequence[Candidate], results: SimulationResult) -> CostMap:
         assert self._cost_function is not None
         return self._cost_function(candidates, results)

@@ -129,6 +129,11 @@ search      Find an optimal design""",
         # now that we're inside a subcommand, ignore the first
         # TWO argvs, ie the command (cirkopt) and the subcommand (explore)
         args = parser.parse_args(sys.argv[2:])
+
+        if not os.path.isdir(args.outdir):
+            info(f"Creating output directory {args.outdir}")
+            os.mkdir(args.outdir)
+
         logging.basicConfig(
             format="%(levelname)s (%(asctime)s): %(message)s",
             datefmt="%I:%M:%S %p",
@@ -138,6 +143,7 @@ search      Find an optimal design""",
                 logging.StreamHandler(sys.stdout),
             ],
         )
+
         # Print all the arguments given
         for key in args.__dict__:
             debug(f"{key:<10}: {args.__dict__[key]}")
@@ -155,10 +161,7 @@ search      Find an optimal design""",
             graph_delay_index=args.outindex,
             tcl_script=args.tclscript,
             liberate_dir=LIBERATE_DIRECTORY,
-            netlist_dir=os.path.join(args.outdir, "netlist"),
-            liberate_log=os.path.join(args.outdir, "liberate.log"),
             out_dir=args.outdir,
-            ldb_name="CIRKOPT",
         )
 
     # pylint: disable=no-self-use
@@ -265,6 +268,11 @@ search      Find an optimal design""",
         # now that we're inside a subcommand, ignore the first
         # TWO argvs, ie the command (cirkopt) and the subcommand (explore)
         args = parser.parse_args(sys.argv[2:])
+
+        if not os.path.isdir(args.outdir):
+            info(f"Creating output directory {args.outdir}")
+            os.mkdir(args.outdir)
+
         logging.basicConfig(
             format="%(levelname)s (%(asctime)s): %(message)s",
             datefmt="%I:%M:%S %p",
@@ -299,10 +307,7 @@ search      Find an optimal design""",
             seed=args.seed,
             tcl_script=args.tclscript,
             liberate_dir=LIBERATE_DIRECTORY,
-            netlist_dir=os.path.join(args.outdir, "netlist"),
-            liberate_log=os.path.join(args.outdir, "liberate.log"),
             out_dir=args.outdir,
-            ldb_name="CIRKOPT",
         )
 
 

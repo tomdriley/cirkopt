@@ -39,10 +39,7 @@ def genetic_search(
     seed: Optional[int],
     tcl_script: str,
     liberate_dir: str,
-    netlist_dir: str,
-    liberate_log: str,
     out_dir: str,
-    ldb_name: str,
 ):
     if not os.path.isfile(reference_netlist):
         raise FileNotFoundError(reference_netlist)
@@ -50,10 +47,6 @@ def genetic_search(
     if not os.path.isdir(out_dir):
         info(f"Creating output directory {out_dir}")
         os.mkdir(out_dir)
-
-    if not os.path.isdir(netlist_dir):
-        info(f"Creating netlist working directory {netlist_dir}")
-        os.mkdir(netlist_dir)
 
     if num_individuals < 2:
         raise ValueError("Number of individuals must be at least 2")
@@ -71,10 +64,7 @@ def genetic_search(
         liberate_simulator,
         tcl_script=tcl_script,
         liberate_dir=liberate_dir,
-        netlist_dir=netlist_dir,
-        liberate_log=liberate_log,
         out_dir=out_dir,
-        ldb_name=ldb_name,
     )
 
     # Validates npoints
@@ -112,7 +102,15 @@ def genetic_search(
     info("Starting genetic search.")
     best_netlist = search_algorithm.search()
     info("Search complete")
-    info(f"Find netlist is named {best_netlist.cell_name} in {netlist_dir}")
+    best_netlist.mutate(
+        cell_name=best_netlist.base_netlist_cell_name,
+        device_widths=best_netlist.device_widths,
+        device_lengths=best_netlist.device_lengths,
+        device_fingers=best_netlist.device_fingers,
+    )
+    best_netlist_path = os.path.join(out_dir, best_netlist.cell_name + ".sp")
+    best_netlist.persist(File(best_netlist_path))
+    info(f"Find netlist is named {best_netlist.cell_name} in {best_netlist_path}")
 
     mpl_logger = logging.getLogger("matplotlib")
     if logging.getLogger().getEffectiveLevel() < logging.WARNING:
