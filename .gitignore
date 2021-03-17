@@ -6,6 +6,7 @@
 
 # Output from scripts
 python/out/*
+python/out-*/*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
@@ -147,3 +148,5 @@ dmypy.json
 cython_debug/
 
 virtuoso/
+
+altos*
