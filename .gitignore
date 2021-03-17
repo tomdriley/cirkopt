@@ -6,6 +6,7 @@
 
 # Output from scripts
 python/out/*
+python/out-*/*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

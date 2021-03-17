@@ -75,6 +75,26 @@ def _add_common_args(parser: argparse.ArgumentParser):
         default=[0, 0],
     )
 
+def _init_logger(loglevel: int, outdir: str) -> None:
+    create_outdir = not os.path.isdir(outdir)
+
+    if create_outdir:
+        os.mkdir(outdir)
+
+    logging.basicConfig(
+        format="%(levelname)s (%(asctime)s): %(message)s",
+        datefmt="%I:%M:%S %p",
+        level=loglevel,
+        handlers=[
+            logging.FileHandler(os.path.join(outdir, "cirkopt.log")),
+            logging.StreamHandler(sys.stdout),
+        ],
+    )
+
+    if create_outdir:
+        info(f"Created output directory {outdir}")
+
+
 
 # Basically a copy of this blog post [1].
 # [1] https://chase-seibert.github.io/blog/2014/03/21/python-multilevel-argparse.html
@@ -140,19 +160,7 @@ class Cirkopt:
         # TWO argvs, ie the command (cirkopt) and the subcommand (explore)
         args = parser.parse_args(sys.argv[2:])
 
-        if not os.path.isdir(args.outdir):
-            info(f"Creating output directory {args.outdir}")
-            os.mkdir(args.outdir)
-
-        logging.basicConfig(
-            format="%(levelname)s (%(asctime)s): %(message)s",
-            datefmt="%I:%M:%S %p",
-            level=args.loglevel,
-            handlers=[
-                logging.FileHandler(os.path.join(args.outdir, "cirkopt.log")),
-                logging.StreamHandler(sys.stdout),
-            ],
-        )
+        _init_logger(args.loglevel, args.outdir)
 
         # Print all the arguments given
         for key in args.__dict__:
@@ -279,19 +287,7 @@ class Cirkopt:
         # TWO argvs, ie the command (cirkopt) and the subcommand (explore)
         args = parser.parse_args(sys.argv[2:])
 
-        if not os.path.isdir(args.outdir):
-            info(f"Creating output directory {args.outdir}")
-            os.mkdir(args.outdir)
-
-        logging.basicConfig(
-            format="%(levelname)s (%(asctime)s): %(message)s",
-            datefmt="%I:%M:%S %p",
-            level=args.loglevel,
-            handlers=[
-                logging.FileHandler(os.path.join(args.outdir, "cirkopt.log")),
-                logging.StreamHandler(sys.stdout),
-            ],
-        )
+        _init_logger(args.loglevel, args.outdir)
 
         # Print all the arguments given
         for key in args.__dict__:
@@ -365,11 +361,9 @@ class Cirkopt:
         # now that we're inside a subcommand, ignore the first
         # TWO argvs, ie the command (cirkopt) and the subcommand (explore)
         args = parser.parse_args(sys.argv[2:])
-        logging.basicConfig(
-            format="%(levelname)s (%(asctime)s): %(message)s",
-            datefmt="%I:%M:%S %p",
-            level=args.loglevel,
-        )
+
+        _init_logger(args.loglevel, args.outdir)
+
         # Print all the arguments given
         for key in args.__dict__:
             debug(f"{key:<10}: {args.__dict__[key]}")
