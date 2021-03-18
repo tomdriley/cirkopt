@@ -12,6 +12,7 @@ from textwrap import dedent
 from decimal import Decimal
 
 import numpy as np
+from colorlog import ColoredFormatter
 
 PYTHON_SCRIPTS_DIRECTORY: str = os.path.dirname(os.path.abspath(__file__))
 PYTHON_DIRECTORY: str = os.path.abspath(os.path.join(PYTHON_SCRIPTS_DIRECTORY, ".."))
@@ -36,15 +37,15 @@ def _range(param: Param, _type: Type[RangeType], string: str) -> Range[RangeType
     return Range(param, low, high, step_size)
 
 
-def width(string: str) -> Range[Decimal]:
+def _width(string: str) -> Range[Decimal]:
     return _range(Param.WIDTH, Decimal, string)
 
 
-def length(string: str) -> Range[Decimal]:
+def _length(string: str) -> Range[Decimal]:
     return _range(Param.LENGTH, Decimal, string)
 
 
-def fingers(string: str) -> Range[int]:
+def _fingers(string: str) -> Range[int]:
     return _range(Param.FINGERS, int, string)
 
 
@@ -87,11 +88,20 @@ def _add_common_args(parser: argparse.ArgumentParser):
         default=[0, 0],
     )
 
+
 def _init_logger(loglevel: int, outdir: str) -> None:
     create_outdir = not os.path.isdir(outdir)
 
     if create_outdir:
         os.mkdir(outdir)
+
+    stdio_handler = logging.StreamHandler(sys.stdout)
+    stdio_handler.setFormatter(
+        ColoredFormatter(
+            "%(log_color)s%(levelname)s (%(asctime)s): %(message)s",
+            datefmt="%I:%M:%S %p",
+        )
+    )
 
     logging.basicConfig(
         format="%(levelname)s (%(asctime)s): %(message)s",
@@ -99,13 +109,12 @@ def _init_logger(loglevel: int, outdir: str) -> None:
         level=loglevel,
         handlers=[
             logging.FileHandler(os.path.join(outdir, "cirkopt.log")),
-            logging.StreamHandler(sys.stdout),
+            stdio_handler,
         ],
     )
 
     if create_outdir:
         info(f"Created output directory {outdir}")
-
 
 
 # Basically a copy of this blog post [1].
@@ -244,19 +253,19 @@ class Cirkopt:
         parser.add_argument(
             "--width",
             help="Defines the range of widths a device may have, eg.: low:step_size:high (inclusive)",
-            type=width,
+            type=_width,
             default="120e-9:5e-9:1e-6",
         )
         parser.add_argument(
             "--length",
             help="Defines the range of lengths a device may have, eg.: low:step_size:high (inclusive)",
-            type=length,
+            type=_length,
             default="45e-9:1e-9:45e-9",
         )
         parser.add_argument(
             "--fingers",
             help="Defines the range of fingers a device may have, eg.: low:step_size:high (inclusive)",
-            type=fingers,
+            type=_fingers,
             default="1:1:1",
         )
         parser.add_argument(
@@ -305,19 +314,19 @@ class Cirkopt:
         parser.add_argument(
             "--width",
             help="Defines the range of widths a device may have, eg.: low:step_size:high (inclusive)",
-            type=width,
+            type=_width,
             default="120e-9:5e-9:1e-6",
         )
         parser.add_argument(
             "--length",
             help="Defines the range of lengths a device may have, eg.: low:step_size:high (inclusive)",
-            type=length,
+            type=_length,
             default="45e-9:1e-9:45e-9",
         )
         parser.add_argument(
             "--fingers",
             help="Defines the range of fingers a device may have, eg.: low:step_size:high (inclusive)",
-            type=fingers,
+            type=_fingers,
             default="1:1:1",
         )
         parser.add_argument(
