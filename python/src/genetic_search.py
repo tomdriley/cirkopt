@@ -63,8 +63,8 @@ def _denormalize(
 
     # Clip to ensure values are valid
     quantized_widths = normalized_netlist[:ndevices].clip(0, len(b.widths) - 1)
-    quantized_lengths = normalized_netlist[:ndevices].clip(0, len(b.lengths) - 1)
-    quantized_fingers = normalized_netlist[:ndevices].clip(0, len(b.fingers) - 1)
+    quantized_lengths = normalized_netlist[ndevices:-ndevices].clip(0, len(b.lengths) - 1)
+    quantized_fingers = normalized_netlist[-ndevices:].clip(0, len(b.fingers) - 1)
     return (
         tuple(float(b.widths[w]) for w in quantized_widths),
         tuple(float(b.lengths[l]) for l in quantized_lengths),
