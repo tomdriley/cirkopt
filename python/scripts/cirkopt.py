@@ -12,7 +12,7 @@ from textwrap import dedent
 from decimal import Decimal
 
 import numpy as np
-from colorlog import ColoredFormatter
+from colorlog import ColoredFormatter  # type: ignore
 
 PYTHON_SCRIPTS_DIRECTORY: str = os.path.dirname(os.path.abspath(__file__))
 PYTHON_DIRECTORY: str = os.path.abspath(os.path.join(PYTHON_SCRIPTS_DIRECTORY, ".."))
@@ -86,6 +86,10 @@ def _add_common_args(parser: argparse.ArgumentParser):
         nargs=2,
         type=int,
         default=[0, 0],
+    )
+    parser.add_argument(
+        "--initial_candidates",
+        help="Path to json file containing starting candidates",
     )
 
 
@@ -190,6 +194,10 @@ class Cirkopt:
         # Additional parsing
         values = np.linspace(start=args.range[0], stop=args.range[1], num=args.numsteps)
         debug(f"values: {values}")
+
+        if args.initial_candidates is not None:
+            error("Resuming from dumped candidate json file not yet supported on explore")
+            sys.exit()
 
         info("Exploring search space.")
         single_param_sweep(
@@ -304,6 +312,7 @@ class Cirkopt:
             tcl_script=args.tclscript,
             liberate_dir=LIBERATE_DIRECTORY,
             out_dir=args.outdir,
+            initial_candidates=args.initial_candidates,
         )
 
     # pylint: disable=no-self-use
@@ -347,6 +356,10 @@ class Cirkopt:
         # Print all the arguments given
         for key in args.__dict__:
             debug(f"{key:<10}: {args.__dict__[key]}")
+
+        if args.initial_candidates is not None:
+            error("Resuming from dumped candidate json file not yet supported on explore")
+            sys.exit()
 
         info("Exploring search space.")
         brute_force_search(

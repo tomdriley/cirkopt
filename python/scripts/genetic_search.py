@@ -38,6 +38,7 @@ def genetic_search(
     tcl_script: str,
     liberate_dir: str,
     out_dir: str,
+    initial_candidates: Optional[str],
 ):
     if not os.path.isfile(reference_netlist_path):
         raise FileNotFoundError(reference_netlist_path)
@@ -81,6 +82,7 @@ def genetic_search(
         fingers_range,
         reference_netlist,
         seed=seed,
+        initial_candidates=initial_candidates,
     )
 
     cost_function: CostFunction = partial(

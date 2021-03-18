@@ -41,6 +41,16 @@ class BaseNetlistFile:
             self._cached = self.file.read()
         return self._cached
 
+    def json_repr(self):
+        return {"__BaseNetlistFile__": True, **self.__dict__}
+
+    @staticmethod
+    def from_json(json_dict) -> "BaseNetlistFile":
+        if "__BaseNetlistFile__" in json_dict:
+            file: File = File.from_json(json_dict["file"])
+            return BaseNetlistFile(file=file)
+        raise TypeError
+
 
 @dataclass(frozen=True)
 class Netlist(CandidateClass):
@@ -152,3 +162,22 @@ class Netlist(CandidateClass):
             current_device += 1
 
         file.write("\n".join(lines))
+
+    def json_repr(self):
+        return {"__Netlist__": True, **self.__dict__}
+
+    @staticmethod
+    def from_json(json_dict) -> "Netlist":
+        if "__Netlist__" in json_dict:
+            base_netlist_file: BaseNetlistFile = BaseNetlistFile.from_json(
+                json_dict["base_netlist_file"]
+            )
+
+            return Netlist.create(
+                base_netlist_file=base_netlist_file,
+                cell_name=json_dict["cell_name"],
+                device_widths=json_dict["device_widths"],
+                device_lengths=json_dict["device_lengths"],
+                device_fingers=json_dict["device_fingers"],
+            )
+        raise TypeError
