@@ -1,5 +1,4 @@
-from decimal import Decimal
-from math import floor, ceil
+from decimal import Decimal, ROUND_UP, ROUND_HALF_EVEN, ROUND_DOWN
 
 from enum import Enum
 
@@ -10,27 +9,31 @@ class Rounding(Enum):
     TIE_EVEN = 3  # Round to nearest integer, round to even number on tie
 
 
-def quantize(val: float, precision: str, rounding: Rounding = Rounding.TIE_EVEN) -> int:
-    prec = Decimal(precision)
-    if prec <= 0:
+def quantize(
+        val: Decimal,
+        precision: Decimal,
+        _min: Decimal = Decimal('0'),
+        rounding: Rounding = Rounding.TIE_EVEN
+) -> int:
+    if precision <= 0:
         raise ValueError("Precision cannot be 0")
 
-    quantized = float(Decimal(val) / prec)
+    quantized = (val - _min).max(Decimal(0.0)) / precision
 
     if rounding == Rounding.TIE_EVEN:
-        return round(quantized)
+        decimal_rounding = ROUND_HALF_EVEN
+    elif rounding == Rounding.DOWN:
+        decimal_rounding = ROUND_DOWN
+    elif rounding == Rounding.UP:
+        decimal_rounding = ROUND_UP
+    else:
+        raise ValueError("rounding not one of UP, DOWN, or TIE_EVEN")
 
-    if rounding == Rounding.DOWN:
-        return floor(quantized)
-
-    if rounding == Rounding.UP:
-        return ceil(quantized)
-
-    raise ValueError("rounding not one of UP, DOWN, or TIE_EVEN")
+    return int(quantized.quantize(Decimal('1.'), rounding=decimal_rounding))
 
 
-def scale(val: int, precision: str) -> float:
-    prec = Decimal(precision)
-    if prec <= 0:
+def scale(val: int, precision: Decimal) -> float:
+    precision = Decimal(precision)
+    if precision <= 0:
         raise ValueError("Precision cannot be 0")
-    return float(val * prec)
+    return float(val * precision)

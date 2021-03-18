@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import subprocess
 import os
+from shutil import copy
 import sys
 import shutil
 import time
@@ -126,7 +127,8 @@ def liberate_simulator(
 ) -> LibertyResult:
     run_folder = os.path.join(out_dir, "iteration-" + str(iteration))
     netlist_dir = os.path.join(run_folder, "netlist")
-    liberate_log = os.path.join(run_folder, "liberate.log")
+    # Place current log in same place to allow `tail -f`
+    liberate_log_working = os.path.join(out_dir, "liberate.log")
     ldb_name = "CIRKOPT"
 
     # Run simulations
@@ -135,10 +137,13 @@ def liberate_simulator(
         tcl_script=tcl_script,
         liberate_dir=liberate_dir,
         netlist_dir=netlist_dir,
-        liberate_log=liberate_log,
+        liberate_log=liberate_log_working,
         out_dir=run_folder,
         ldb_name=ldb_name,
     )
+
+    # Keep copy so to prevent overwritting
+    copy(liberate_log_working, run_folder)
 
     # Parse results
     ldb_path = os.path.join(run_folder, "lib", ldb_name + ".lib")

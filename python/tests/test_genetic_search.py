@@ -1,7 +1,9 @@
 import unittest
+from decimal import Decimal
 
+from src.circuit_search_common import Range, Param
 from src.netlist import Netlist, BaseNetlistFile
-from src.genetic_search import GeneticCandidateGenerator, Param
+from src.genetic_search import GeneticCandidateGenerator
 from tests.mock_file import MockFile
 from tests.test_netlist import TEST_NETLIST
 
@@ -19,13 +21,9 @@ class TestGeneticSearch(unittest.TestCase):
             alpha=0.6,
             pmutation=0.25,
             mutation_std_deviation=5.0,
-            min_width=120e-9,
-            max_width=10e-6,
-            min_length=45e-9,
-            max_length=45e-9,
-            min_fingers=1,
-            max_fingers=2,
-            precision="5e-9",
+            width_range=Range(Param.WIDTH, Decimal('120e-9'), Decimal('10e-6'), Decimal('5e-9')),
+            length_range=Range(Param.LENGTH, Decimal('45e-9'), Decimal('45e-9'), Decimal('5e-9')),
+            fingers_range=Range(Param.FINGERS, 1, 2, 1),
             reference_netlist=self.ref_netlist,
             seed=1234,
         )
@@ -34,12 +32,11 @@ class TestGeneticSearch(unittest.TestCase):
         # pylint: disable=protected-access
 
         # Test computed members
-        self.assertEqual(self.candidate_generator._bounds.max_width, 2000)
-        self.assertEqual(self.candidate_generator._bounds.max_length, 9)
-        self.assertEqual(self.candidate_generator._bounds.min_width, 24)
-        self.assertEqual(self.candidate_generator._bounds.min_length, 9)
+        self.assertEqual(len(self.candidate_generator._range_info.widths), 1977)
+        self.assertEqual(len(self.candidate_generator._range_info.lengths), 1)
+        self.assertEqual(len(self.candidate_generator._range_info.fingers), 2)
         self.assertEqual(self.candidate_generator._search_params, {Param.WIDTH, Param.FINGERS})
-        self.assertEqual(self.candidate_generator._number_of_devices, 2)
+        self.assertEqual(self.candidate_generator._ndevices, 2)
         self.assertEqual(self.candidate_generator._id_num_digits, 2)
 
         initial_population = self.candidate_generator.get_initial_population()
