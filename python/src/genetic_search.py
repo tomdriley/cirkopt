@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from itertools import chain
 from math import ceil, log10
 from typing import List, Optional, Sequence, Set, Tuple, Type, Callable
-from logging import debug
+from logging import debug, info
 from decimal import Decimal
 import json
 
@@ -98,7 +98,7 @@ class GeneticCandidateGenerator(CandidateGenerator[Netlist]):
 
     _rng: np.random.Generator
 
-    _get_initial_population: Callable[["GeneticCandidateGenerator"], Sequence[Netlist]]
+    _get_initial_population: Optional[Callable[["GeneticCandidateGenerator"], Sequence[Netlist]]]
 
     @classmethod
     def create(
@@ -147,7 +147,10 @@ class GeneticCandidateGenerator(CandidateGenerator[Netlist]):
         else:
             json_list = json.loads(File(initial_candidates).read())
             candidates = tuple(Netlist.from_json(candidate) for candidate in json_list)
-            get_initial_population = lambda _: candidates
+
+            def get_initial_population(_):
+                info("Using initial population from JSON file")
+                return candidates
 
         # pylint: disable=too-many-locals
         return cls(

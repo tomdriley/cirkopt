@@ -42,7 +42,7 @@ class BaseNetlistFile:
         return self._cached
 
     def json_repr(self):
-        return {"__BaseNetlistFile__": True, **self.__dict__}
+        return {"__BaseNetlistFile__": True, "file": self.file}
 
     @staticmethod
     def from_json(json_dict) -> "BaseNetlistFile":

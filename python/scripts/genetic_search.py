@@ -105,7 +105,7 @@ def genetic_search(
     best_netlist = best_netlist.clone(cell_name=reference_netlist.cell_name)
     best_netlist_path = os.path.join(out_dir, best_netlist.cell_name + ".sp")
     best_netlist.persist(File(best_netlist_path))
-    info(f"Find netlist is named {best_netlist.cell_name} in {best_netlist_path}")
+    info(f"Find final netlist {best_netlist.cell_name} in {best_netlist_path}")
 
     mpl_logger = logging.getLogger("matplotlib")
     if logging.getLogger().getEffectiveLevel() < logging.WARNING:
