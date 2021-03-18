@@ -32,9 +32,9 @@ class TestGeneticSearch(unittest.TestCase):
         # pylint: disable=protected-access
 
         # Test computed members
-        self.assertEqual(len(self.candidate_generator._bounds.widths), 1977)
-        self.assertEqual(len(self.candidate_generator._bounds.lengths), 1)
-        self.assertEqual(len(self.candidate_generator._bounds.fingers), 2)
+        self.assertEqual(len(self.candidate_generator._range_info.widths), 1977)
+        self.assertEqual(len(self.candidate_generator._range_info.lengths), 1)
+        self.assertEqual(len(self.candidate_generator._range_info.fingers), 2)
         self.assertEqual(self.candidate_generator._search_params, {Param.WIDTH, Param.FINGERS})
         self.assertEqual(self.candidate_generator._ndevices, 2)
         self.assertEqual(self.candidate_generator._id_num_digits, 2)

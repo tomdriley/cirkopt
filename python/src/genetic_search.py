@@ -22,7 +22,7 @@ from src.search_algorithm import (
 
 
 @dataclass(frozen=True)
-class Bounds:
+class RangeInfo:
     widths: Sequence[Decimal]
     step_width: Decimal
     lengths: Sequence[Decimal]
@@ -32,11 +32,11 @@ class Bounds:
 
     @classmethod
     def from_range(
-        cls: Type['Bounds'],
+        cls: Type['RangeInfo'],
         width_range: Range[Decimal],
         length_range: Range[Decimal],
         fingers_range: Range[int]
-    ) -> 'Bounds':
+    ) -> 'RangeInfo':
         return cls(
             widths=list(width_range),
             step_width=width_range.step_size,
@@ -47,28 +47,28 @@ class Bounds:
         )
 
 
-def _normalize(netlist: Netlist, b: Bounds) -> Tuple[int, ...]:
+def _normalize(netlist: Netlist, r: RangeInfo) -> Tuple[int, ...]:
     """Returns the netlist's fixed point widths, fixed point lengths and fingers in a 1d tuple"""
-    widths = (quantize(Decimal(w), b.step_width, b.widths[0]) for w in netlist.device_widths)
-    lengths = (quantize(Decimal(l), b.step_length, b.lengths[0]) for l in netlist.device_lengths)
-    fingers = (max(f - b.fingers[0], 0) // b.step_fingers for f in netlist.device_fingers)
+    widths = (quantize(Decimal(w), r.step_width, r.widths[0]) for w in netlist.device_widths)
+    lengths = (quantize(Decimal(l), r.step_length, r.lengths[0]) for l in netlist.device_lengths)
+    fingers = (max(f - r.fingers[0], 0) // r.step_fingers for f in netlist.device_fingers)
     return tuple(chain(widths, lengths, fingers))
 
 
 def _denormalize(
-    normalized_netlist: np.ndarray, b: Bounds
+    normalized_netlist: np.ndarray, r: RangeInfo
 ) -> Tuple[Tuple[float, ...], Tuple[float, ...], Tuple[int, ...]]:
     """Returns the normalized netlist's floating point widths, floating point lengths and fingers"""
     ndevices = normalized_netlist.shape[0] // 3
 
     # Clip to ensure values are valid
-    quantized_widths = normalized_netlist[:ndevices].clip(0, len(b.widths) - 1)
-    quantized_lengths = normalized_netlist[ndevices:-ndevices].clip(0, len(b.lengths) - 1)
-    quantized_fingers = normalized_netlist[-ndevices:].clip(0, len(b.fingers) - 1)
+    quantized_widths = normalized_netlist[:ndevices].clip(0, len(r.widths) - 1)
+    quantized_lengths = normalized_netlist[ndevices:-ndevices].clip(0, len(r.lengths) - 1)
+    quantized_fingers = normalized_netlist[-ndevices:].clip(0, len(r.fingers) - 1)
     return (
-        tuple(float(b.widths[w]) for w in quantized_widths),
-        tuple(float(b.lengths[l]) for l in quantized_lengths),
-        tuple(b.fingers[f] for f in quantized_fingers),
+        tuple(float(r.widths[w]) for w in quantized_widths),
+        tuple(float(r.lengths[l]) for l in quantized_lengths),
+        tuple(r.fingers[f] for f in quantized_fingers),
     )
 
 
@@ -85,7 +85,7 @@ class GeneticCandidateGenerator(CandidateGenerator[Netlist]):
     _mutation_std_deviation: float  # Standard deviation of additive gaussian noise mutation
 
     # Search space params
-    _bounds: Bounds
+    _range_info: RangeInfo
 
     # Netlist
     _reference_netlist: Netlist
@@ -112,13 +112,13 @@ class GeneticCandidateGenerator(CandidateGenerator[Netlist]):
         seed: Optional[int] = None,
     ):
         # pylint: disable=too-many-locals)
-        bounds = Bounds.from_range(width_range, length_range, fingers_range)
+        range_info = RangeInfo.from_range(width_range, length_range, fingers_range)
         search_params = []
-        if len(bounds.widths) > 1:
+        if len(range_info.widths) > 1:
             search_params.append(Param.WIDTH)
-        if len(bounds.lengths) > 1:
+        if len(range_info.lengths) > 1:
             search_params.append(Param.LENGTH)
-        if len(bounds.fingers) > 1:
+        if len(range_info.fingers) > 1:
             search_params.append(Param.FINGERS)
         debug(f"Search params: {search_params}")
 
@@ -145,7 +145,7 @@ class GeneticCandidateGenerator(CandidateGenerator[Netlist]):
             _alpha=alpha,
             _pmutation=pmutation,
             _mutation_std_deviation=mutation_std_deviation,
-            _bounds=bounds,
+            _range_info=range_info,
             _reference_netlist=reference_netlist,
             _ndevices=ndevices,
             _search_params=set(search_params),
@@ -162,32 +162,32 @@ class GeneticCandidateGenerator(CandidateGenerator[Netlist]):
 
         :return: a sequence of randomly generated netlists
         """
-        b = self._bounds
+        r = self._range_info
         n = self._ndevices
 
         def rand_netlist(idx: int) -> Netlist:
             # Generate fixed point widths if we can vary them
             if Param.WIDTH in self._search_params:
-                widths = self._rng.integers(0, len(b.widths), n, dtype=np.uint64)
+                widths = self._rng.integers(0, len(r.widths), n, dtype=np.uint64)
             else:
                 widths = np.zeros(n, dtype=np.uint64)
 
             # Generate fixed point lengths if we can vary them
             if Param.LENGTH in self._search_params:
-                lengths = self._rng.integers(0, len(b.lengths), n, dtype=np.uint64)
+                lengths = self._rng.integers(0, len(r.lengths), n, dtype=np.uint64)
             else:
                 lengths = np.zeros(n, dtype=np.uint64)
 
             if Param.FINGERS in self._search_params:
-                fingers = self._rng.integers(0, len(b.fingers), n, dtype=np.uint64)
+                fingers = self._rng.integers(0, len(r.fingers), n, dtype=np.uint64)
             else:
                 fingers = np.zeros(n, dtype=np.uint64)
 
             return self._reference_netlist.clone(
                 cell_name=self._get_netlist_name(idx),
-                device_widths=tuple(float(b.widths[w]) for w in widths),
-                device_lengths=tuple(float(b.lengths[l]) for l in lengths),
-                device_fingers=tuple(b.fingers[f] for f in fingers),
+                device_widths=tuple(float(r.widths[w]) for w in widths),
+                device_lengths=tuple(float(r.lengths[l]) for l in lengths),
+                device_fingers=tuple(r.fingers[f] for f in fingers),
             )
 
         return [rand_netlist(idx) for idx in range(self._num_individuals)]
@@ -206,7 +206,7 @@ class GeneticCandidateGenerator(CandidateGenerator[Netlist]):
         parenting_probabilities = fitness / fitness.sum()
 
         # Two NxM arrays where N is number of individuals and M is 3 * number of devices per individual
-        mating_pool = np.asarray([_normalize(n, self._bounds) for n in current_candidates], dtype=np.uint64)
+        mating_pool = np.asarray([_normalize(n, self._range_info) for n in current_candidates], dtype=np.uint64)
         offspring = np.zeros((self._num_individuals, self._ndevices * 3), dtype=np.uint64)
 
         def maybe_add_child_to_offspring(child_to_add: np.ndarray, child_idx: int) -> bool:
@@ -263,7 +263,7 @@ class GeneticCandidateGenerator(CandidateGenerator[Netlist]):
         for idx, normalized_netlist in enumerate(offspring):
             assert normalized_netlist.any(), f"Offspring[{idx}] contained only zeros"
 
-            widths, lengths, fingers = _denormalize(normalized_netlist, self._bounds)
+            widths, lengths, fingers = _denormalize(normalized_netlist, self._range_info)
             netlists.append(
                 self._reference_netlist.clone(self._get_netlist_name(idx), widths, lengths, fingers)
             )
