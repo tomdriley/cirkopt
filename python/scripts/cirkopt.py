@@ -36,6 +36,18 @@ def _range(param: Param, _type: Type[RangeType], string: str) -> Range[RangeType
     return Range(param, low, high, step_size)
 
 
+def width(string: str) -> Range[Decimal]:
+    return _range(Param.WIDTH, Decimal, string)
+
+
+def length(string: str) -> Range[Decimal]:
+    return _range(Param.LENGTH, Decimal, string)
+
+
+def fingers(string: str) -> Range[int]:
+    return _range(Param.FINGERS, int, string)
+
+
 def _add_common_args(parser: argparse.ArgumentParser):
     parser.add_argument(
         "--outdir",
@@ -230,49 +242,22 @@ class Cirkopt:
             default=5.0,
         )
         parser.add_argument(
-            "--min-width",
-            help="Minimum width for a device (inclusive)",
-            type=float,
-            default=120e-9,
+            "--width",
+            help="Defines the range of widths a device may have, eg.: low:step_size:high (inclusive)",
+            type=width,
+            default="120e-9:5e-9:1e-6",
         )
         parser.add_argument(
-            "--max-width",
-            help="Maximum width for a device (inclusive)",
-            type=float,
-            default=10e-6,
+            "--length",
+            help="Defines the range of lengths a device may have, eg.: low:step_size:high (inclusive)",
+            type=length,
+            default="45e-9:1e-9:45e-9",
         )
         parser.add_argument(
-            "--min-length",
-            help="Minimum length for a device (inclusive)",
-            type=float,
-            default=45e-9,
-        )
-        parser.add_argument(
-            "--max-length",
-            help="Maximum length for a device (inclusive)",
-            type=float,
-            default=45e-9,
-        )
-        parser.add_argument(
-            "--min-fingers",
-            help="Minimum fingers for a device (inclusive)",
-            type=int,
-            default=1,
-        )
-        parser.add_argument(
-            "--max-fingers",
-            help="Maximum fingers for a device (inclusive)",
-            type=int,
-            default=1,
-        )
-        parser.add_argument(
-            "--precision",
-            help=(
-                "The smallest step size in device width and length to take (i.e 5nm would be '5e-9'). "
-                + "Stored as string to avoid floating point madness."
-            ),
-            type=str,
-            default="5e-9",
+            "--fingers",
+            help="Defines the range of fingers a device may have, eg.: low:step_size:high (inclusive)",
+            type=fingers,
+            default="1:1:1",
         )
         parser.add_argument(
             "--seed",
@@ -302,13 +287,9 @@ class Cirkopt:
             alpha=args.alpha,
             pmutation=args.pmutation,
             mutation_std_deviation=args.mutation_std_dev,
-            min_width=args.min_width,
-            max_width=args.max_width,
-            min_length=args.min_length,
-            max_length=args.max_length,
-            min_fingers=args.min_fingers,
-            max_fingers=args.max_fingers,
-            precision=args.precision,
+            width_range=args.width,
+            length_range=args.length,
+            fingers_range=args.fingers,
             delay_index=tuple(args.outindex),
             seed=args.seed,
             tcl_script=args.tclscript,
@@ -321,16 +302,6 @@ class Cirkopt:
         parser = argparse.ArgumentParser(
             description="Perform exhaustive search to optimize netlist",
         )
-
-        def width(string: str) -> Range[Decimal]:
-            return _range(Param.WIDTH, Decimal, string)
-
-        def length(string: str) -> Range[Decimal]:
-            return _range(Param.LENGTH, Decimal, string)
-
-        def fingers(string: str) -> Range[int]:
-            return _range(Param.FINGERS, int, string)
-
         parser.add_argument(
             "--width",
             help="Defines the range of widths a device may have, eg.: low:step_size:high (inclusive)",

@@ -3,9 +3,11 @@ from functools import partial
 import logging
 from logging import info, debug
 from typing import Tuple, Optional
+from decimal import Decimal
 
 import matplotlib.pyplot as plt  # type: ignore
 
+from src.circuit_search_common import Range
 from src.file_io import File
 from src.netlist import BaseNetlistFile, Netlist
 from src.netlist_cost_functions import delay_cost_function
@@ -28,13 +30,9 @@ def genetic_search(
     alpha: float,
     pmutation: float,
     mutation_std_deviation: float,
-    min_width: float,
-    max_width: float,
-    min_length: float,
-    max_length: float,
-    min_fingers: int,
-    max_fingers: int,
-    precision: str,
+    width_range: Range[Decimal],
+    length_range: Range[Decimal],
+    fingers_range: Range[int],
     delay_index: Tuple[int, int],
     seed: Optional[int],
     tcl_script: str,
@@ -78,13 +76,9 @@ def genetic_search(
         alpha,
         pmutation,
         mutation_std_deviation,
-        min_width,
-        max_width,
-        min_length,
-        max_length,
-        min_fingers,
-        max_fingers,
-        precision,
+        width_range,
+        length_range,
+        fingers_range,
         reference_netlist,
         seed=seed,
     )

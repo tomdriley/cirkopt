@@ -22,4 +22,9 @@ class TestCircuitSearchCommon(unittest.TestCase):
             list(Range(Param.WIDTH, Decimal(1.0), Decimal(6.0), Decimal(1.0))),
             list(map(Decimal, [1.0, 2.0, 3.0, 4.0, 5.0, 6.0]))
         )
+
+        self.assertEqual(
+            list(Range(Param.WIDTH, Decimal(1.0), Decimal(6.0), Decimal(1.0))),
+            list(map(Decimal, [1.0, 2.0, 3.0, 4.0, 5.0, 6.0]))
+        )
         self.assertEqual(list(Range(Param.FINGERS, 1, 6, 2)), [1, 3, 5])
