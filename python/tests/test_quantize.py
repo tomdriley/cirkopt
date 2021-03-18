@@ -31,7 +31,7 @@ class TestQuantize(unittest.TestCase):
         self.assertEqual(quantize(d(1.24), d('0.5'), rounding=Rounding.UP), 3)
 
         self.assertEqual(quantize(d(1.26e-9), d('0.5e-9')), 3)
-        self.assertEqual(quantize(d(1.25e-9), d('0.5e-9')), 2)
+        self.assertEqual(quantize(d(1.25e-9), d('0.5e-9')), 3)  # rounds up
         self.assertEqual(quantize(d(1.24e-9), d('0.5e-9')), 2)
 
     def test_scale(self):
