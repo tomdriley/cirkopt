@@ -1,7 +1,0 @@
-Initializing GA with population size of 50, 150 generations, 0.6 crossover rate, and 0.25 mutation rate
-Progress 100%
-GA Completed in 178.28 seconds (1.19 seconds/iteration)
-Number of unstable system errors: 94
-
----------------------------Results---------------------------
-Best solution: Kp=6.67, Ti=3.64, Td=2.37 -> ISE=78.21313281834199, Tr=0.7602108437832915, Ts=12.208091785461091, Mp=28.3710122865
