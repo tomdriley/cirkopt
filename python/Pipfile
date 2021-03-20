@@ -12,6 +12,7 @@ pyparsing = "*"
 matplotlib = "*"
 numpy = "*"
 colorlog = "*"
+configargparse = "*"
 
 [requires]
 python_version = "3.8" # This is the version that is on iccad
