@@ -3,7 +3,7 @@ import unittest
 from src.netlist import Netlist, BaseNetlistFile
 from src.liberty_parser import LibertyParser  # type: ignore
 from src.netlist_cost_functions import delay_cost_function, longest_delay
-from tests.mock_file import MockFile
+from src.file_io import MockFile
 from tests.netlist_example import NETLIST_F3E7F6B4_EXAMPLES
 from tests.liberty_example import LIBERTY_EXAMPLE, LIBERTY_F3E7F6B4_EXAMPLE
 
@@ -31,7 +31,7 @@ class TestDelayCostFunction(unittest.TestCase):
         for netlist_file in NETLIST_F3E7F6B4_EXAMPLES.values():
             netlist_mock_file = MockFile()
             netlist_mock_file.write(netlist_file)
-            base_netlist_file = BaseNetlistFile(netlist_mock_file)
+            base_netlist_file = BaseNetlistFile.create(netlist_mock_file)
             netlists.append(Netlist.create(base_netlist_file))
 
         # Parse ldb to create LibertyResult

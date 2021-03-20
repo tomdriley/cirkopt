@@ -4,7 +4,7 @@ from decimal import Decimal
 from src.circuit_search_common import Range, Param
 from src.netlist import Netlist, BaseNetlistFile
 from src.genetic_search import GeneticCandidateGenerator
-from tests.mock_file import MockFile
+from src.file_io import MockFile
 from tests.test_netlist import TEST_NETLIST
 
 
@@ -12,7 +12,7 @@ class TestGeneticSearch(unittest.TestCase):
     def setUp(self):
         self.ref_netlist_file = MockFile()
         self.ref_netlist_file.write(TEST_NETLIST)
-        self.ref_netlist = Netlist.create(BaseNetlistFile(self.ref_netlist_file))
+        self.ref_netlist = Netlist.create(BaseNetlistFile.create(self.ref_netlist_file))
 
         self.candidate_generator = GeneticCandidateGenerator.create(
             num_individuals=100,

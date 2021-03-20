@@ -4,7 +4,7 @@ import unittest
 from src.netlist import Netlist, BaseNetlistFile
 from src.brute_force_search import BruteForceCandidateGenerator
 from src.circuit_search_common import Range, Param
-from tests.mock_file import MockFile
+from src.file_io import MockFile
 from tests.test_netlist import TEST_NETLIST
 
 
@@ -12,14 +12,18 @@ class TestBruteForceSearch(unittest.TestCase):
     def setUp(self):
         self.ref_netlist_file = MockFile()
         self.ref_netlist_file.write(TEST_NETLIST)
-        self.ref_netlist = Netlist.create(BaseNetlistFile(self.ref_netlist_file))
+        self.ref_netlist = Netlist.create(BaseNetlistFile.create(self.ref_netlist_file))
 
     def test_single_candidate_generator(self):
         for simulations_per_iterations in [1, 10]:
             candidate_generator = BruteForceCandidateGenerator.create(
                 reference_netlist=self.ref_netlist,
-                width_range=Range(Param.WIDTH, Decimal('120e-9'), Decimal('120e-9'), Decimal('5e-9')),
-                length_range=Range(Param.LENGTH, Decimal('45e-9'), Decimal('45e-9'), Decimal('5e-9')),
+                width_range=Range(
+                    Param.WIDTH, Decimal("120e-9"), Decimal("120e-9"), Decimal("5e-9")
+                ),
+                length_range=Range(
+                    Param.LENGTH, Decimal("45e-9"), Decimal("45e-9"), Decimal("5e-9")
+                ),
                 fingers_range=Range(Param.FINGERS, 1, 1, 1),
                 simulations_per_iteration=simulations_per_iterations,
             )
@@ -35,8 +39,8 @@ class TestBruteForceSearch(unittest.TestCase):
     def test_width_only(self):
         candidate_generator = BruteForceCandidateGenerator.create(
             reference_netlist=self.ref_netlist,
-            width_range=Range(Param.WIDTH, Decimal('120e-9'), Decimal('125e-9'), Decimal('5e-9')),
-            length_range=Range(Param.LENGTH, Decimal('45e-9'), Decimal('45e-9'), Decimal('5e-9')),
+            width_range=Range(Param.WIDTH, Decimal("120e-9"), Decimal("125e-9"), Decimal("5e-9")),
+            length_range=Range(Param.LENGTH, Decimal("45e-9"), Decimal("45e-9"), Decimal("5e-9")),
             fingers_range=Range(Param.FINGERS, 1, 1, 1),
             simulations_per_iteration=2,
         )
@@ -68,8 +72,8 @@ class TestBruteForceSearch(unittest.TestCase):
     def test_length_only(self):
         candidate_generator = BruteForceCandidateGenerator.create(
             reference_netlist=self.ref_netlist,
-            width_range=Range(Param.WIDTH, Decimal('120e-9'), Decimal('120e-9'), Decimal('5e-9')),
-            length_range=Range(Param.LENGTH, Decimal('45e-9'), Decimal('50e-9'), Decimal('5e-9')),
+            width_range=Range(Param.WIDTH, Decimal("120e-9"), Decimal("120e-9"), Decimal("5e-9")),
+            length_range=Range(Param.LENGTH, Decimal("45e-9"), Decimal("50e-9"), Decimal("5e-9")),
             fingers_range=Range(Param.FINGERS, 1, 1, 1),
             simulations_per_iteration=2,
         )
@@ -101,8 +105,8 @@ class TestBruteForceSearch(unittest.TestCase):
     def test_fingers_only(self):
         candidate_generator = BruteForceCandidateGenerator.create(
             reference_netlist=self.ref_netlist,
-            width_range=Range(Param.WIDTH, Decimal('120e-9'), Decimal('120e-9'), Decimal('5e-9')),
-            length_range=Range(Param.LENGTH, Decimal('45e-9'), Decimal('45e-9'), Decimal('5e-9')),
+            width_range=Range(Param.WIDTH, Decimal("120e-9"), Decimal("120e-9"), Decimal("5e-9")),
+            length_range=Range(Param.LENGTH, Decimal("45e-9"), Decimal("45e-9"), Decimal("5e-9")),
             fingers_range=Range(Param.FINGERS, 1, 2, 1),
             simulations_per_iteration=2,
         )
@@ -134,8 +138,8 @@ class TestBruteForceSearch(unittest.TestCase):
     def test_all_params(self):
         candidate_generator = BruteForceCandidateGenerator.create(
             reference_netlist=self.ref_netlist,
-            width_range=Range(Param.WIDTH, Decimal('120e-9'), Decimal('125e-9'), Decimal('5e-9')),
-            length_range=Range(Param.LENGTH, Decimal('45e-9'), Decimal('50e-9'), Decimal('5e-9')),
+            width_range=Range(Param.WIDTH, Decimal("120e-9"), Decimal("125e-9"), Decimal("5e-9")),
+            length_range=Range(Param.LENGTH, Decimal("45e-9"), Decimal("50e-9"), Decimal("5e-9")),
             fingers_range=Range(Param.FINGERS, 1, 2, 1),
             simulations_per_iteration=2,
         )

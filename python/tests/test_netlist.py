@@ -2,7 +2,7 @@ import unittest
 import textwrap
 
 from src.netlist import BaseNetlistFile, Netlist
-from tests.mock_file import MockFile
+from src.file_io import MockFile
 from tests.netlist_example import TEST_NETLIST
 
 
@@ -11,14 +11,14 @@ class TestNetlist(unittest.TestCase):
         mock_file = MockFile()
         mock_file.write("some content")
 
-        netflist_file = BaseNetlistFile(mock_file)
+        netflist_file = BaseNetlistFile.create(mock_file)
         self.assertEqual("some content", netflist_file.contents())
 
     def test_read_netlist_values(self):
         mock_file = MockFile()
         mock_file.write(TEST_NETLIST)
 
-        netflist_file = BaseNetlistFile(mock_file)
+        netflist_file = BaseNetlistFile.create(mock_file)
         netlist = Netlist.create(netflist_file)
 
         self.assertEqual(netlist.cell_name, "INVX1_3")
@@ -30,7 +30,7 @@ class TestNetlist(unittest.TestCase):
         mock_file = MockFile()
         mock_file.write(TEST_NETLIST)
 
-        netflist_file = BaseNetlistFile(mock_file)
+        netflist_file = BaseNetlistFile.create(mock_file)
         netlist = Netlist.create(netflist_file)
 
         new_netlist = netlist.clone(
