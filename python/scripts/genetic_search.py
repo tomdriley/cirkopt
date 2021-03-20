@@ -66,7 +66,7 @@ def genetic_search(
         out_dir=out_dir,
     )
 
-    reference_netlist: Netlist = Netlist.create(BaseNetlistFile(File(reference_netlist_path)))
+    reference_netlist: Netlist = Netlist.create(BaseNetlistFile.create(File(reference_netlist_path)))
     debug(f"Reference netlist name: {reference_netlist.cell_name}")
 
     # Validates npoints

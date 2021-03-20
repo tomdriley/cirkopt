@@ -1,7 +1,6 @@
 import re
-
 from dataclasses import dataclass
-from typing import Optional, Tuple, Type, TypeVar
+from typing import Optional, Tuple, Type, TypeVar, Any
 
 from src.file_io import IFile as File
 from src.search_algorithm import CandidateClass
@@ -27,28 +26,29 @@ def _replace(regex: str, new: str, text: str) -> str:
     return re.sub(regex, new, text, count=1)
 
 
+@dataclass(frozen=True)
 class BaseNetlistFile:
     """An immutable view of a netlist file. [Netlist] uses this to avoid duplicating file reads."""
 
-    file: File
-    _cached: Optional[str] = None
+    _path: str
+    _contents: str
 
-    def __init__(self, file: File):
-        self.file = file
+    @classmethod
+    def create(cls: Type["BaseNetlistFile"], file: File) -> "BaseNetlistFile":
+        path = file.path()
+        contents = file.read()
+        return cls(_contents=contents, _path=path)
 
     def contents(self) -> str:
-        if self._cached is None:
-            self._cached = self.file.read()
-        return self._cached
+        return self._contents
 
     def json_repr(self):
-        return {"__BaseNetlistFile__": True, "file": self.file}
+        return {"__BaseNetlistFile__": True, **self.__dict__}
 
     @staticmethod
     def from_json(json_dict) -> "BaseNetlistFile":
         if "__BaseNetlistFile__" in json_dict:
-            file: File = File.from_json(json_dict["file"])
-            return BaseNetlistFile(file=file)
+            return BaseNetlistFile(_contents=json_dict["_contents"], _path=json_dict["_path"])
         raise TypeError
 
 
@@ -167,17 +167,13 @@ class Netlist(CandidateClass):
         return {"__Netlist__": True, **self.__dict__}
 
     @staticmethod
-    def from_json(json_dict) -> "Netlist":
+    def from_json(json_dict) -> Any:
         if "__Netlist__" in json_dict:
-            base_netlist_file: BaseNetlistFile = BaseNetlistFile.from_json(
-                json_dict["base_netlist_file"]
-            )
-
             return Netlist.create(
-                base_netlist_file=base_netlist_file,
+                base_netlist_file=json_dict["base_netlist_file"],
                 cell_name=json_dict["cell_name"],
-                device_widths=json_dict["device_widths"],
-                device_lengths=json_dict["device_lengths"],
-                device_fingers=json_dict["device_fingers"],
+                device_widths=tuple(json_dict["device_widths"]),
+                device_lengths=tuple(json_dict["device_lengths"]),
+                device_fingers=tuple(json_dict["device_fingers"]),
             )
-        raise TypeError
+        return BaseNetlistFile.from_json(json_dict)

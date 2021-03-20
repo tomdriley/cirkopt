@@ -44,7 +44,7 @@ def brute_force_search(
         out_dir=out_dir,
     )
 
-    reference_netlist = Netlist.create(BaseNetlistFile(File(reference_netlist_path)))
+    reference_netlist = Netlist.create(BaseNetlistFile.create(File(reference_netlist_path)))
 
     T = TypeVar("T", Decimal, int)
 

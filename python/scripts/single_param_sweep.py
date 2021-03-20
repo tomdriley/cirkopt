@@ -41,7 +41,7 @@ def single_param_sweep(
     )
 
     candidate_generator = ParamSweepCandidateGenerator(
-        reference_netlist=Netlist.create(BaseNetlistFile(File(reference_netlist))),
+        reference_netlist=Netlist.create(BaseNetlistFile.create(File(reference_netlist))),
         param=param,
         values=values,
     )
