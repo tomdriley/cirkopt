@@ -327,14 +327,14 @@ class GeneticCandidateGenerator(CandidateGenerator[Netlist]):
     def _gaussian_mutation(self, individual: np.ndarray) -> np.ndarray:
         """Apply additive gaussian noise to each device parameter with a probability of self._pmutation"""
 
-        def round_based_on_sign(v: np.float32) -> np.int64:
+        def round_away_from_zero(v: np.float32) -> np.int64:
             if v > 0:
                 return np.ceil(v)
             if v < 0:
                 return np.floor(v)
             return np.int64(0)
 
-        vectorized_round_based_on_sign = np.vectorize(round_based_on_sign, otypes=[np.int64])
+        vectorized_round_away_from_zero = np.vectorize(round_away_from_zero, otypes=[np.int64])
 
         # get the indices we can modify based on self._search_params
         indices = self._variable_indices
@@ -349,7 +349,7 @@ class GeneticCandidateGenerator(CandidateGenerator[Netlist]):
         # rounded down and mutations above zero are rounded up
         # This ensures that if a device parameter is chosen to be mutated it is at least changed by +/- 1
         mutations = self._rng.normal(0, self._mutation_std_deviation, len(individual))
-        rounded_mutations = vectorized_round_based_on_sign(mutations)
+        rounded_mutations = vectorized_round_away_from_zero(mutations)
 
         # Returns device params can't be negative, clip below zero and cast to uint
         return np.maximum(individual + rounded_mutations * mutation_mask, 0).astype(np.uint64)
