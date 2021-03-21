@@ -4,6 +4,7 @@ import textwrap
 from src.netlist import BaseNetlistFile, Netlist
 from src.file_io import MockFile
 from tests.netlist_example import TEST_NETLIST
+from dataclasses import FrozenInstanceError
 
 
 class TestNetlist(unittest.TestCase):
@@ -57,3 +58,38 @@ class TestNetlist(unittest.TestCase):
             """
 
         self.assertEqual(new_mock_file.read(), textwrap.dedent(expected_netlist_string))
+
+    def test_eq_hash(self):
+        file1: MockFile = MockFile("/some/path", "Some Content.")
+        file2: MockFile = MockFile("/some/path", "Some Content.")
+        bnf1: BaseNetlistFile = BaseNetlistFile.create(file1)
+        bnf2: BaseNetlistFile = BaseNetlistFile.create(file2)
+
+        self.assertEqual(bnf1, bnf2)
+        self.assertEqual(hash(bnf1), hash(bnf2))
+
+        with self.assertRaises(FrozenInstanceError):
+            bnf1._path = "/different/path"
+
+        file1.write(TEST_NETLIST)
+        file2.write(TEST_NETLIST)
+
+        bnf3: BaseNetlistFile = BaseNetlistFile.create(file1)
+        bnf4: BaseNetlistFile = BaseNetlistFile.create(file2)
+
+        self.assertNotEqual(bnf1, bnf3)
+        self.assertNotEqual(hash(bnf1), bnf3)
+
+        nl1: Netlist = Netlist.create(bnf3)
+        nl2: Netlist = Netlist.create(bnf4)
+
+        self.assertEqual(nl1, nl2)
+        self.assertEqual(hash(nl1), hash(nl2))
+
+        with self.assertRaises(FrozenInstanceError):
+            nl1.base_netlist_file = bnf1
+
+        nl3: Netlist = Netlist.create(bnf3, "Cell Name")
+
+        self.assertNotEqual(nl1, nl3)
+        self.assertNotEqual(hash(nl1), nl3)
