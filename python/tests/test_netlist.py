@@ -1,8 +1,9 @@
 import unittest
 import textwrap
+from dataclasses import FrozenInstanceError
 
 from src.netlist import BaseNetlistFile, Netlist
-from tests.mock_file import MockFile
+from src.file_io import MockFile
 from tests.netlist_example import TEST_NETLIST
 
 
@@ -11,14 +12,14 @@ class TestNetlist(unittest.TestCase):
         mock_file = MockFile()
         mock_file.write("some content")
 
-        netflist_file = BaseNetlistFile(mock_file)
+        netflist_file = BaseNetlistFile.create(mock_file)
         self.assertEqual("some content", netflist_file.contents())
 
     def test_read_netlist_values(self):
         mock_file = MockFile()
         mock_file.write(TEST_NETLIST)
 
-        netflist_file = BaseNetlistFile(mock_file)
+        netflist_file = BaseNetlistFile.create(mock_file)
         netlist = Netlist.create(netflist_file)
 
         self.assertEqual(netlist.cell_name, "INVX1_3")
@@ -30,7 +31,7 @@ class TestNetlist(unittest.TestCase):
         mock_file = MockFile()
         mock_file.write(TEST_NETLIST)
 
-        netflist_file = BaseNetlistFile(mock_file)
+        netflist_file = BaseNetlistFile.create(mock_file)
         netlist = Netlist.create(netflist_file)
 
         new_netlist = netlist.clone(
@@ -57,3 +58,38 @@ class TestNetlist(unittest.TestCase):
             """
 
         self.assertEqual(new_mock_file.read(), textwrap.dedent(expected_netlist_string))
+
+    def test_eq_hash(self):
+        file1: MockFile = MockFile("/some/path", "Some Content.")
+        file2: MockFile = MockFile("/some/path", "Some Content.")
+        bnf1: BaseNetlistFile = BaseNetlistFile.create(file1)
+        bnf2: BaseNetlistFile = BaseNetlistFile.create(file2)
+
+        self.assertEqual(bnf1, bnf2)
+        self.assertEqual(hash(bnf1), hash(bnf2))
+
+        with self.assertRaises(FrozenInstanceError):
+            bnf1._path = "/different/path"  # pylint: disable=protected-access
+
+        file1.write(TEST_NETLIST)
+        file2.write(TEST_NETLIST)
+
+        bnf3: BaseNetlistFile = BaseNetlistFile.create(file1)
+        bnf4: BaseNetlistFile = BaseNetlistFile.create(file2)
+
+        self.assertNotEqual(bnf1, bnf3)
+        self.assertNotEqual(hash(bnf1), bnf3)
+
+        nl1: Netlist = Netlist.create(bnf3)
+        nl2: Netlist = Netlist.create(bnf4)
+
+        self.assertEqual(nl1, nl2)
+        self.assertEqual(hash(nl1), hash(nl2))
+
+        with self.assertRaises(FrozenInstanceError):
+            nl1.base_netlist_file = bnf1
+
+        nl3: Netlist = Netlist.create(bnf3, "Cell Name")
+
+        self.assertNotEqual(nl1, nl3)
+        self.assertNotEqual(hash(nl1), nl3)

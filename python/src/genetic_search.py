@@ -1,9 +1,10 @@
 from dataclasses import dataclass
 from itertools import chain
 from math import ceil, log10
-from typing import List, Optional, Sequence, Set, Tuple, Type
-from logging import debug
+from typing import List, Optional, Sequence, Set, Tuple, Type, Callable
+from logging import debug, info
 from decimal import Decimal
+import json
 
 from numpy.random import default_rng
 import numpy as np
@@ -19,6 +20,7 @@ from src.search_algorithm import (
     Simulator,
     CostFunction,
 )
+from src.file_io import File
 
 
 @dataclass(frozen=True)
@@ -32,18 +34,18 @@ class RangeInfo:
 
     @classmethod
     def from_range(
-        cls: Type['RangeInfo'],
+        cls: Type["RangeInfo"],
         width_range: Range[Decimal],
         length_range: Range[Decimal],
-        fingers_range: Range[int]
-    ) -> 'RangeInfo':
+        fingers_range: Range[int],
+    ) -> "RangeInfo":
         return cls(
             widths=list(width_range),
             step_width=width_range.step_size,
             lengths=list(length_range),
             step_length=length_range.step_size,
             fingers=list(fingers_range),
-            step_fingers=fingers_range.step_size
+            step_fingers=fingers_range.step_size,
         )
 
 
@@ -96,6 +98,8 @@ class GeneticCandidateGenerator(CandidateGenerator[Netlist]):
 
     _rng: np.random.Generator
 
+    _get_initial_population: Optional[Callable[["GeneticCandidateGenerator"], Sequence[Netlist]]]
+
     @classmethod
     def create(
         cls,
@@ -110,6 +114,7 @@ class GeneticCandidateGenerator(CandidateGenerator[Netlist]):
         fingers_range: Range[int],
         reference_netlist: Netlist,
         seed: Optional[int] = None,
+        initial_candidates: Optional[str] = None,
     ):
         # pylint: disable=too-many-locals)
         range_info = RangeInfo.from_range(width_range, length_range, fingers_range)
@@ -137,6 +142,16 @@ class GeneticCandidateGenerator(CandidateGenerator[Netlist]):
                 "(2 devices * 2 params)."
             )
 
+        if initial_candidates is None:
+            get_initial_population = GeneticCandidateGenerator._generate_initial_population
+        else:
+            json_list = json.loads(File(initial_candidates).read())
+            candidates = tuple(Netlist.from_json(candidate) for candidate in json_list)
+
+            def get_initial_population(_):
+                info("Using initial population from JSON file")
+                return candidates
+
         # pylint: disable=too-many-locals
         return cls(
             _num_individuals=num_individuals,
@@ -152,45 +167,52 @@ class GeneticCandidateGenerator(CandidateGenerator[Netlist]):
             _variable_indices=variable_indices,
             _id_num_digits=ceil(log10(num_individuals)),
             _rng=(default_rng(seed=seed) if seed is not None else default_rng()),
+            _get_initial_population=get_initial_population,
         )
 
-    def get_initial_population(self) -> Sequence[Netlist]:
+    @staticmethod
+    def _generate_initial_population(obj: "GeneticCandidateGenerator") -> Sequence[Netlist]:
+        # pylint: disable=protected-access
         """
-        Generate N (self._num_individuals) netlists where each netlist has random device widths, lengths and fingers.
+        Generate N (obj._num_individuals) netlists where each netlist has random device widths, lengths and fingers.
         The randomized widths, lengths and fingers follow a normal distribution and satisfy the constraints given in
         class initializer.
 
         :return: a sequence of randomly generated netlists
         """
-        r = self._range_info
-        n = self._ndevices
+        r = obj._range_info
+        n = obj._ndevices
 
         def rand_netlist(idx: int) -> Netlist:
             # Generate fixed point widths if we can vary them
-            if Param.WIDTH in self._search_params:
-                widths = self._rng.integers(0, len(r.widths), n, dtype=np.uint64)
+            if Param.WIDTH in obj._search_params:
+                widths = obj._rng.integers(0, len(r.widths), n, dtype=np.uint64)
             else:
                 widths = np.zeros(n, dtype=np.uint64)
 
             # Generate fixed point lengths if we can vary them
-            if Param.LENGTH in self._search_params:
-                lengths = self._rng.integers(0, len(r.lengths), n, dtype=np.uint64)
+            if Param.LENGTH in obj._search_params:
+                lengths = obj._rng.integers(0, len(r.lengths), n, dtype=np.uint64)
             else:
                 lengths = np.zeros(n, dtype=np.uint64)
 
-            if Param.FINGERS in self._search_params:
-                fingers = self._rng.integers(0, len(r.fingers), n, dtype=np.uint64)
+            if Param.FINGERS in obj._search_params:
+                fingers = obj._rng.integers(0, len(r.fingers), n, dtype=np.uint64)
             else:
                 fingers = np.zeros(n, dtype=np.uint64)
 
-            return self._reference_netlist.clone(
-                cell_name=self._get_netlist_name(idx),
+            return obj._reference_netlist.clone(
+                cell_name=obj._get_netlist_name(idx),
                 device_widths=tuple(float(r.widths[w]) for w in widths),
                 device_lengths=tuple(float(r.lengths[l]) for l in lengths),
                 device_fingers=tuple(r.fingers[f] for f in fingers),
             )
 
-        return [rand_netlist(idx) for idx in range(self._num_individuals)]
+        return [rand_netlist(idx) for idx in range(obj._num_individuals)]
+
+    def get_initial_population(self) -> Sequence[Netlist]:
+        assert self._get_initial_population is not None
+        return self._get_initial_population(self)
 
     def get_next_population(
         self, current_candidates: Sequence[Netlist], cost_map: CostMap
@@ -206,7 +228,9 @@ class GeneticCandidateGenerator(CandidateGenerator[Netlist]):
         parenting_probabilities = fitness / fitness.sum()
 
         # Two NxM arrays where N is number of individuals and M is 3 * number of devices per individual
-        mating_pool = np.asarray([_normalize(n, self._range_info) for n in current_candidates], dtype=np.uint64)
+        mating_pool = np.asarray(
+            [_normalize(n, self._range_info) for n in current_candidates], dtype=np.uint64
+        )
         offspring = np.zeros((self._num_individuals, self._ndevices * 3), dtype=np.uint64)
 
         def maybe_add_child_to_offspring(child_to_add: np.ndarray, child_idx: int) -> bool:
@@ -303,14 +327,14 @@ class GeneticCandidateGenerator(CandidateGenerator[Netlist]):
     def _gaussian_mutation(self, individual: np.ndarray) -> np.ndarray:
         """Apply additive gaussian noise to each device parameter with a probability of self._pmutation"""
 
-        def round_based_on_sign(v: np.float32) -> np.int64:
+        def round_away_from_zero(v: np.float32) -> np.int64:
             if v > 0:
                 return np.ceil(v)
             if v < 0:
                 return np.floor(v)
             return np.int64(0)
 
-        vectorized_round_based_on_sign = np.vectorize(round_based_on_sign, otypes=[np.int64])
+        vectorized_round_away_from_zero = np.vectorize(round_away_from_zero, otypes=[np.int64])
 
         # get the indices we can modify based on self._search_params
         indices = self._variable_indices
@@ -325,7 +349,7 @@ class GeneticCandidateGenerator(CandidateGenerator[Netlist]):
         # rounded down and mutations above zero are rounded up
         # This ensures that if a device parameter is chosen to be mutated it is at least changed by +/- 1
         mutations = self._rng.normal(0, self._mutation_std_deviation, len(individual))
-        rounded_mutations = vectorized_round_based_on_sign(mutations)
+        rounded_mutations = vectorized_round_away_from_zero(mutations)
 
         # Returns device params can't be negative, clip below zero and cast to uint
         return np.maximum(individual + rounded_mutations * mutation_mask, 0).astype(np.uint64)

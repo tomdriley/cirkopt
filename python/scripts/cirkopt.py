@@ -12,6 +12,7 @@ from textwrap import dedent
 from decimal import Decimal
 
 import numpy as np
+from colorlog import ColoredFormatter  # type: ignore
 
 PYTHON_SCRIPTS_DIRECTORY: str = os.path.dirname(os.path.abspath(__file__))
 PYTHON_DIRECTORY: str = os.path.abspath(os.path.join(PYTHON_SCRIPTS_DIRECTORY, ".."))
@@ -36,15 +37,15 @@ def _range(param: Param, _type: Type[RangeType], string: str) -> Range[RangeType
     return Range(param, low, high, step_size)
 
 
-def width(string: str) -> Range[Decimal]:
+def _width(string: str) -> Range[Decimal]:
     return _range(Param.WIDTH, Decimal, string)
 
 
-def length(string: str) -> Range[Decimal]:
+def _length(string: str) -> Range[Decimal]:
     return _range(Param.LENGTH, Decimal, string)
 
 
-def fingers(string: str) -> Range[int]:
+def _fingers(string: str) -> Range[int]:
     return _range(Param.FINGERS, int, string)
 
 
@@ -86,6 +87,11 @@ def _add_common_args(parser: argparse.ArgumentParser):
         type=int,
         default=[0, 0],
     )
+    parser.add_argument(
+        "--initial_candidates",
+        help="Path to json file containing starting candidates",
+    )
+
 
 def _init_logger(loglevel: int, outdir: str) -> None:
     create_outdir = not os.path.isdir(outdir)
@@ -93,19 +99,26 @@ def _init_logger(loglevel: int, outdir: str) -> None:
     if create_outdir:
         os.mkdir(outdir)
 
+    stdio_handler = logging.StreamHandler(sys.stdout)
+    stdio_handler.setFormatter(
+        ColoredFormatter(
+            "%(log_color)s%(levelname)s (%(asctime)s): %(message)s",
+            datefmt="%I:%M:%S %p",
+        )
+    )
+
     logging.basicConfig(
         format="%(levelname)s (%(asctime)s): %(message)s",
         datefmt="%I:%M:%S %p",
         level=loglevel,
         handlers=[
             logging.FileHandler(os.path.join(outdir, "cirkopt.log")),
-            logging.StreamHandler(sys.stdout),
+            stdio_handler,
         ],
     )
 
     if create_outdir:
         info(f"Created output directory {outdir}")
-
 
 
 # Basically a copy of this blog post [1].
@@ -182,6 +195,10 @@ class Cirkopt:
         values = np.linspace(start=args.range[0], stop=args.range[1], num=args.numsteps)
         debug(f"values: {values}")
 
+        if args.initial_candidates is not None:
+            error("Resuming from dumped candidate json file not yet supported on explore")
+            sys.exit()
+
         info("Exploring search space.")
         single_param_sweep(
             reference_netlist=args.netlist,
@@ -244,19 +261,19 @@ class Cirkopt:
         parser.add_argument(
             "--width",
             help="Defines the range of widths a device may have, eg.: low:step_size:high (inclusive)",
-            type=width,
+            type=_width,
             default="120e-9:5e-9:1e-6",
         )
         parser.add_argument(
             "--length",
             help="Defines the range of lengths a device may have, eg.: low:step_size:high (inclusive)",
-            type=length,
+            type=_length,
             default="45e-9:1e-9:45e-9",
         )
         parser.add_argument(
             "--fingers",
             help="Defines the range of fingers a device may have, eg.: low:step_size:high (inclusive)",
-            type=fingers,
+            type=_fingers,
             default="1:1:1",
         )
         parser.add_argument(
@@ -295,6 +312,7 @@ class Cirkopt:
             tcl_script=args.tclscript,
             liberate_dir=LIBERATE_DIRECTORY,
             out_dir=args.outdir,
+            initial_candidates=args.initial_candidates,
         )
 
     # pylint: disable=no-self-use
@@ -305,19 +323,19 @@ class Cirkopt:
         parser.add_argument(
             "--width",
             help="Defines the range of widths a device may have, eg.: low:step_size:high (inclusive)",
-            type=width,
+            type=_width,
             default="120e-9:5e-9:1e-6",
         )
         parser.add_argument(
             "--length",
             help="Defines the range of lengths a device may have, eg.: low:step_size:high (inclusive)",
-            type=length,
+            type=_length,
             default="45e-9:1e-9:45e-9",
         )
         parser.add_argument(
             "--fingers",
             help="Defines the range of fingers a device may have, eg.: low:step_size:high (inclusive)",
-            type=fingers,
+            type=_fingers,
             default="1:1:1",
         )
         parser.add_argument(
@@ -338,6 +356,10 @@ class Cirkopt:
         # Print all the arguments given
         for key in args.__dict__:
             debug(f"{key:<10}: {args.__dict__[key]}")
+
+        if args.initial_candidates is not None:
+            error("Resuming from dumped candidate json file not yet supported on explore")
+            sys.exit()
 
         info("Exploring search space.")
         brute_force_search(

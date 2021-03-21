@@ -1,8 +1,8 @@
 import unittest
 
 from src.liberty_parser import LibertyParser
+from src.file_io import MockFile
 from tests.liberty_example import LIBERTY_EXAMPLE
-from tests.mock_file import MockFile
 
 
 class TestLibertyParser(unittest.TestCase):

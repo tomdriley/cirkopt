@@ -38,6 +38,7 @@ def genetic_search(
     tcl_script: str,
     liberate_dir: str,
     out_dir: str,
+    initial_candidates: Optional[str],
 ):
     if not os.path.isfile(reference_netlist_path):
         raise FileNotFoundError(reference_netlist_path)
@@ -65,7 +66,7 @@ def genetic_search(
         out_dir=out_dir,
     )
 
-    reference_netlist: Netlist = Netlist.create(BaseNetlistFile(File(reference_netlist_path)))
+    reference_netlist: Netlist = Netlist.create(BaseNetlistFile.create(File(reference_netlist_path)))
     debug(f"Reference netlist name: {reference_netlist.cell_name}")
 
     # Validates npoints
@@ -81,6 +82,7 @@ def genetic_search(
         fingers_range,
         reference_netlist,
         seed=seed,
+        initial_candidates=initial_candidates,
     )
 
     cost_function: CostFunction = partial(
@@ -103,7 +105,7 @@ def genetic_search(
     best_netlist = best_netlist.clone(cell_name=reference_netlist.cell_name)
     best_netlist_path = os.path.join(out_dir, best_netlist.cell_name + ".sp")
     best_netlist.persist(File(best_netlist_path))
-    info(f"Find netlist is named {best_netlist.cell_name} in {best_netlist_path}")
+    info(f"Find final netlist {best_netlist.cell_name} in {best_netlist_path}")
 
     mpl_logger = logging.getLogger("matplotlib")
     if logging.getLogger().getEffectiveLevel() < logging.WARNING:

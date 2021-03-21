@@ -9,7 +9,7 @@ def main() -> None:
     path = os.path.join(my_path, "../../liberate/netlist_wrk/INVX1_2.sp")
 
     netlist_file = File(path)
-    base_netlist_file = BaseNetlistFile(netlist_file)
+    base_netlist_file = BaseNetlistFile.create(netlist_file)
 
     netlist = Netlist.create(base_netlist_file)
 

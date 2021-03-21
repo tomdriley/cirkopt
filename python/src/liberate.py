@@ -9,9 +9,12 @@ from itertools import cycle
 import logging
 from logging import info, error
 from typing import NamedTuple, List, Sequence
+import json
+
 from src.file_io import File
 from src.liberty_parser import LibertyParser, LibertyResult
 from src.netlist import Netlist
+from src.json import ObjectEncoder
 
 LIBERATE_DEFAULT_CMD: str = "liberate"
 
@@ -126,6 +129,15 @@ def liberate_simulator(
     out_dir: str,
 ) -> LibertyResult:
     run_folder = os.path.join(out_dir, "iteration-" + str(iteration))
+    if not os.path.isdir(run_folder):
+        info(f"Creating output directory {run_folder}")
+        os.mkdir(run_folder)
+
+    # Serialize candidates
+    json_file: File = File(os.path.join(run_folder, "candidates.json"))
+    candidates_json: str = json.dumps(candidates, indent=4, cls=ObjectEncoder)
+    json_file.write(candidates_json)
+
     netlist_dir = os.path.join(run_folder, "netlist")
     # Place current log in same place to allow `tail -f`
     liberate_log_working = os.path.join(out_dir, "liberate.log")
