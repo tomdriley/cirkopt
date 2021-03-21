@@ -266,9 +266,9 @@ class GeneticCandidateGenerator(CandidateGenerator[Netlist]):
             child_a = self._gaussian_mutation(child_a)
             child_b = self._gaussian_mutation(child_b)
 
-            if maybe_add_child_to_offspring(child_a, num_children):
+            if maybe_add_child_to_offspring(child_a, child_idx=num_children):
                 num_children += 1
-            if maybe_add_child_to_offspring(child_b, num_children):
+            if maybe_add_child_to_offspring(child_b, child_idx=num_children):
                 num_children += 1
 
         # elitism
