@@ -1,10 +1,10 @@
 import unittest
 import textwrap
+from dataclasses import FrozenInstanceError
 
 from src.netlist import BaseNetlistFile, Netlist
 from src.file_io import MockFile
 from tests.netlist_example import TEST_NETLIST
-from dataclasses import FrozenInstanceError
 
 
 class TestNetlist(unittest.TestCase):
@@ -69,7 +69,7 @@ class TestNetlist(unittest.TestCase):
         self.assertEqual(hash(bnf1), hash(bnf2))
 
         with self.assertRaises(FrozenInstanceError):
-            bnf1._path = "/different/path"
+            bnf1._path = "/different/path"  # pylint: disable=protected-access
 
         file1.write(TEST_NETLIST)
         file2.write(TEST_NETLIST)
