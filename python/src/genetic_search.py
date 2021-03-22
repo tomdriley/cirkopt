@@ -350,9 +350,19 @@ class GeneticCandidateGenerator(CandidateGenerator[Netlist]):
         # This ensures that if a device parameter is chosen to be mutated it is at least changed by +/- 1
         mutations = self._rng.normal(0, self._mutation_std_deviation, len(individual))
         rounded_mutations = vectorized_round_away_from_zero(mutations)
+        mutated_individual = individual + rounded_mutations * mutation_mask
 
-        # Returns device params can't be negative, clip below zero and cast to uint
-        return np.maximum(individual + rounded_mutations * mutation_mask, 0).astype(np.uint64)
+        # Clip params to bounds
+        r = self._range_info
+        ndevices = self._ndevices
+        widths = mutated_individual[:ndevices]
+        lengths = mutated_individual[ndevices:-ndevices]
+        fingers = mutated_individual[-ndevices:]
+
+        widths.clip(0, len(r.widths), out=widths)
+        lengths.clip(0, len(r.lengths), out=lengths)
+        fingers.clip(0, len(r.fingers), out=fingers)
+        return mutated_individual.astype(np.uint64)
 
     def _get_netlist_name(self, idx: int) -> str:
         return self._reference_netlist.cell_name + "_" + str(idx).zfill(self._id_num_digits)

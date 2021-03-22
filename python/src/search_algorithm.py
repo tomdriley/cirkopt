@@ -44,6 +44,9 @@ class CandidateCache(Generic[Candidate]):
     _hits: int = field(default=0, init=False)
     _misses: int = field(default=0, init=False)
 
+    def __post_init__(self):
+        assert self._size > 0
+
     def get(self, candidates: Sequence[Candidate]) -> Tuple[CostMap, Sequence[Candidate]]:
         """Returns costs for cached candidates and misses"""
         # Get cached costs by hash on candidate
@@ -60,12 +63,12 @@ class CandidateCache(Generic[Candidate]):
         return cached_cost_map, uncached_candidates
 
     def update(self, candidates: Sequence[Candidate], cost_map: CostMap):
-        # Update the cache with the top N candidates we have reference too currently
-        # (i.e what's already in the cache and what we're being updated with)
-        all_candidates_and_costs = (
-            [(hash(c), cost_map[c.key()]) for c in candidates] +
-            [(_hash, cost) for _hash, cost in self._cache.items()]
-        )
+        # Make one big cache with existing and new entries, deduplicate using dict
+        combined_cache = {hash(c): cost_map[c.key()] for c in candidates}  # New entries
+        combined_cache.update(self._cache)  # Add existing
+
+        # Only keep the N lowest costs
+        all_candidates_and_costs = list(combined_cache.items())
         all_candidates_and_costs.sort(key=lambda hash_and_cost: hash_and_cost[1])
         num_to_keep = min(len(all_candidates_and_costs), self._size)
         self._cache = {_hash: cost for _hash, cost in all_candidates_and_costs[:num_to_keep]}
