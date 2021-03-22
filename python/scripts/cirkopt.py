@@ -277,6 +277,11 @@ class Cirkopt:
             type=int,
             default=randint(0, 2 ** 32),
         )
+        parser.add_argument(
+            "--cache-size",
+            help="The top N costs will be cached to avoid re-simulation",
+            type=int,
+        )
 
         _add_common_args(parser)
 
@@ -308,7 +313,7 @@ class Cirkopt:
             liberate_dir=LIBERATE_DIRECTORY,
             out_dir=args.outdir,
             initial_candidates=args.initial_candidates,
-            cache_size=50
+            cache_size=args.cache_size
         )
 
     # pylint: disable=no-self-use
