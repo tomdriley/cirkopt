@@ -39,6 +39,7 @@ def genetic_search(
     liberate_dir: str,
     out_dir: str,
     initial_candidates: Optional[str],
+    cache_size: int
 ):
     if not os.path.isfile(reference_netlist_path):
         raise FileNotFoundError(reference_netlist_path)
@@ -95,6 +96,7 @@ def genetic_search(
         candidate_generator=candidate_generator,
         cost_function=cost_function,  # TODO: parameterize when there are more cost functions
         max_iterations=max_iterations,
+        cache_size=cache_size
     )
 
     # Do the sweep
@@ -106,6 +108,9 @@ def genetic_search(
     best_netlist_path = os.path.join(out_dir, best_netlist.cell_name + ".sp")
     best_netlist.persist(File(best_netlist_path))
     info(f"Find final netlist {best_netlist.cell_name} in {best_netlist_path}")
+
+    hits, misses = search_algorithm.cache_stats()
+    info(f"Cache stats: {hits} hits, {misses} misses")
 
     mpl_logger = logging.getLogger("matplotlib")
     if logging.getLogger().getEffectiveLevel() < logging.WARNING:

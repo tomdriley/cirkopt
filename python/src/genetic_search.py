@@ -15,6 +15,7 @@ from src.liberty_parser import LibertyResult
 from src.netlist import Netlist
 from src.search_algorithm import (
     CandidateGenerator,
+    CandidateCache,
     CostMap,
     SearchAlgorithm,
     Simulator,
@@ -239,10 +240,7 @@ class GeneticCandidateGenerator(CandidateGenerator[Netlist]):
             if child_idx >= offspring.shape[0]:
                 return False
 
-            for idx, child in enumerate(offspring):
-                if idx > child_idx:
-                    break  # break early since from here on out it'll all be zeros
-
+            for child in offspring:
                 if (child_to_add == child).all():
                     return False  # if child already exists in offspring, don't add
             # Child not found in offspring, so it can be added
@@ -266,22 +264,21 @@ class GeneticCandidateGenerator(CandidateGenerator[Netlist]):
             child_a = self._gaussian_mutation(child_a)
             child_b = self._gaussian_mutation(child_b)
 
-            if maybe_add_child_to_offspring(child_a, num_children):
+            if maybe_add_child_to_offspring(child_a, child_idx=num_children):
                 num_children += 1
-            if maybe_add_child_to_offspring(child_b, num_children):
+            if maybe_add_child_to_offspring(child_b, child_idx=num_children):
                 num_children += 1
 
         # elitism
         if self._elitism:
-            lowest_cost_parent = fitness.argmax()
-            offspring[lowest_cost_parent] = mating_pool[lowest_cost_parent]
+            elite_idx = int(fitness.argmax())
+            maybe_add_child_to_offspring(mating_pool[elite_idx], child_idx=elite_idx)
 
             # perform a local search on best individual as well, don't replace the one we just added
-            valid_indices = [
-                idx for idx in range(self._num_individuals) if idx != lowest_cost_parent
-            ]
+            valid_indices = tuple(filter(lambda idx: idx != elite_idx, range(self._num_individuals)))
             rand_child = self._rng.choice(valid_indices, 1)
-            offspring[rand_child] = self._gaussian_mutation(mating_pool[lowest_cost_parent])
+            mutated_elite = self._gaussian_mutation(mating_pool[elite_idx])
+            maybe_add_child_to_offspring(mutated_elite, child_idx=rand_child)
 
         netlists = []
         for idx, normalized_netlist in enumerate(offspring):
@@ -326,6 +323,7 @@ class GeneticCandidateGenerator(CandidateGenerator[Netlist]):
 
     def _gaussian_mutation(self, individual: np.ndarray) -> np.ndarray:
         """Apply additive gaussian noise to each device parameter with a probability of self._pmutation"""
+        # pylint: disable=too-many-locals
 
         def round_away_from_zero(v: np.float32) -> np.int64:
             if v > 0:
@@ -350,9 +348,19 @@ class GeneticCandidateGenerator(CandidateGenerator[Netlist]):
         # This ensures that if a device parameter is chosen to be mutated it is at least changed by +/- 1
         mutations = self._rng.normal(0, self._mutation_std_deviation, len(individual))
         rounded_mutations = vectorized_round_away_from_zero(mutations)
+        mutated_individual = individual + rounded_mutations * mutation_mask
 
-        # Returns device params can't be negative, clip below zero and cast to uint
-        return np.maximum(individual + rounded_mutations * mutation_mask, 0).astype(np.uint64)
+        # Clip params to bounds
+        r = self._range_info
+        ndevices = self._ndevices
+        widths = mutated_individual[:ndevices]
+        lengths = mutated_individual[ndevices:-ndevices]
+        fingers = mutated_individual[-ndevices:]
+
+        widths.clip(0, len(r.widths) - 1, out=widths)
+        lengths.clip(0, len(r.lengths) - 1, out=lengths)
+        fingers.clip(0, len(r.fingers) - 1, out=fingers)
+        return mutated_individual.astype(np.uint64)
 
     def _get_netlist_name(self, idx: int) -> str:
         return self._reference_netlist.cell_name + "_" + str(idx).zfill(self._id_num_digits)
@@ -368,15 +376,23 @@ class GeneticSearch(SearchAlgorithm[Netlist, LibertyResult]):
         candidate_generator: GeneticCandidateGenerator,
         cost_function: CostFunction,
         max_iterations: int,
+        cache_size: int
     ):
         self._candidate_generator = candidate_generator
         self._cost_function = cost_function
         self._simulate = simulator
         self._max_iterations = max_iterations
         self.min_cost_per_iteration = [0] * max_iterations
+        self._candidate_cache = CandidateCache(cache_size) if cache_size > 0 else None
 
     def _should_stop(self) -> bool:
         return self._iteration >= self._max_iterations
 
     def _post_simulation(self):
         self.min_cost_per_iteration[self._iteration] = min(self._cost_map.values())
+
+    def cache_stats(self) -> Tuple[int, int]:
+        if self._candidate_cache is None:
+            return 0, 0
+
+        return self._candidate_cache.hits(), self._candidate_cache.misses()

@@ -1,5 +1,6 @@
 import re
-from dataclasses import dataclass
+
+from dataclasses import dataclass, field
 from typing import Optional, Tuple, Type, TypeVar, Any
 
 from src.file_io import IFile as File
@@ -62,7 +63,7 @@ class Netlist(CandidateClass):
     base_netlist_file: BaseNetlistFile
 
     """Cell name"""
-    cell_name: str
+    cell_name: str = field(compare=False, hash=None)
 
     """Stores the device widths (in nm) in order of device appearance in base_netlist_file"""
     device_widths: Tuple[float, ...]

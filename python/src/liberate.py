@@ -14,7 +14,7 @@ import json
 from src.file_io import File
 from src.liberty_parser import LibertyParser, LibertyResult
 from src.netlist import Netlist
-from src.json import ObjectEncoder
+from src.cirkopt_json import ObjectEncoder
 
 LIBERATE_DEFAULT_CMD: str = "liberate"
 

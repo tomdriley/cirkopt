@@ -70,7 +70,7 @@ class TestGeneticSearch(unittest.TestCase):
         self.assertEqual(len(set(next_population)), 100)  # no duplicates
 
         # Test elitism
-        self.assertEqual(initial_population[0], next_population[0])
+        self.assertIn(initial_population[0], next_population)
 
         self.assertTrue(
             all(
