@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Any, Sequence, Dict, Optional
+from typing import Sequence, Dict, Optional
 from unittest import TestCase
 
 from src.search_algorithm import (
@@ -33,7 +33,7 @@ class TestCandidateGenerator(CandidateGenerator[TestCandidate]):
 
 def test_cost_function(
     candidates: Sequence[TestCandidate],
-    simulation_result: None,
+    simulation_result: Dict[str, float],
 ) -> CostMap:
     return {c.key(): simulation_result[c.key()] for c in candidates}
 
@@ -43,7 +43,7 @@ def test_simulator(candidates: Sequence[TestCandidate], iteration: int) -> Dict[
     return {c.key(): c.value for c in candidates}
 
 
-class TestSearchAlgorithm(SearchAlgorithm[TestCandidate, Any]):
+class TestSearchAlgorithm(SearchAlgorithm[TestCandidate, Dict[str, float]]):
 
     def __init__(
         self,
@@ -62,6 +62,8 @@ class TestSearchAlgorithm(SearchAlgorithm[TestCandidate, Any]):
 
 
 class TestSearchAlgorithms(TestCase):
+    # pylint: disable=protected-access
+
     def test_search_algorithm_classes(self):
         candidate_generator = TestCandidateGenerator()
         search_algorithm = TestSearchAlgorithm(candidate_generator)

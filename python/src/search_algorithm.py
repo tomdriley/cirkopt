@@ -71,7 +71,7 @@ class CandidateCache(Generic[Candidate]):
         all_candidates_and_costs = list(combined_cache.items())
         all_candidates_and_costs.sort(key=lambda hash_and_cost: hash_and_cost[1])
         num_to_keep = min(len(all_candidates_and_costs), self._size)
-        self._cache = {_hash: cost for _hash, cost in all_candidates_and_costs[:num_to_keep]}
+        self._cache = dict(all_candidates_and_costs[:num_to_keep])
 
 
 class SearchAlgorithm(Generic[Candidate, SimulationResult]):

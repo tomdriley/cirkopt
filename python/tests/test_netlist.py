@@ -98,4 +98,3 @@ class TestNetlist(unittest.TestCase):
         nl3: Netlist = Netlist.create(bnf3, device_widths=(123e-9, 123-9))
         self.assertNotEqual(nl1, nl3)
         self.assertNotEqual(hash(nl1), hash(nl3))
-

@@ -239,7 +239,7 @@ class GeneticCandidateGenerator(CandidateGenerator[Netlist]):
             if child_idx >= offspring.shape[0]:
                 return False
 
-            for idx, child in enumerate(offspring):
+            for child in offspring:
                 if (child_to_add == child).all():
                     return False  # if child already exists in offspring, don't add
             # Child not found in offspring, so it can be added
@@ -270,7 +270,7 @@ class GeneticCandidateGenerator(CandidateGenerator[Netlist]):
 
         # elitism
         if self._elitism:
-            elite_idx = fitness.argmax()
+            elite_idx = int(fitness.argmax())
             maybe_add_child_to_offspring(mating_pool[elite_idx], child_idx=elite_idx)
 
             # perform a local search on best individual as well, don't replace the one we just added
@@ -322,6 +322,7 @@ class GeneticCandidateGenerator(CandidateGenerator[Netlist]):
 
     def _gaussian_mutation(self, individual: np.ndarray) -> np.ndarray:
         """Apply additive gaussian noise to each device parameter with a probability of self._pmutation"""
+        # pylint: disable=too-many-locals
 
         def round_away_from_zero(v: np.float32) -> np.int64:
             if v > 0:
