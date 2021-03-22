@@ -3,7 +3,6 @@
 # Set up path relative to python root folder so we can find the other packages
 import sys
 import os.path
-import argparse
 import logging
 from logging import DEBUG, debug, INFO, info, WARNING, error
 from random import randint
@@ -12,6 +11,7 @@ from textwrap import dedent
 from decimal import Decimal
 
 import numpy as np
+import configargparse  # type: ignore
 from colorlog import ColoredFormatter  # type: ignore
 
 PYTHON_SCRIPTS_DIRECTORY: str = os.path.dirname(os.path.abspath(__file__))
@@ -49,21 +49,18 @@ def _fingers(string: str) -> Range[int]:
     return _range(Param.FINGERS, int, string)
 
 
-def _add_common_args(parser: argparse.ArgumentParser):
+def _add_common_args(parser: configargparse.ArgumentParser):
     parser.add_argument(
         "--outdir",
         help="Directory to place results in, e.g. graphs, netlists, ldb.",
-        default=os.path.join(PYTHON_DIRECTORY, "out"),
     )
     parser.add_argument(
         "--netlist",
         help="Path to reference netlist to modify. ",
-        default=os.path.join(LIBERATE_DIRECTORY, "netlist/INVX1.sp"),
     )
     parser.add_argument(
         "--tclscript",
         help="Characterization tcl script with liberate settings and templates",
-        default=os.path.join(LIBERATE_DIRECTORY, "tcl/char.tcl"),
     )
     parser.add_argument(
         "--debug",
@@ -85,7 +82,6 @@ def _add_common_args(parser: argparse.ArgumentParser):
         help="Index of value from LDB table to show, space separated, e.g.: 0 1",
         nargs=2,
         type=int,
-        default=[0, 0],
     )
     parser.add_argument(
         "--initial_candidates",
@@ -132,7 +128,10 @@ class Cirkopt:
                 explore       Generate plots showing search space
                 search        Find an optimal design using genetic algorithm
                 brute_force   Find optimal design using exhaustive search"""
-        parser = argparse.ArgumentParser(description="SPICE circuit optimizer", usage=dedent(usage))
+        parser = configargparse.ArgumentParser(
+            description="SPICE circuit optimizer",
+            usage=dedent(usage),
+        )
         parser.add_argument("command", help="Sub command to run")
         # parse_args defaults to [1:] for args, but you need to
         # exclude the rest of the args too, or validation will fail
@@ -146,8 +145,13 @@ class Cirkopt:
 
     # pylint: disable=no-self-use
     def explore(self):
-        parser = argparse.ArgumentParser(
+        parser = configargparse.ArgumentParser(
             description="Generate plots showing search space",
+            default_config_files=[os.path.join(PYTHON_DIRECTORY, "conf/explore-default.ini")],
+            args_for_setting_config_path=["-c", "--config-file"],
+            config_arg_help_message="Path to config file",
+            args_for_writing_out_config_file=["--write-out-config-file"],
+            write_out_config_file_arg_help_message="Write out configuration to specified file",
         )
         # prefixing the argument with -- means it's optional
         parser.add_argument(
@@ -155,7 +159,6 @@ class Cirkopt:
             help="Paramater to sweep, e.g.: width",
             type=lambda input: Param[input.upper()],
             choices=tuple(Param),
-            default=Param.WIDTH,
         )
         parser.add_argument(
             "--range",
@@ -165,18 +168,15 @@ class Cirkopt:
             ),
             nargs=2,
             type=float,
-            default=[200e-9, 1e-6],
         )
         parser.add_argument(
             "--numsteps",
             help="Number of values to simulate within range, e.g. 9",
             type=int,
-            default=9,
         )
         parser.add_argument(
             "--outpin",
             help="Name of pin to get data from, e.g.: Y",
-            default="Y",
         )
 
         _add_common_args(parser)
@@ -213,68 +213,63 @@ class Cirkopt:
 
     # pylint: disable=no-self-use
     def search(self):
-        parser = argparse.ArgumentParser(
+        parser = configargparse.ArgumentParser(
             description="Use genetic search to find optimal design",
+            default_config_files=[os.path.join(PYTHON_DIRECTORY, "conf/search-default.ini")],
+            args_for_setting_config_path=["-c", "--config-file"],
+            config_arg_help_message="Path to config file",
+            args_for_writing_out_config_file=["--write-out-config-file"],
+            write_out_config_file_arg_help_message="Write out configuration to specified file",
         )
         parser.add_argument(
             "--iterations",
             help="Number of search iterations to run",
             type=int,
-            default=100,
         )
         parser.add_argument(
             "--individuals",
             help="Number of search individuals per population",
             type=int,
-            default=10,
         )
         parser.add_argument(
             "--elitism",
             help="If the best candidate should continue to next population",
             type=bool,
-            default=True,
         )
         parser.add_argument(
             "--npoints",
             help="Number of crossover points, should be less than number of devices * 3",
             type=int,
-            default=2,
         )
         parser.add_argument(
             "--alpha",
             help="Alpha for n point crossover",
             type=float,
-            default=0.5,
         )
         parser.add_argument(
             "--pmutation",
             help="Probability of adding gaussian noise mutation to a given device param within a candidate",
             type=float,
-            default=0.05,
         )
         parser.add_argument(
             "--mutation-std-dev",
             help="Standard deviation of additive gaussian noise mutation",
             type=float,
-            default=5.0,
         )
         parser.add_argument(
             "--width",
             help="Defines the range of widths a device may have, eg.: low:step_size:high (inclusive)",
             type=_width,
-            default="120e-9:5e-9:1e-6",
         )
         parser.add_argument(
             "--length",
             help="Defines the range of lengths a device may have, eg.: low:step_size:high (inclusive)",
             type=_length,
-            default="45e-9:1e-9:45e-9",
         )
         parser.add_argument(
             "--fingers",
             help="Defines the range of fingers a device may have, eg.: low:step_size:high (inclusive)",
             type=_fingers,
-            default="1:1:1",
         )
         parser.add_argument(
             "--seed",
@@ -318,32 +313,33 @@ class Cirkopt:
 
     # pylint: disable=no-self-use
     def brute_force(self):
-        parser = argparse.ArgumentParser(
+        parser = configargparse.ArgumentParser(
             description="Perform exhaustive search to optimize netlist",
+            default_config_files=[os.path.join(PYTHON_DIRECTORY, "conf/brute_force-default.ini")],
+            args_for_setting_config_path=["-c", "--config-file"],
+            config_arg_help_message="Path to config file",
+            args_for_writing_out_config_file=["--write-out-config-file"],
+            write_out_config_file_arg_help_message="Write out configuration to specified file",
         )
         parser.add_argument(
             "--width",
             help="Defines the range of widths a device may have, eg.: low:step_size:high (inclusive)",
             type=_width,
-            default="120e-9:5e-9:1e-6",
         )
         parser.add_argument(
             "--length",
             help="Defines the range of lengths a device may have, eg.: low:step_size:high (inclusive)",
             type=_length,
-            default="45e-9:1e-9:45e-9",
         )
         parser.add_argument(
             "--fingers",
             help="Defines the range of fingers a device may have, eg.: low:step_size:high (inclusive)",
             type=_fingers,
-            default="1:1:1",
         )
         parser.add_argument(
             "--simulations-per-iteration",
             help="Defines how many netlists to simulate to run per iteration.",
             type=int,
-            default=10,
         )
 
         _add_common_args(parser)
