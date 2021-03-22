@@ -46,11 +46,11 @@ class CandidateCache(Generic[Candidate]):
 
     def get(self, candidates: Sequence[Candidate]) -> Tuple[CostMap, Sequence[Candidate]]:
         """Returns costs for cached candidates and misses"""
-        # Get cached costs by __hash__ on candidate
+        # Get cached costs by hash on candidate
         cached_cost_map: CostMap = {
-            c.key(): self._cache[c.__hash__()]
+            c.key(): self._cache[hash(c)]
             for c in candidates
-            if c.__hash__() in self._cache
+            if hash(c) in self._cache
         }
         self._hits += len(cached_cost_map)
 
@@ -63,7 +63,7 @@ class CandidateCache(Generic[Candidate]):
         # Update the cache with the top N candidates we have reference too currently
         # (i.e what's already in the cache and what we're being updated with)
         all_candidates_and_costs = (
-            [(c.__hash__(), cost_map[c.key()]) for c in candidates] +
+            [(hash(c), cost_map[c.key()]) for c in candidates] +
             [(_hash, cost) for _hash, cost in self._cache]
         )
         all_candidates_and_costs.sort(key=lambda hash_and_cost: hash_and_cost[1])
