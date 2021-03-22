@@ -1,5 +1,5 @@
 from abc import ABCMeta, abstractmethod
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Dict, Generic, Sequence, TypeVar, Callable, Optional, Tuple
 from logging import info
 
@@ -39,10 +39,10 @@ class CandidateGenerator(Generic[Candidate]):
 
 @dataclass()
 class CandidateCache(Generic[Candidate]):
-    _cache: Dict[int, float]
     _size: int
-    _hits: int = 0
-    _misses: int = 0
+    _cache: Dict[int, float] = field(default_factory=dict, init=False)
+    _hits: int = field(default=0, init=False)
+    _misses: int = field(default=0, init=False)
 
     def get(self, candidates: Sequence[Candidate]) -> Tuple[CostMap, Sequence[Candidate]]:
         """Returns costs for cached candidates and misses"""
@@ -64,7 +64,7 @@ class CandidateCache(Generic[Candidate]):
         # (i.e what's already in the cache and what we're being updated with)
         all_candidates_and_costs = (
             [(hash(c), cost_map[c.key()]) for c in candidates] +
-            [(_hash, cost) for _hash, cost in self._cache]
+            [(_hash, cost) for _hash, cost in self._cache.items()]
         )
         all_candidates_and_costs.sort(key=lambda hash_and_cost: hash_and_cost[1])
         num_to_keep = min(len(all_candidates_and_costs), self._size)

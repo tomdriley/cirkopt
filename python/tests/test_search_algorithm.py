@@ -5,6 +5,7 @@ from unittest import TestCase
 from src.search_algorithm import (
     CandidateClass,
     CandidateGenerator,
+    CandidateCache,
     CostMap,
     SearchAlgorithm,
 )
@@ -100,3 +101,53 @@ class TestSearchAlgorithms(TestCase):
         )
         self.assertEqual(search_algorithm.get_simulation_result(), {"cand_1": 0.0, "cand_3": 1.0})
         self.assertEqual(search_algorithm.get_cost_map(), search_algorithm.get_simulation_result())
+
+    def test_candidate_cache(self):
+        candidates = tuple(TestCandidate(f"cand_{i}", i) for i in [1, 3, 5, 7, 9])
+        next_candidates = tuple(TestCandidate(f"cand_{i}", i) for i in [2, 4, 6, 8, 10])
+
+        # Test cache initialization
+        cache: CandidateCache[TestCandidate] = CandidateCache(8)
+        self.assertEqual(cache._misses, 0)
+        self.assertEqual(cache._hits, 0)
+        self.assertEqual(cache._size, 8)
+
+        # Test empty cache
+        empty_cost_map, uncached_candidates = cache.get(candidates)
+        self.assertEqual(len(empty_cost_map), 0)
+        self.assertSequenceEqual(candidates, uncached_candidates)
+        self.assertEqual(cache._misses, 5)
+        self.assertEqual(cache._hits, 0)
+
+        # Test partial update to cache
+        cost_map = {c.key(): c.value for c in candidates}
+        cache.update(candidates, cost_map)
+        self.assertDictEqual({hash(c): c.value for c in candidates}, cache._cache)
+
+        # Test 100% cache hit
+        cached_cost_map, uncached_candidates = cache.get(candidates)
+        self.assertEqual(len(uncached_candidates), 0)
+        self.assertDictEqual(cached_cost_map, cost_map)
+        self.assertEqual(cache._misses, 5)
+        self.assertEqual(cache._hits, 5)
+
+        # Test 100% cache miss on partially filled cache
+        empty_cost_map, uncached_candidates = cache.get(next_candidates)
+        self.assertEqual(len(empty_cost_map), 0)
+        self.assertSequenceEqual(next_candidates, uncached_candidates)
+        self.assertEqual(cache._misses, 10)
+        self.assertEqual(cache._hits, 5)
+
+        next_cost_map = {c.key(): c.value for c in next_candidates}
+        cache.update(next_candidates, next_cost_map)
+        expected_cache = {hash(c): c.value for c in candidates[:4] + next_candidates[:4]}
+        self.assertDictEqual(expected_cache, cache._cache)
+
+        # Test 8 hits and 2 misses on fully filled cache
+        cached_cost_map, uncached_candidates = cache.get(candidates + next_candidates)
+        self.assertEqual(len(uncached_candidates), 2)
+        self.assertSequenceEqual(candidates[4:] + next_candidates[4:], uncached_candidates)
+        expected_cost_map = {c.key(): c.value for c in candidates[:4] + next_candidates[:4]}
+        self.assertDictEqual(cached_cost_map, expected_cost_map)
+        self.assertEqual(cache._misses, 12)
+        self.assertEqual(cache._hits, 13)
