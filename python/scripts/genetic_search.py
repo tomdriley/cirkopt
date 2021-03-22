@@ -39,6 +39,7 @@ def genetic_search(
     liberate_dir: str,
     out_dir: str,
     initial_candidates: Optional[str],
+    cache_size: int
 ):
     if not os.path.isfile(reference_netlist_path):
         raise FileNotFoundError(reference_netlist_path)
@@ -95,7 +96,7 @@ def genetic_search(
         candidate_generator=candidate_generator,
         cost_function=cost_function,  # TODO: parameterize when there are more cost functions
         max_iterations=max_iterations,
-        cache_size=50
+        cache_size=cache_size
     )
 
     # Do the sweep

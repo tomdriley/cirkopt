@@ -37,7 +37,7 @@ class CandidateGenerator(Generic[Candidate]):
         pass
 
 
-@dataclass()
+@dataclass
 class CandidateCache(Generic[Candidate]):
     _size: int
     _cache: Dict[int, float] = field(default_factory=dict, init=False)
@@ -57,21 +57,20 @@ class CandidateCache(Generic[Candidate]):
         }
         self._hits += len(cached_cost_map)
 
-        # Get the others by fetch function (probably calls a simulator and cost function)
-        uncached_candidates = tuple(filter(lambda c: c.key() not in cached_cost_map, candidates))
+        # Identify the cache misses
+        uncached_candidates = tuple(filter(function=lambda c: c.key() not in cached_cost_map, iterable=candidates))
         self._misses += len(uncached_candidates)
         return cached_cost_map, uncached_candidates
 
     def update(self, candidates: Sequence[Candidate], cost_map: CostMap):
         # Make one big cache with existing and new entries, deduplicate using dict
-        combined_cache = {hash(c): cost_map[c.key()] for c in candidates}  # New entries
-        combined_cache.update(self._cache)  # Add existing
+        new_cache_entries = {hash(c): cost_map[c.key()] for c in candidates}
+        combined_cache = {**self._cache, **new_cache_entries}
 
         # Only keep the N lowest costs
         all_candidates_and_costs = list(combined_cache.items())
         all_candidates_and_costs.sort(key=lambda hash_and_cost: hash_and_cost[1])
-        num_to_keep = min(len(all_candidates_and_costs), self._size)
-        self._cache = dict(all_candidates_and_costs[:num_to_keep])
+        self._cache = dict(all_candidates_and_costs[:self._size])
 
     def hits(self) -> int:
         return self._hits

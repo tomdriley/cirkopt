@@ -313,6 +313,7 @@ class Cirkopt:
             liberate_dir=LIBERATE_DIRECTORY,
             out_dir=args.outdir,
             initial_candidates=args.initial_candidates,
+            cache_size=50
         )
 
     # pylint: disable=no-self-use
