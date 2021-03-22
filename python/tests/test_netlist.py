@@ -78,7 +78,7 @@ class TestNetlist(unittest.TestCase):
         bnf4: BaseNetlistFile = BaseNetlistFile.create(file2)
 
         self.assertNotEqual(bnf1, bnf3)
-        self.assertNotEqual(hash(bnf1), bnf3)
+        self.assertNotEqual(hash(bnf1), hash(bnf3))
 
         nl1: Netlist = Netlist.create(bnf3)
         nl2: Netlist = Netlist.create(bnf4)
@@ -89,7 +89,13 @@ class TestNetlist(unittest.TestCase):
         with self.assertRaises(FrozenInstanceError):
             nl1.base_netlist_file = bnf1
 
+        # Changing name doesn't matter for equality and hash
         nl3: Netlist = Netlist.create(bnf3, "Cell Name")
+        self.assertEqual(nl1, nl3)
+        self.assertEqual(hash(nl1), hash(nl3))
 
+        # Hash and eq depend on device params and base netlist file
+        nl3: Netlist = Netlist.create(bnf3, device_widths=(123e-9, 123-9))
         self.assertNotEqual(nl1, nl3)
-        self.assertNotEqual(hash(nl1), nl3)
+        self.assertNotEqual(hash(nl1), hash(nl3))
+
