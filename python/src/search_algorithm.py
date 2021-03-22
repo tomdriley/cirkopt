@@ -58,7 +58,7 @@ class CandidateCache(Generic[Candidate]):
         self._hits += len(cached_cost_map)
 
         # Identify the cache misses
-        uncached_candidates = tuple(filter(function=lambda c: c.key() not in cached_cost_map, iterable=candidates))
+        uncached_candidates = tuple(filter(lambda c: c.key() not in cached_cost_map, candidates))
         self._misses += len(uncached_candidates)
         return cached_cost_map, uncached_candidates
 
