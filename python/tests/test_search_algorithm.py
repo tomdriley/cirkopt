@@ -106,8 +106,8 @@ class TestSearchAlgorithms(TestCase):
 
         cache = search_algorithm._candidate_cache
         self.assertEqual(cache._size, 4)
-        self.assertEqual(cache._hits, 1)
-        self.assertEqual(cache._misses, 9)
+        self.assertEqual(cache.hits(), 1)
+        self.assertEqual(cache.misses(), 9)
         expected_cache = {hash(TestCandidate(f"cand_{i}", float(i))): float(i) for i in range(1, 5)}
         self.assertDictEqual(cache._cache, expected_cache)
 
@@ -118,16 +118,16 @@ class TestSearchAlgorithms(TestCase):
 
         # Test cache initialization
         cache: CandidateCache[TestCandidate] = CandidateCache(8)
-        self.assertEqual(cache._misses, 0)
-        self.assertEqual(cache._hits, 0)
+        self.assertEqual(cache.misses(), 0)
+        self.assertEqual(cache.hits(), 0)
         self.assertEqual(cache._size, 8)
 
         # Test empty cache
         empty_cost_map, uncached_candidates = cache.get(candidates)
         self.assertEqual(len(empty_cost_map), 0)
         self.assertSequenceEqual(candidates, uncached_candidates)
-        self.assertEqual(cache._misses, 5)
-        self.assertEqual(cache._hits, 0)
+        self.assertEqual(cache.misses(), 5)
+        self.assertEqual(cache.hits(), 0)
 
         # Test partial update to cache
         cost_map = {c.key(): c.value for c in candidates}
@@ -138,15 +138,15 @@ class TestSearchAlgorithms(TestCase):
         cached_cost_map, uncached_candidates = cache.get(candidates)
         self.assertEqual(len(uncached_candidates), 0)
         self.assertDictEqual(cached_cost_map, cost_map)
-        self.assertEqual(cache._misses, 5)
-        self.assertEqual(cache._hits, 5)
+        self.assertEqual(cache.misses(), 5)
+        self.assertEqual(cache.hits(), 5)
 
         # Test partial cache miss on partially filled cache, second candidate already in cache
         partial_cost_map, uncached_candidates = cache.get(next_candidates)
         self.assertEqual(len(partial_cost_map), 1)
         self.assertSequenceEqual(next_candidates[:1] + next_candidates[2:], uncached_candidates)
-        self.assertEqual(cache._misses, 9)
-        self.assertEqual(cache._hits, 6)
+        self.assertEqual(cache.misses(), 9)
+        self.assertEqual(cache.hits(), 6)
 
         next_cost_map = {c.key(): c.value for c in next_candidates}
         cache.update(next_candidates, next_cost_map)  # deduplicate second candidate already in cache
@@ -159,5 +159,5 @@ class TestSearchAlgorithms(TestCase):
         self.assertSequenceEqual(candidates[4:], uncached_candidates)
         expected_cost_map = {c.key(): c.value for c in candidates[:4] + next_candidates}
         self.assertDictEqual(cached_cost_map, expected_cost_map)
-        self.assertEqual(cache._misses, 10)
-        self.assertEqual(cache._hits, 14)
+        self.assertEqual(cache.misses(), 10)
+        self.assertEqual(cache.hits(), 14)

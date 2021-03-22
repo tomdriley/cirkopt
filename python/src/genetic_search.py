@@ -15,6 +15,7 @@ from src.liberty_parser import LibertyResult
 from src.netlist import Netlist
 from src.search_algorithm import (
     CandidateGenerator,
+    CandidateCache,
     CostMap,
     SearchAlgorithm,
     Simulator,
@@ -375,15 +376,23 @@ class GeneticSearch(SearchAlgorithm[Netlist, LibertyResult]):
         candidate_generator: GeneticCandidateGenerator,
         cost_function: CostFunction,
         max_iterations: int,
+        cache_size: int
     ):
         self._candidate_generator = candidate_generator
         self._cost_function = cost_function
         self._simulate = simulator
         self._max_iterations = max_iterations
         self.min_cost_per_iteration = [0] * max_iterations
+        self._candidate_cache = CandidateCache(cache_size) if cache_size > 0 else None
 
     def _should_stop(self) -> bool:
         return self._iteration >= self._max_iterations
 
     def _post_simulation(self):
         self.min_cost_per_iteration[self._iteration] = min(self._cost_map.values())
+
+    def cache_stats(self) -> Tuple[int, int]:
+        if self._candidate_cache is None:
+            return 0, 0
+
+        return self._candidate_cache.hits(), self._candidate_cache.misses()

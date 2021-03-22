@@ -73,6 +73,12 @@ class CandidateCache(Generic[Candidate]):
         num_to_keep = min(len(all_candidates_and_costs), self._size)
         self._cache = dict(all_candidates_and_costs[:num_to_keep])
 
+    def hits(self) -> int:
+        return self._hits
+
+    def misses(self) -> int:
+        return self._misses
+
 
 class SearchAlgorithm(Generic[Candidate, SimulationResult]):
     __metaclass__ = ABCMeta
