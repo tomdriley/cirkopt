@@ -240,9 +240,6 @@ class GeneticCandidateGenerator(CandidateGenerator[Netlist]):
                 return False
 
             for idx, child in enumerate(offspring):
-                if idx > child_idx:
-                    break  # break early since from here on out it'll all be zeros
-
                 if (child_to_add == child).all():
                     return False  # if child already exists in offspring, don't add
             # Child not found in offspring, so it can be added
@@ -273,15 +270,14 @@ class GeneticCandidateGenerator(CandidateGenerator[Netlist]):
 
         # elitism
         if self._elitism:
-            lowest_cost_parent = fitness.argmax()
-            offspring[lowest_cost_parent] = mating_pool[lowest_cost_parent]
+            elite_idx = fitness.argmax()
+            maybe_add_child_to_offspring(mating_pool[elite_idx], child_idx=elite_idx)
 
             # perform a local search on best individual as well, don't replace the one we just added
-            valid_indices = [
-                idx for idx in range(self._num_individuals) if idx != lowest_cost_parent
-            ]
+            valid_indices = tuple(filter(lambda idx: idx != elite_idx, range(self._num_individuals)))
             rand_child = self._rng.choice(valid_indices, 1)
-            offspring[rand_child] = self._gaussian_mutation(mating_pool[lowest_cost_parent])
+            mutated_elite = self._gaussian_mutation(mating_pool[elite_idx])
+            maybe_add_child_to_offspring(mutated_elite, child_idx=rand_child)
 
         netlists = []
         for idx, normalized_netlist in enumerate(offspring):
@@ -359,9 +355,9 @@ class GeneticCandidateGenerator(CandidateGenerator[Netlist]):
         lengths = mutated_individual[ndevices:-ndevices]
         fingers = mutated_individual[-ndevices:]
 
-        widths.clip(0, len(r.widths), out=widths)
-        lengths.clip(0, len(r.lengths), out=lengths)
-        fingers.clip(0, len(r.fingers), out=fingers)
+        widths.clip(0, len(r.widths) - 1, out=widths)
+        lengths.clip(0, len(r.lengths) - 1, out=lengths)
+        fingers.clip(0, len(r.fingers) - 1, out=fingers)
         return mutated_individual.astype(np.uint64)
 
     def _get_netlist_name(self, idx: int) -> str:
