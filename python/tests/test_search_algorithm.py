@@ -67,13 +67,14 @@ class TestSearchAlgorithms(TestCase):
     def test_search_algorithm_classes(self):
         candidate_generator = TestCandidateGenerator()
         search_algorithm = TestSearchAlgorithm(candidate_generator)
-        result = search_algorithm.search()
+        result, cost = search_algorithm.search()
 
         second_candidates = candidate_generator.get_next_population(list(), dict())
 
         self.assertEqual(search_algorithm._iteration, 2)
         self.assertEqual(result.name, "cand_1")
         self.assertEqual(result.value, 1.0)
+        self.assertEqual(cost, 1.0)
         self.assertSequenceEqual(search_algorithm._candidates, second_candidates)
         self.assertDictEqual(
             search_algorithm._simulation_result,
@@ -87,13 +88,14 @@ class TestSearchAlgorithms(TestCase):
     def test_search_algorithm_classes_with_caching(self):
         candidate_generator = TestCandidateGenerator()
         search_algorithm = TestSearchAlgorithm(candidate_generator, cache=CandidateCache(4))
-        result = search_algorithm.search()
+        result, cost = search_algorithm.search()
 
         second_candidates = list(candidate_generator.get_next_population(list(), dict()))
 
         self.assertEqual(search_algorithm._iteration, 2)
         self.assertEqual(result.name, "cand_1")
         self.assertEqual(result.value, 1.0)
+        self.assertEqual(cost, 1.0)
         self.assertSequenceEqual(search_algorithm._candidates,second_candidates)
         self.assertDictEqual(
             search_algorithm._simulation_result,

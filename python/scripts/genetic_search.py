@@ -33,6 +33,7 @@ def genetic_search(
     width_range: Range[Decimal],
     length_range: Range[Decimal],
     fingers_range: Range[int],
+    target_cost: float,
     delay_index: Tuple[int, int],
     seed: Optional[int],
     tcl_script: str,
@@ -41,6 +42,7 @@ def genetic_search(
     initial_candidates: Optional[str],
     cache_size: int
 ):
+    # pylint: disable=too-many-statements
     if not os.path.isfile(reference_netlist_path):
         raise FileNotFoundError(reference_netlist_path)
 
@@ -96,18 +98,25 @@ def genetic_search(
         candidate_generator=candidate_generator,
         cost_function=cost_function,  # TODO: parameterize when there are more cost functions
         max_iterations=max_iterations,
+        target_cost=target_cost,
         cache_size=cache_size
     )
 
     # Do the sweep
     info("Starting genetic search.")
-    best_netlist = search_algorithm.search()
+    best_netlist, best_cost = search_algorithm.search()
     info("Search complete")
     debug(f"Reference netlist name: {reference_netlist.cell_name}")
     best_netlist = best_netlist.clone(cell_name=reference_netlist.cell_name)
     best_netlist_path = os.path.join(out_dir, best_netlist.cell_name + ".sp")
     best_netlist.persist(File(best_netlist_path))
     info(f"Find final netlist {best_netlist.cell_name} in {best_netlist_path}")
+
+    is_target_cost_specified = target_cost > 0
+    if is_target_cost_specified and best_cost <= target_cost:
+        info(f"Best netlist [cost={best_cost}] met target cost of {target_cost}")
+    elif is_target_cost_specified and target_cost < best_cost:
+        info(f"Best netlist [cost={best_cost}] DID NOT meet target cost of {target_cost}")
 
     hits, misses = search_algorithm.cache_stats()
     info(f"Cache stats: {hits} hits, {misses} misses")

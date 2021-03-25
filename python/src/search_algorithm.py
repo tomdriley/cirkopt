@@ -92,7 +92,7 @@ class SearchAlgorithm(Generic[Candidate, SimulationResult]):
     _best_candidate: Optional[Tuple[Candidate, float]] = None
     _candidate_cache: Optional[CandidateCache[Candidate]] = None  # Override to enable caching best candidates
 
-    def search(self) -> Candidate:
+    def search(self) -> Tuple[Candidate, float]:
         info("Generating initial population.")
         self._candidates = self._candidate_generator.get_initial_population()
 
@@ -121,7 +121,7 @@ class SearchAlgorithm(Generic[Candidate, SimulationResult]):
 
         info("Selecting best candidate.")
         assert self._best_candidate is not None
-        return self._best_candidate[0]
+        return self._best_candidate
 
     def _simulate_and_compute_costs(self):
         # If caching not enabled, proceed normally

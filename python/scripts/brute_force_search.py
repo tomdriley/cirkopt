@@ -84,7 +84,7 @@ def brute_force_search(
 
     # Do the sweep
     info("Starting brute force search...")
-    best_netlist = brute_force.search()
+    best_netlist = brute_force.search()[0]
     info("Search complete")
     best_netlist = best_netlist.clone(cell_name=reference_netlist.cell_name)
     best_netlist_path = os.path.join(out_dir, best_netlist.cell_name + ".sp")

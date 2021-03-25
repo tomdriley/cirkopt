@@ -368,6 +368,7 @@ class GeneticCandidateGenerator(CandidateGenerator[Netlist]):
 
 class GeneticSearch(SearchAlgorithm[Netlist, LibertyResult]):
     _max_iterations: int
+    _target_cost: float
     min_cost_per_iteration: List[float]
 
     def __init__(
@@ -376,17 +377,29 @@ class GeneticSearch(SearchAlgorithm[Netlist, LibertyResult]):
         candidate_generator: GeneticCandidateGenerator,
         cost_function: CostFunction,
         max_iterations: int,
+        target_cost: float,
         cache_size: int
     ):
         self._candidate_generator = candidate_generator
         self._cost_function = cost_function
         self._simulate = simulator
         self._max_iterations = max_iterations
+        self._target_cost = target_cost
         self.min_cost_per_iteration = [0] * max_iterations
         self._candidate_cache = CandidateCache(cache_size) if cache_size > 0 else None
 
     def _should_stop(self) -> bool:
-        return self._iteration >= self._max_iterations
+        # Stop if we've reach max iterations
+        if self._iteration >= self._max_iterations:
+            return True
+
+        # Stop if we've met the target cost
+        is_target_cost_specified = self._target_cost > 0
+        if is_target_cost_specified:
+            _, current_best_cost = self._best_candidate or (None, float("inf"))
+            return self._target_cost >= current_best_cost
+
+        return False
 
     def _post_simulation(self):
         self.min_cost_per_iteration[self._iteration] = min(self._cost_map.values())
