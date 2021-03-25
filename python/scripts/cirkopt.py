@@ -282,6 +282,11 @@ class Cirkopt:
             help="The top N costs will be cached to avoid re-simulation",
             type=int,
         )
+        parser.add_argument(
+            "--target-cost",
+            help="If specified search will terminate early if it reaches this cost. Negative indicates no target cost.",
+            type=float,
+        )
 
         _add_common_args(parser)
 
@@ -307,6 +312,7 @@ class Cirkopt:
             width_range=args.width,
             length_range=args.length,
             fingers_range=args.fingers,
+            target_cost=args.target_cost,
             delay_index=tuple(args.outindex),
             seed=args.seed,
             tcl_script=args.tclscript,
