@@ -42,6 +42,7 @@ def genetic_search(
     initial_candidates: Optional[str],
     cache_size: int
 ):
+    # pylint: disable=too-many-statements
     if not os.path.isfile(reference_netlist_path):
         raise FileNotFoundError(reference_netlist_path)
 
@@ -111,7 +112,7 @@ def genetic_search(
     best_netlist.persist(File(best_netlist_path))
     info(f"Find final netlist {best_netlist.cell_name} in {best_netlist_path}")
 
-    is_target_cost_specified = 0 < target_cost
+    is_target_cost_specified = target_cost > 0
     if is_target_cost_specified and best_cost <= target_cost:
         info(f"Best netlist [cost={best_cost}] met target cost of {target_cost}")
     elif is_target_cost_specified and target_cost < best_cost:

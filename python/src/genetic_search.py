@@ -394,10 +394,10 @@ class GeneticSearch(SearchAlgorithm[Netlist, LibertyResult]):
             return True
 
         # Stop if we've met the target cost
-        is_target_cost_specified = 0 < self._target_cost
+        is_target_cost_specified = self._target_cost > 0
         if is_target_cost_specified:
             _, current_best_cost = self._best_candidate or (None, float("inf"))
-            return current_best_cost <= self._target_cost
+            return self._target_cost >= current_best_cost
 
         return False
 
