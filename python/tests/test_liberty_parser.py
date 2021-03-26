@@ -98,7 +98,8 @@ class TestLibertyParser(unittest.TestCase):
             parser.parse(mock_file)
 
         self.assertIn(
-            "Group with group name 'comment' already defined as attribute",
+            "Could not parse liberate LDB file at '' because:"
+            "\n\tGroup with group name 'comment' already defined as attribute",
             context.exception.args,
         )
 
@@ -120,6 +121,7 @@ class TestLibertyParser(unittest.TestCase):
             parser.parse(mock_file)
 
         self.assertIn(
-            "Member name 'comment' already defined as group name",
+            "Could not parse liberate LDB file at '' because:"
+            "\n\tMember name 'comment' already defined as group name",
             context.exception.args,
         )

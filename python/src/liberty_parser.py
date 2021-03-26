@@ -17,6 +17,7 @@ class Group:
 
 LibertyResult = Group  # Alias for use outside module
 
+
 # pylint: disable=unused-argument
 def _to_multi_dict(input_string: str, location: int, toks: List[Any]) -> List[Any]:
     tokens = toks[0]
@@ -154,6 +155,10 @@ class LibertyParser:
         def dict_to_group(adict: Dict) -> Group:
             return Group({key: handle_value(val) for key, val in adict.items()})
 
-        root = self.liberty_object.parseString(file.read())[0][2]
+        try:
+            root = self.liberty_object.parseString(file.read())[0][2]
+        except Exception as ex:
+            raise CirkoptException(f"Could not parse liberate LDB file at '{file.path()}' because:\n\t{ex}") from ex
+
         result: LibertyResult = dict_to_group(root)
         return result
