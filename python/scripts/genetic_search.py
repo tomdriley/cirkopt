@@ -7,7 +7,7 @@ from decimal import Decimal
 
 import matplotlib.pyplot as plt  # type: ignore
 
-from src.exceptions import CirkoptValueError
+from src.exceptions import CirkoptValueError, CirkoptFileNotFoundError
 from src.circuit_search_common import Range
 from src.file_io import File
 from src.netlist import BaseNetlistFile, Netlist
@@ -43,7 +43,7 @@ def genetic_search(
     cache_size: int
 ):
     if not os.path.isfile(reference_netlist_path):
-        raise FileNotFoundError(reference_netlist_path)
+        raise CirkoptFileNotFoundError(reference_netlist_path)
 
     if not os.path.isdir(out_dir):
         info(f"Creating output directory {out_dir}")

@@ -3,6 +3,7 @@ from typing import Union, Sequence, Tuple
 from logging import info
 from functools import partial
 
+from src.exceptions import CirkoptFileNotFoundError
 from src.circuit_search_common import Param
 from src.file_io import File
 from src.liberate_grapher import graph_cell_delay
@@ -27,7 +28,7 @@ def single_param_sweep(
     out_dir: str,
 ):
     if not os.path.isfile(reference_netlist):
-        raise FileNotFoundError(reference_netlist)
+        raise CirkoptFileNotFoundError(reference_netlist)
 
     if not os.path.isdir(out_dir):
         info(f"Creating output directory {out_dir}")

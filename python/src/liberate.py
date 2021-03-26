@@ -15,6 +15,7 @@ from src.file_io import File
 from src.liberty_parser import LibertyParser, LibertyResult
 from src.netlist import Netlist
 from src.cirkopt_json import ObjectEncoder
+from src.exceptions import CirkoptFileNotFoundError, CirkoptNotADirectoryError
 
 LIBERATE_DEFAULT_CMD: str = "liberate"
 
@@ -63,9 +64,9 @@ def _run_liberate(
     # TODO: Run setup script before
 
     if not os.path.isfile(tcl_script):
-        raise FileNotFoundError(tcl_script)
+        raise CirkoptFileNotFoundError(tcl_script)
     if not os.path.isdir(liberate_dir):
-        raise NotADirectoryError(liberate_dir)
+        raise CirkoptNotADirectoryError(liberate_dir)
     if shutil.which(liberate_cmd) is None:
         error(
             f"'{liberate_cmd}' does not appear to be an executable, "

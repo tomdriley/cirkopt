@@ -3,6 +3,9 @@ from dataclasses import dataclass
 from abc import ABC, abstractmethod
 
 
+from src.exceptions import CirkoptFileNotFoundError
+
+
 @dataclass(eq=True, unsafe_hash=True)  # Force __hash__() generation
 class FileData:
     _path: str = ""
@@ -41,7 +44,7 @@ class File(IFile):
 
     def read(self) -> str:
         if not os.path.isfile(self._path):
-            raise FileNotFoundError(self.path)
+            raise CirkoptFileNotFoundError(self.path)
         with open(self._path, "r") as reader:
             file_str = reader.read()
         return file_str

@@ -16,6 +16,7 @@ from src.brute_force_search import (
     Simulator,
 )
 from src.circuit_search_common import Range
+from src.exceptions import CirkoptFileNotFoundError
 
 
 # pylint: disable=too-many-locals
@@ -31,7 +32,7 @@ def brute_force_search(
     simulations_per_iteration: int,
 ):
     if not os.path.isfile(reference_netlist_path):
-        raise FileNotFoundError(reference_netlist_path)
+        raise CirkoptFileNotFoundError(reference_netlist_path)
 
     if not os.path.isdir(out_dir):
         info(f"Creating output directory {out_dir}")
