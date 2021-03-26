@@ -331,6 +331,7 @@ class Cirkopt:
             search()
             return
 
+        # pylint: disable=broad-except
         try:
             search()
         except CirkoptException as ex:
