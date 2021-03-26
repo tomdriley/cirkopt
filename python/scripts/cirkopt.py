@@ -9,6 +9,7 @@ from random import randint
 from typing import Type, TypeVar
 from textwrap import dedent
 from decimal import Decimal
+from functools import partial
 
 import numpy as np
 import configargparse  # type: ignore
@@ -24,7 +25,7 @@ from scripts.brute_force_search import brute_force_search  # pylint: disable=wro
 from scripts.genetic_search import genetic_search  # pylint: disable=wrong-import-position
 from scripts.single_param_sweep import single_param_sweep  # pylint: disable=wrong-import-position
 from src.circuit_search_common import Param, Range  # pylint: disable=wrong-import-position
-
+from src.exceptions import CirkoptValueError, CirkoptException  # pylint: disable=wrong-import-position
 
 RangeType = TypeVar("RangeType", int, Decimal)
 
@@ -32,7 +33,7 @@ RangeType = TypeVar("RangeType", int, Decimal)
 def _range(param: Param, _type: Type[RangeType], string: str) -> Range[RangeType]:
     params = string.split(":")
     if len(params) != 3:
-        raise ValueError("Range should be formatted as low:step_size:high (inclusive")
+        raise CirkoptValueError("Range should be formatted as low:step_size:high (inclusive")
     low, step_size, high = tuple(map(_type, params))
     return Range(param, low, high, step_size)
 
@@ -64,7 +65,7 @@ def _add_common_args(parser: configargparse.ArgumentParser):
     )
     parser.add_argument(
         "--debug",
-        help="Print lots of debugging statements",
+        help="Print lots of debugging statements. Also does not catch known exceptions.",
         action="store_const",
         dest="loglevel",
         const=DEBUG,
@@ -185,7 +186,11 @@ class Cirkopt:
         # TWO argvs, ie the command (cirkopt) and the subcommand (explore)
         args = parser.parse_args(sys.argv[2:])
 
-        _init_logger(args.loglevel, args.outdir)
+        try:
+            _init_logger(args.loglevel, args.outdir)
+        except FileNotFoundError:
+            error("Could not find or create out directory, please make sure outdir arg is correct.")
+            return
 
         # Print all the arguments given
         for key in args.__dict__:
@@ -289,13 +294,18 @@ class Cirkopt:
         # TWO argvs, ie the command (cirkopt) and the subcommand (explore)
         args = parser.parse_args(sys.argv[2:])
 
-        _init_logger(args.loglevel, args.outdir)
+        try:
+            _init_logger(args.loglevel, args.outdir)
+        except FileNotFoundError:
+            error("Could not find or create out directory, please make sure outdir arg is correct.")
+            return
 
         # Print all the arguments given
         for key in args.__dict__:
             debug(f"{key:<10}: {args.__dict__[key]}")
 
-        genetic_search(
+        search = partial(
+            genetic_search,
             reference_netlist_path=args.netlist,
             max_iterations=args.iterations,
             num_individuals=args.individuals,
@@ -315,6 +325,20 @@ class Cirkopt:
             initial_candidates=args.initial_candidates,
             cache_size=args.cache_size
         )
+
+        # If on debug, don't catch exceptions
+        if args.loglevel == DEBUG:
+            search()
+            return
+
+        # pylint: disable=broad-except
+        try:
+            search()
+        except CirkoptException as ex:
+            error(f"Encountered user error:\n\t{ex}.\nPlease correct the issue and try again.")
+        except Exception as ex:
+            error(f"Encountered unknown error:\n\t{ex}.\n"
+                  f"Please report this as an issue to https://github.com/thrile/cirkopt")
 
     # pylint: disable=no-self-use
     def brute_force(self):
@@ -353,7 +377,11 @@ class Cirkopt:
         # TWO argvs, ie the command (cirkopt) and the subcommand (explore)
         args = parser.parse_args(sys.argv[2:])
 
-        _init_logger(args.loglevel, args.outdir)
+        try:
+            _init_logger(args.loglevel, args.outdir)
+        except FileNotFoundError:
+            error("Could not find or create out directory, please make sure outdir arg is correct.")
+            return
 
         # Print all the arguments given
         for key in args.__dict__:

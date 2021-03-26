@@ -2,18 +2,19 @@ from decimal import Decimal
 import unittest
 
 from src.circuit_search_common import Range, Param
+from src.exceptions import CirkoptValueError
 
 
 class TestCircuitSearchCommon(unittest.TestCase):
 
     def test_range(self):
-        with self.assertRaises(ValueError) as context:
+        with self.assertRaises(CirkoptValueError) as context:
             Range(Param.WIDTH, Decimal(2.0), Decimal(1.0), Decimal(1.0))
-            self.assertIn("Range low must be less than or equal to high", context.exception.args)
+        self.assertIn("Range low must be less than or equal to high", context.exception.args)
 
-        with self.assertRaises(ValueError) as context:
+        with self.assertRaises(CirkoptValueError) as context:
             Range(Param.WIDTH, 1, 2.0, 1.0)
-            self.assertIn("Range low and high must be the same type", context.exception.args)
+        self.assertIn("Range low, high, and step size must be the same type", context.exception.args)
 
         self.assertEqual(list(Range(Param.FINGERS, 1, 6, 1)), [1, 2, 3, 4, 5, 6])
         self.assertEqual(list(Range(Param.FINGERS, 1, 6, 2)), [1, 3, 5])

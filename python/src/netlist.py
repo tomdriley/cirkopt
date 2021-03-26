@@ -5,12 +5,16 @@ from typing import Optional, Tuple, Type, TypeVar, Any
 
 from src.file_io import IFile as File
 from src.search_algorithm import CandidateClass
+from src.exceptions import CirkoptValueError, CirkoptException
 
 
 SUBCIRKT_NAME_REGEX = r".subckt\s+(.*?)\s+"
-WIDTH_REGEX = r"W=(.*?)\s"
-LENGTH_REGEX = r"L=(.*?)\s"
-FINGERS_REGEX = r"M=(.*?)\s"
+# 1 or more digits, optionally followed by a '.' with one or more digits optionally followed by '+' or '-'
+# followed by e and one or more digits
+SCI_NOTATION = r"(\d+(?:\.\d+)?e[-\+]?\d+)"
+WIDTH_REGEX = r"W=" + SCI_NOTATION
+LENGTH_REGEX = r"L=" + SCI_NOTATION
+FINGERS_REGEX = r"M=(\d+)"
 
 ReturnType = TypeVar("ReturnType")
 
@@ -20,7 +24,7 @@ def _extract(text: str, regex: str, return_type: Type[ReturnType]) -> ReturnType
     if match:
         str_value = match.group(1)
         return return_type(str_value)  # type: ignore
-    raise ValueError(f"No match of {regex} found in {text}")
+    raise CirkoptValueError(f"No match of {regex} found in {text}")
 
 
 def _replace(regex: str, new: str, text: str) -> str:
@@ -84,12 +88,16 @@ class Netlist(CandidateClass):
         device_fingers: Optional[Tuple[int, ...]] = None,
     ) -> "Netlist":
         netlist_str = base_netlist_file.contents()
+        if len(netlist_str.strip(" \n")) < 1:
+            raise CirkoptException("Empty netlist file")
 
         if cell_name is None:
             cell_name = _extract(netlist_str, SUBCIRKT_NAME_REGEX, str)
 
         lines = netlist_str.split("\n")
         device_lines = [l + " " for l in lines if len(l) > 0 and l[0].isalpha()]
+        if len(device_lines) < 1:
+            raise CirkoptException("Invalid netlist, no device lines found")
 
         if device_widths is None:
             device_widths = tuple(_extract(l, WIDTH_REGEX, float) for l in device_lines)
@@ -120,6 +128,10 @@ class Netlist(CandidateClass):
         if device_fingers is None:
             device_fingers = self.device_fingers
 
+        # Ensure we're creating valid netlists
+        assert len(cell_name) > 0
+        assert len(device_widths) > 0 and len(device_lengths) > 0 and len(device_fingers) > 0
+
         return Netlist.create(
             base_netlist_file=self.base_netlist_file,
             cell_name=cell_name,
@@ -141,21 +153,21 @@ class Netlist(CandidateClass):
 
         current_device = 0
         for i in range(len(lines)):
-            device_line = lines[i] + " "
+            device_line = lines[i]
             if len(device_line) == 0 or not device_line[0].isalpha():
                 continue
 
             device_line = _replace(
-                regex=WIDTH_REGEX, new=f"W={self.device_widths[current_device]} ", text=device_line
+                regex=WIDTH_REGEX, new=f"W={self.device_widths[current_device]}", text=device_line
             )
             device_line = _replace(
                 regex=LENGTH_REGEX,
-                new=f"L={self.device_lengths[current_device]} ",
+                new=f"L={self.device_lengths[current_device]}",
                 text=device_line,
             )
             device_line = _replace(
                 regex=FINGERS_REGEX,
-                new=f"M={self.device_fingers[current_device]} ",
+                new=f"M={self.device_fingers[current_device]}",
                 text=device_line,
             )
 

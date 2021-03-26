@@ -4,6 +4,9 @@ from typing import Generic, Iterator, TypeVar
 
 from dataclasses import dataclass
 
+from src.exceptions import CirkoptValueError
+
+
 T = TypeVar('T', Decimal, int)
 
 
@@ -25,16 +28,16 @@ class Range(Generic[T]):
 
     def __post_init__(self):
         if self.low > self.high:
-            raise ValueError("Range low must be less than or equal to high")
+            raise CirkoptValueError("Range low must be less than or equal to high")
 
         if len({type(self.low), type(self.high), type(self.step_size)}) != 1:
-            raise ValueError("Range low, high, and step size must be the same type")
+            raise CirkoptValueError("Range low, high, and step size must be the same type")
 
         if self.param in {Param.WIDTH, Param.LENGTH} and not isinstance(self.low, Decimal):
-            raise ValueError("Widths should be specified as decimals")
+            raise CirkoptValueError("Widths should be specified as decimals")
 
         if self.param == Param.FINGERS and not isinstance(self.low, int):
-            raise ValueError("Fingers should be specified as ints")
+            raise CirkoptValueError("Fingers should be specified as ints")
 
     def __iter__(self) -> Iterator[T]:
         current = self.low

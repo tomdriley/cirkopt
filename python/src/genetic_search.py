@@ -22,6 +22,7 @@ from src.search_algorithm import (
     CostFunction,
 )
 from src.file_io import File
+from src.exceptions import CirkoptValueError
 
 
 @dataclass(frozen=True)
@@ -136,7 +137,7 @@ class GeneticCandidateGenerator(CandidateGenerator[Netlist]):
         ]
 
         if npoints > len(variable_indices):
-            raise ValueError(
+            raise CirkoptValueError(
                 "npoints should be less than or equal to the number of number of devices per "
                 "netlist * number of params the algorithm can vary. "
                 "For example if the algorithm can very length and width for an inverter, nppoints <= 4"
