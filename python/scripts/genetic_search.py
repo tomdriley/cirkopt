@@ -7,6 +7,7 @@ from decimal import Decimal
 
 import matplotlib.pyplot as plt  # type: ignore
 
+from src.exceptions import CirkoptValueError
 from src.circuit_search_common import Range
 from src.file_io import File
 from src.netlist import BaseNetlistFile, Netlist
@@ -48,17 +49,20 @@ def genetic_search(
         info(f"Creating output directory {out_dir}")
         os.mkdir(out_dir)
 
+    if max_iterations < 1:
+        raise CirkoptValueError("Number of iterations must be at least 1")
+
     if num_individuals < 2:
-        raise ValueError("Number of individuals must be at least 2")
+        raise CirkoptValueError("Number of individuals must be at least 2")
 
     if not 0 < alpha < 1:
-        raise ValueError("alpha should be strictly between 0 and 1")
+        raise CirkoptValueError("alpha should be strictly between 0 and 1")
 
     if not 0 < pmutation < 1:
-        raise ValueError("pmutation should be strictly between 0 and 1")
+        raise CirkoptValueError("pmutation should be strictly between 0 and 1")
 
     if mutation_std_deviation <= 0:
-        raise ValueError("mutation_std_deviation should be greater than 0")
+        raise CirkoptValueError("mutation_std_deviation should be greater than 0")
 
     simulator: Simulator = partial(
         liberate_simulator,

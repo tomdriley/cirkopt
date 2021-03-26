@@ -2,15 +2,16 @@ import unittest
 from decimal import Decimal as d
 
 from src.quantize import quantize, scale, Rounding
+from src.exceptions import CirkoptValueError
 
 
 class TestQuantize(unittest.TestCase):
 
     def test_quantize(self):
-        with self.assertRaises(ValueError) as context:
+        with self.assertRaises(CirkoptValueError) as context:
             quantize(d(1.0), d('0'))
         self.assertIn("Precision cannot be 0", context.exception.args)
-        with self.assertRaises(ValueError) as context:
+        with self.assertRaises(CirkoptValueError) as context:
             quantize(d(1.0), d('-0.1'))
         self.assertIn("Precision cannot be 0", context.exception.args)
 
@@ -35,10 +36,10 @@ class TestQuantize(unittest.TestCase):
         self.assertEqual(quantize(d(1.24e-9), d('0.5e-9')), 2)
 
     def test_scale(self):
-        with self.assertRaises(ValueError) as context:
+        with self.assertRaises(CirkoptValueError) as context:
             scale(1, '0')
         self.assertIn("Precision cannot be 0", context.exception.args)
-        with self.assertRaises(ValueError) as context:
+        with self.assertRaises(CirkoptValueError) as context:
             scale(1, '-0.1')
         self.assertIn("Precision cannot be 0", context.exception.args)
 

@@ -2,6 +2,7 @@ import unittest
 
 from src.liberty_parser import LibertyParser
 from src.file_io import MockFile
+from src.exceptions import CirkoptException
 from tests.liberty_example import LIBERTY_EXAMPLE
 
 
@@ -93,7 +94,7 @@ class TestLibertyParser(unittest.TestCase):
 
         parser = LibertyParser()
 
-        with self.assertRaises(Exception) as context:
+        with self.assertRaises(CirkoptException) as context:
             parser.parse(mock_file)
 
         self.assertIn(
@@ -115,7 +116,7 @@ class TestLibertyParser(unittest.TestCase):
 
         parser = LibertyParser()
 
-        with self.assertRaises(Exception) as context:
+        with self.assertRaises(CirkoptException) as context:
             parser.parse(mock_file)
 
         self.assertIn(

@@ -5,6 +5,7 @@ from typing import Optional, Tuple, Type, TypeVar, Any
 
 from src.file_io import IFile as File
 from src.search_algorithm import CandidateClass
+from src.exceptions import CirkoptValueError, CirkoptException
 
 
 SUBCIRKT_NAME_REGEX = r".subckt\s+(.*?)\s+"
@@ -23,7 +24,7 @@ def _extract(text: str, regex: str, return_type: Type[ReturnType]) -> ReturnType
     if match:
         str_value = match.group(1)
         return return_type(str_value)  # type: ignore
-    raise ValueError(f"No match of {regex} found in {text}")
+    raise CirkoptValueError(f"No match of {regex} found in {text}")
 
 
 def _replace(regex: str, new: str, text: str) -> str:
@@ -88,7 +89,7 @@ class Netlist(CandidateClass):
     ) -> "Netlist":
         netlist_str = base_netlist_file.contents()
         if len(netlist_str.strip(" \n")) < 1:
-            raise Exception("Empty netlist file")
+            raise CirkoptException("Empty netlist file")
 
         if cell_name is None:
             cell_name = _extract(netlist_str, SUBCIRKT_NAME_REGEX, str)
@@ -96,7 +97,7 @@ class Netlist(CandidateClass):
         lines = netlist_str.split("\n")
         device_lines = [l + " " for l in lines if len(l) > 0 and l[0].isalpha()]
         if len(device_lines) < 1:
-            raise Exception("Invalid netlist, no device lines found")
+            raise CirkoptException("Invalid netlist, no device lines found")
 
         if device_widths is None:
             device_widths = tuple(_extract(l, WIDTH_REGEX, float) for l in device_lines)

@@ -4,6 +4,7 @@ from itertools import chain
 from src.search_algorithm import CostMap
 from src.netlist import Netlist
 from src.liberty_parser import LibertyResult, Group
+from src.exceptions import CirkoptValueError
 
 
 def noop_cost_function(
@@ -51,7 +52,7 @@ def delay_cost_function(
     for candidate in candidates:
         if candidate.key() not in cost_map:
             missing = {candidate.key() for candidate in candidates} - cost_map.keys()
-            raise ValueError(
+            raise CirkoptValueError(
                 f"Not all candidates have a simulation result: {missing}, {cost_map.keys()}"
             )
 

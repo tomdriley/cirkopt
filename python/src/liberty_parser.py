@@ -6,6 +6,7 @@ import pyparsing as pp  # type: ignore
 from pyparsing import pyparsing_common as ppc
 
 from src.file_io import IFile
+from src.exceptions import CirkoptException
 
 
 @dataclass(frozen=True)
@@ -41,7 +42,7 @@ def _to_multi_dict(input_string: str, location: int, toks: List[Any]) -> List[An
 
         # Error if attribute's name has already been defined group name
         if is_attribute and existing_member_is_list_of_dicts:
-            raise Exception(
+            raise CirkoptException(
                 f"Member name '{member_name}' already defined as group name"
             )
 
@@ -51,7 +52,7 @@ def _to_multi_dict(input_string: str, location: int, toks: List[Any]) -> List[An
             and existing_member is not None
             and not existing_member_is_list_of_dicts
         ):
-            raise Exception(
+            raise CirkoptException(
                 f"Group with group name '{member_name}' already defined as attribute"
             )
 
@@ -70,7 +71,7 @@ def _to_multi_dict(input_string: str, location: int, toks: List[Any]) -> List[An
         elif is_group:
             group[member_name] = [member[2]]
         else:
-            raise Exception(f"Unexpected tokens in group: {toks}")
+            raise CirkoptException(f"Unexpected tokens in group: {toks}")
 
     toks[0][-1] = group
     return toks

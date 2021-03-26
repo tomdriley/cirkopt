@@ -4,6 +4,7 @@ from dataclasses import FrozenInstanceError
 
 from src.netlist import BaseNetlistFile, Netlist
 from src.file_io import MockFile
+from src.exceptions import CirkoptException
 from tests.netlist_example import TEST_NETLIST
 
 
@@ -15,7 +16,7 @@ class TestNetlist(unittest.TestCase):
         """
 
         mock_file.write(textwrap.dedent(netlist_blank))
-        with self.assertRaises(Exception) as context:
+        with self.assertRaises(CirkoptException) as context:
             Netlist.create(BaseNetlistFile.create(mock_file))
         self.assertIn("Empty netlist file", context.exception.args)
 
@@ -32,7 +33,7 @@ class TestNetlist(unittest.TestCase):
         """
 
         mock_file.write(textwrap.dedent(netlist_no_devices))
-        with self.assertRaises(Exception) as context:
+        with self.assertRaises(CirkoptException) as context:
             Netlist.create(BaseNetlistFile.create(mock_file))
         self.assertIn("Invalid netlist, no device lines found", context.exception.args)
 
@@ -49,7 +50,7 @@ class TestNetlist(unittest.TestCase):
             .ends INVX1_4
         """
         mock_file.write(textwrap.dedent(netlist_no_width))
-        with self.assertRaises(Exception) as context:
+        with self.assertRaises(CirkoptException) as context:
             Netlist.create(BaseNetlistFile.create(mock_file))
         expected_prefix = "No match of W=(\\d+(?:\\.\\d+)?e[-\\+]?\\d+) found in mp0 "
         self.assertTrue(context.exception.args[0].startswith(expected_prefix))

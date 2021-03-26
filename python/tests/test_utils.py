@@ -1,16 +1,17 @@
 import unittest
 
 from src.utils import single, chunked
+from src.exceptions import CirkoptException
 
 
 class TestUtils(unittest.TestCase):
 
     def test_single(self):
-        with self.assertRaises(Exception) as context:
+        with self.assertRaises(CirkoptException) as context:
             single(lambda it: True, [])
         self.assertIn("Zero items in sequence match predicate", context.exception.args)
 
-        with self.assertRaises(Exception) as context:
+        with self.assertRaises(CirkoptException) as context:
             single(lambda it: True, [0, 0])
         self.assertIn("More than one item in sequence matches predicate", context.exception.args)
 
