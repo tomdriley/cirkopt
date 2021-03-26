@@ -4,6 +4,7 @@ import json
 from src.cirkopt_json import ObjectEncoder
 from src.file_io import MockFile, IFile
 from src.netlist import Netlist, BaseNetlistFile
+from tests.netlist_example import TEST_NETLIST
 
 JSON_MOCK_FILE = r"""{"__MockFile__": true, "_path": "/path/to/file", "_contents": ""}"""
 
@@ -18,7 +19,7 @@ JSON_NETLIST = r"""{
     "base_netlist_file": {
         "__BaseNetlistFile__": true,
         "_path": "",
-        "_contents": ""
+        "_contents": """ + json.dumps(TEST_NETLIST) + r"""
     },
     "cell_name": "Cell Name",
     "device_widths": [
@@ -64,8 +65,10 @@ class TestJSON(unittest.TestCase):
             base_netlist_file,
         )
 
+        mock_file = MockFile()
+        mock_file.write(TEST_NETLIST)
         netlist = Netlist.create(
-            base_netlist_file=BaseNetlistFile.create(MockFile()),
+            base_netlist_file=BaseNetlistFile.create(mock_file),
             cell_name="Cell Name",
             device_widths=tuple([1, 3.0, 5.5]),
             device_lengths=tuple([0]),

@@ -9,10 +9,10 @@ class TestQuantize(unittest.TestCase):
     def test_quantize(self):
         with self.assertRaises(ValueError) as context:
             quantize(d(1.0), d('0'))
-            self.assertIn("Precision cannot be less than or equal to 0", context.exception.args)
+        self.assertIn("Precision cannot be 0", context.exception.args)
         with self.assertRaises(ValueError) as context:
             quantize(d(1.0), d('-0.1'))
-            self.assertIn("Precision cannot be less than or equal to 0", context.exception.args)
+        self.assertIn("Precision cannot be 0", context.exception.args)
 
         self.assertEqual(quantize(d(0.1), d('1.0')), 0)
         self.assertEqual(quantize(d(1.0), d('1.0')), 1)
@@ -37,10 +37,10 @@ class TestQuantize(unittest.TestCase):
     def test_scale(self):
         with self.assertRaises(ValueError) as context:
             scale(1, '0')
-            self.assertIn("Precision cannot be less than or equal to 0", context.exception.args)
+        self.assertIn("Precision cannot be 0", context.exception.args)
         with self.assertRaises(ValueError) as context:
             scale(1, '-0.1')
-            self.assertIn("Precision cannot be less than or equal to 0", context.exception.args)
+        self.assertIn("Precision cannot be 0", context.exception.args)
 
         self.assertEqual(scale(0, '1.0'), 0)
         self.assertEqual(scale(1, '1.0'), 1.0)
